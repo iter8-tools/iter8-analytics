@@ -8,15 +8,7 @@ class Iter8MetricFactory:
         self.metrics_backend_url = metrics_backend_url
 
     def get_iter8_metric(self, metric_spec):
-        if metric_spec["type"] == "histogram":
-            metrics_object = Iter8Histogram(metric_spec, self.metrics_backend_url)
-        elif metric_spec["type"] == "gauge":
-            metrics_object = Iter8Gauge(metric_spec, self.metrics_backend_url)
-        elif metric_spec["type"] == "counter":
-            metrics_object = Iter8Counter(metric_spec, self.metrics_backend_url)
-        else:
-            raise ValueError("Unknown type in metric_spec")
-        return metrics_object
+        return Iter8Metric(metric_spec, self.metrics_backend_url)
 
     @staticmethod
     def create_metric_spec(metrics_config, metric_name, entity_tag):
@@ -65,16 +57,3 @@ class Iter8Metric:
         for query in self.prom_queries:
             results[query.query_spec["query_name"]] = query.query_from_template(interval_str, offset_str)
         return results
-
-
-class Iter8Histogram(Iter8Metric): # custom
-    def __init__(self, metric_spec, metrics_backend_url):
-        super().__init__(metric_spec, metrics_backend_url)
-
-class Iter8Gauge(Iter8Metric): # custom
-    def __init__(self, metric_spec, metrics_backend_url):
-        super().__init__(metric_spec, metrics_backend_url)
-        # the above call should have created self.prom
-
-class Iter8Counter(Iter8Gauge): # counter is a gauge whose value keeps increasing
-    pass

@@ -26,33 +26,36 @@ class PrometheusQuery():
         params = {'query': query}
         log.info(query)
         DataCapture.append_value("prometheus_requests", query)
-        prom_result = requests.get(self.prometheus_url, params=params).json()
+        query_result = requests.get(self.prometheus_url, params=params).json()
         DataCapture.append_value("prometheus_responses", prom_result)
-        return self.post_process(prom_result)
+        return self.post_process(query_result)
 
-    def post_process(self, prom_result):
-        if "data" not in prom_result:
-            if self.query_spec["zero_value_on_nodata"] == True:
-                return 0
-            else:
-                return None
-        results = prom_result["data"]["result"]
-        if prom_result["status"] == "error":
-            raise ValueError("Invalid query")
-        if results == []:
-            if self.query_spec["zero_value_on_nodata"] == True:
-                return 0
-            else:
-                return None
-        match_key = self.query_spec["entity_tags"]
-        for each_result in results:
-            if each_result["metric"] == match_key:
-                result_float = float(each_result["value"][1])
-                if not math.isnan(result_float):
-                    return float(each_result["value"][1])
-                else:
-                    break
-        if self.query_spec["zero_value_on_nodata"] == True:
-            return 0
+    def post_process(self, query_result):
+        prom_result = {"value": None, "message": ""}
+        metric_type_flag = False
+        if query_result["status"] != "success":
+            prom_result["message"] = "Query did not succeed. Check your query template."
+        elif "data" not in query_result:
+            prom_result["message"] = "No data found in Prometheus but query succeeded. Check load generator. Returning None"
         else:
-            return None
+            results = query_result["data"]["result"]
+            if results == []:
+                prom_result["message"] = "No data found in Prometheus but query succeeded. Return value based on metric type"
+                metric_type_flag = True
+            else:
+                match_key = self.query_spec["entity_tags"]
+                for each_result in results:
+                    if each_result["metric"] == match_key:
+                        result_float = float(each_result["value"][1])
+                        if not math.isnan(result_float):
+                            prom_result["value"] = float(each_result["value"][1])
+                            prom_result["message"] = "Query success, result found"
+                            return prom_result
+                prom_result["message"] = "No matching entity found in Prometheus or result was NaN. Return value based on metric type"
+                metric_type_flag = True
+        if metric_type_flag == True:
+            if self.query_spec["metric_type"] == "Correctness":
+                prom_result["value"] = 0
+            elif self.query_spec["metric_type"] == "Performance":
+                prom_result["value"]= None
+        return prom_result
