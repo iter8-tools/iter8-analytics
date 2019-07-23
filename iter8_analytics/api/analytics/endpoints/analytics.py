@@ -28,15 +28,6 @@ metrics_config = {
         "zero_value_on_nodata": True,
         "query_templates": {
             "sample_size": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
-            # "min": "sum(increase(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels)",
-            # "mean": "(sum(increase(istio_request_duration_seconds_sum{reporter='source'}[$interval]$offset_str)) by ($entity_labels)) / (sum(increase(istio_request_duration_seconds_count{reporter='source'}[$interval]$offset_str)) by ($entity_labels))",
-            # "max": "sum(increase(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels)",
-            # "stddev": "sum(increase(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels)",
-            # "first_quartile": "histogram_quantile(0.25, sum(rate(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels))",
-            # "median": "histogram_quantile(0.5, sum(rate(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels))",
-            # "third_quartile": "histogram_quantile(0.75, sum(rate(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels))",
-            # "95th_percentile": "histogram_quantile(0.95, sum(rate(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels))",
-            # "99th_percentile": "histogram_quantile(0.99, sum(rate(istio_request_duration_seconds_bucket{reporter='source'}[$interval]$offset_str)) by (le, $entity_labels))",
             "value": "(sum(increase(istio_request_duration_seconds_sum{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)) / (sum(increase(istio_request_duration_seconds_count{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels))"
         }
     },
@@ -56,6 +47,40 @@ metrics_config = {
             "value": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
         }
     }
+}
+
+iter8_metrics = {
+  "query_templates": [
+    {
+      "iter8_sample_size": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+    },
+    {
+      "iter8_latency": "(sum(increase(istio_request_duration_seconds_sum{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)) / (sum(increase(istio_request_duration_seconds_count{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels))"
+    },
+    {
+      "iter8_error_count": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+    },
+    {
+      "iter8_error_rate": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels) / sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+    }
+  ],
+  "metrics": [
+    {
+      "iter8_latency": {
+        "metric_type": "Performance"
+      }
+    },
+    {
+      "iter8_error_count": {
+        "metric_type": "Correctness"
+      }
+    },
+    {
+      "iter8_error_rate": {
+        "metric_type": "Correctness"
+      }
+    }
+  ]
 }
 
 prom_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
