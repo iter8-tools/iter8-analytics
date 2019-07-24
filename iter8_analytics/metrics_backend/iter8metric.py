@@ -56,4 +56,8 @@ class Iter8Metric:
         results = {}
         for query in self.prom_queries:
             results[query.query_spec["query_name"]] = query.query_from_template(interval_str, offset_str)
+        """
+        Format of results:
+        results = {'sample_size': {'value': 12, 'message': 'Query success, result found'}, 'value': {'value': 2, 'message': 'Query success, result found'}}
+        """
         return results
