@@ -194,7 +194,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
         statistics = metrics_object.get_stats(interval_str, offset_str)
         return {
             "metric_name": metric_name,
-            "metric_type": metrics_config[metric_name]["type"],
+            "metric_type": metrics_config[metric_name]["metric_type"],
             "statistics": statistics
         }
 
@@ -205,7 +205,6 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
         else:
             self.response["assessment"]["success_criteria"].append(
                 ThresholdCriterion(criterion, self.response["canary"]["metrics"][-1]).test())
-        # print(self.response["assessment"]["success_criteria"])
 
     def append_assessment_summary(self):
         self.response["assessment"]["summary"]["all_success_criteria_met"] = all(

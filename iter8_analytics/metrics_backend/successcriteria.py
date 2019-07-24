@@ -5,11 +5,13 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             "sample_size_sufficient": True
         }
-        if candidate_metric["statistics"]["sample_size"] < criterion["sample_size"]:
+        if candidate_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"]:
             test_result["sample_size_sufficient"] = False
             test_result["success"] = False
         else:
-            if candidate_metric["statistics"]["value"] <= criterion["value"]:
+            if candidate_metric["statistics"]["value"]["value"] == None:
+                test_result["success"] = False
+            elif candidate_metric["statistics"]["value"]["value"] <= criterion["value"]:
                 test_result["success"] = True
             else:
                 test_result["success"] = False
@@ -21,11 +23,13 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             "sample_size_sufficient": True
         }
-        if candidate_metric["statistics"]["sample_size"] < criterion["sample_size"] or baseline_metric["statistics"]["sample_size"] < criterion["sample_size"]:
+        if candidate_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"] or baseline_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"]:
             test_result["sample_size_sufficient"] = False
             test_result["success"] = False
         else:
-            if candidate_metric["statistics"]["value"] <= ((1 + criterion["value"]) * baseline_metric["statistics"]["value"]):
+            if (candidate_metric["statistics"]["value"]["value"] == None) or (baseline_metric["statistics"]["value"]["value"] == None):
+                test_result["success"] = False
+            elif candidate_metric["statistics"]["value"]["value"] <= ((1 + criterion["value"]) * baseline_metric["statistics"]["value"]["value"]):
                 test_result["success"] = True
             else:
                 test_result["success"] = False
