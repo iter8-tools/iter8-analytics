@@ -133,6 +133,9 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
         interval_str, offset_str = self.metric_factory.get_interval_and_offset_str(
             entity["start_time"], entity["end_time"])
         prometheus_results_per_success_criteria = metrics_object.get_stats(interval_str, offset_str)
+        """
+        prometheus_results_per_success_criteria = {'statistics': {'sample_size': '12', 'value': 13}, 'messages': ["sample_size: Query success, result found", "value: Query success, result found"]}
+        """
         return {
             "metric_name": criterion["metric_name"],
             "metric_type": criterion["metric_type"],

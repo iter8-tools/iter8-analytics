@@ -55,6 +55,6 @@ class Iter8Metric:
             results["messages"].append(str(query.query_spec["query_name"]+": "+ prom_result["message"]))
         """
         Format of results:
-        results = {'sample_size': {'value': 12, 'message': 'Query success, result found'}, 'value': {'value': 2, 'message': 'Query success, result found'}}
+        results = {'statistics': {'sample_size': '12', 'value': 13}, 'messages': ["sample_size: Query success, result found", "value: Query success, result found"]}
         """
         return results
