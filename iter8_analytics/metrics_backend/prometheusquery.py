@@ -28,8 +28,7 @@ class PrometheusQuery():
         log.info(params)
         DataCapture.append_value("prometheus_requests", query)
         query_result = requests.get(self.prometheus_url, params=params).json()
-        log.info(query_result)
-        DataCapture.append_value("prometheus_responses", query_result)
+        DataCapture.append_value("prometheus_responses", prom_result)
         return self.post_process(query_result)
 
     def post_process(self, query_result):

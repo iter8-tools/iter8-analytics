@@ -8,7 +8,7 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             "sample_size_sufficient": True
         }
-        if candidate_metric["statistics"]["sample_size"] < criterion["sample_size"]:
+        if candidate_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"]:
             test_result["sample_size_sufficient"] = False
             test_result["success"] = False
         else:
@@ -26,7 +26,7 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             "sample_size_sufficient": True
         }
-        if candidate_metric["statistics"]["sample_size"] < criterion["sample_size"] or baseline_metric["statistics"]["sample_size"] < criterion["sample_size"]:
+        if candidate_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"] or baseline_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"]:
             test_result["sample_size_sufficient"] = False
             test_result["success"] = False
         else:
