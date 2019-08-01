@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 class StatisticalTests: # only provides class methods for statistical tests; cannot be instantiated
     @staticmethod
     def simple_threshold(candidate_metric, criterion):
@@ -5,13 +8,13 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             "sample_size_sufficient": True
         }
-        if candidate_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"]:
+        if candidate_metric["statistics"]["sample_size"] < criterion["sample_size"]:
             test_result["sample_size_sufficient"] = False
             test_result["success"] = False
         else:
-            if candidate_metric["statistics"]["value"]["value"] == None:
+            if candidate_metric["statistics"]["value"] == None:
                 test_result["success"] = False
-            elif candidate_metric["statistics"]["value"]["value"] <= criterion["value"]:
+            elif candidate_metric["statistics"]["value"] <= criterion["value"]:
                 test_result["success"] = True
             else:
                 test_result["success"] = False
@@ -23,13 +26,13 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             "sample_size_sufficient": True
         }
-        if candidate_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"] or baseline_metric["statistics"]["sample_size"]["value"] < criterion["sample_size"]:
+        if candidate_metric["statistics"]["sample_size"] < criterion["sample_size"] or baseline_metric["statistics"]["sample_size"] < criterion["sample_size"]:
             test_result["sample_size_sufficient"] = False
             test_result["success"] = False
         else:
-            if (candidate_metric["statistics"]["value"]["value"] == None) or (baseline_metric["statistics"]["value"]["value"] == None):
+            if (candidate_metric["statistics"]["value"] == None) or (baseline_metric["statistics"]["value"] == None):
                 test_result["success"] = False
-            elif candidate_metric["statistics"]["value"]["value"] <= ((1 + criterion["value"]) * baseline_metric["statistics"]["value"]["value"]):
+            elif candidate_metric["statistics"]["value"] <= ((1 + criterion["value"]) * baseline_metric["statistics"]["value"]):
                 test_result["success"] = True
             else:
                 test_result["success"] = False
@@ -42,10 +45,16 @@ class SuccessCriterion:
     def __init__(self, criterion):
         """
         criterion:  {
-                        "metric_name": "iter8_error_rate",
-                        "type": "threshold",
+                        "metric_name": "iter8_error_count",
+                        "metric_type": "Performance",
+                        "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "delta",
                         "value": 0.02,
-                        "stop_on_failure": True
+                        "sample_size": 0,
+                        "stop_on_failure": false,
+                        "enable_traffic_control": true,
+                        "confidence": 0
                     }
         """
         self.metric_name = criterion["metric_name"]

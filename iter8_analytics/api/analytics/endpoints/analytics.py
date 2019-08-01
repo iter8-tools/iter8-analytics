@@ -22,67 +22,6 @@ import copy
 
 log = logging.getLogger(__name__)
 
-metrics_config = {
-    "iter8_latency": {
-        "type": "histogram",
-        "zero_value_on_nodata": True,
-        "query_templates": {
-            "sample_size": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
-            "value": "(sum(increase(istio_request_duration_seconds_sum{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)) / (sum(increase(istio_request_duration_seconds_count{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels))"
-        }
-    },
-    "iter8_error_rate": {
-        "type": "gauge",
-        "zero_value_on_nodata": True,
-        "query_templates": {
-            "sample_size": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
-            "value": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels) / sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
-        }
-    },
-    "iter8_error_count": {
-        "type": "counter",
-        "zero_value_on_nodata": True,
-        "query_templates": {
-            "sample_size": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
-            "value": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
-        }
-    }
-}
-
-iter8_metrics = {
-  "query_templates": [
-    {
-      "iter8_sample_size": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
-    },
-    {
-      "iter8_latency": "(sum(increase(istio_request_duration_seconds_sum{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)) / (sum(increase(istio_request_duration_seconds_count{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels))"
-    },
-    {
-      "iter8_error_count": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
-    },
-    {
-      "iter8_error_rate": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels) / sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
-    }
-  ],
-  "metrics": [
-    {
-      "iter8_latency": {
-        "metric_type": "Performance"
-      }
-    },
-    {
-      "iter8_error_count": {
-        "metric_type": "Correctness"
-      }
-    },
-    {
-      "iter8_error_rate": {
-        "metric_type": "Correctness"
-      }
-    }
-  ]
-}
-
 prom_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
 DataCapture.data_capture_mode = os.getenv(constants.ITER8_DATA_CAPTURE_MODE_ENV)
 
@@ -178,33 +117,37 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
         }
 
     def append_metrics_and_success_criteria(self):
+        all_messages= []
         for criterion in self.experiment["traffic_control"]["success_criteria"]:
             self.response["baseline"]["metrics"].append(self.get_results(
-                criterion["metric_name"], self.experiment["baseline"]))
+                criterion, self.experiment["baseline"]))
             self.response["canary"]["metrics"].append(self.get_results(
-                criterion["metric_name"], self.experiment["canary"]))
+                criterion, self.experiment["canary"]))
+            log.info(f"Appended metric: {criterion['metric_name']}")
             self.append_success_criteria(criterion)
 
-    def get_results(self, metric_name, entity):
+    def get_results(self, criterion, entity):
         metric_spec = self.metric_factory.create_metric_spec(
-            metrics_config, metric_name, entity["tags"])
+            criterion, entity["tags"])
         metrics_object = self.metric_factory.get_iter8_metric(metric_spec)
         interval_str, offset_str = self.metric_factory.get_interval_and_offset_str(
             entity["start_time"], entity["end_time"])
-        statistics = metrics_object.get_stats(interval_str, offset_str)
+        prometheus_results_per_success_criteria = metrics_object.get_stats(interval_str, offset_str)
         return {
-            "metric_name": metric_name,
-            "metric_type": metrics_config[metric_name]["metric_type"],
-            "statistics": statistics
+            "metric_name": criterion["metric_name"],
+            "metric_type": criterion["metric_type"],
+            "statistics": prometheus_results_per_success_criteria["statistics"]
         }
 
     def append_success_criteria(self, criterion):
+        log.info("Appending Success Criteria")
         if criterion["type"] == "delta":
             self.response["assessment"]["success_criteria"].append(DeltaCriterion(
                 criterion, self.response["baseline"]["metrics"][-1], self.response["canary"]["metrics"][-1]).test())
         else:
             self.response["assessment"]["success_criteria"].append(
                 ThresholdCriterion(criterion, self.response["canary"]["metrics"][-1]).test())
+        log.info(" Success Criteria appended")
 
     def append_assessment_summary(self):
         self.response["assessment"]["summary"]["all_success_criteria_met"] = all(

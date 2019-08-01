@@ -3,6 +3,9 @@ import dateutil.parser as parser
 from datetime import datetime, timezone, timedelta
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 
+import logging
+log = logging.getLogger(__name__)
+
 class Iter8MetricFactory:
     def __init__(self, metrics_backend_url):
         self.metrics_backend_url = metrics_backend_url
@@ -11,20 +14,12 @@ class Iter8MetricFactory:
         return Iter8Metric(metric_spec, self.metrics_backend_url)
 
     @staticmethod
-    def create_metric_spec(metrics_config, metric_name, entity_tag):
-        if metric_name not in metrics_config:
-            raise KeyError("Metric name not found in Metrics Configuration")
+    def create_metric_spec(criterion, entity_tag):
         metric_spec = {}
-        metric_spec["name"] = metric_name
-        metric_spec["type"] = metrics_config[metric_name]["type"]
-        metric_spec["query_specs"] = []
-        for query in metrics_config[metric_name]["query_templates"].keys():
-            query_spec = {}
-            query_spec["query_name"] = query
-            query_spec["query_template"] = metrics_config[metric_name]["query_templates"][query]
-            query_spec["zero_value_on_nodata"] = metrics_config[metric_name]["zero_value_on_nodata"]
-            query_spec["entity_tags"] = entity_tag
-            metric_spec["query_specs"].append(query_spec)
+        metric_spec["name"] = criterion["metric_name"]
+        metric_spec["metric_type"] = criterion["metric_type"]
+        metric_spec["query_specs"] = [{"query_name": "value", "query_template": criterion["metric_query_template"], "metric_type": criterion["metric_type"], "entity_tags": entity_tag},
+        {"query_name": "sample_size", "query_template": criterion["metric_sample_size_query_template"], "metric_type": "Correctness", "entity_tags": entity_tag}]
         return metric_spec
 
     @staticmethod
@@ -47,15 +42,17 @@ class Iter8MetricFactory:
 class Iter8Metric:
     def __init__(self, metric_spec, metrics_backend_url):
         self.name = metric_spec["name"]
-        self.type = metric_spec["type"]
+        self.metric_type = metric_spec["metric_type"]
         self.query_specs = metric_spec["query_specs"]
         self.metrics_backend_url = metrics_backend_url
         self.prom_queries = [PrometheusQuery(self.metrics_backend_url, query_spec) for query_spec in self.query_specs]
 
     def get_stats(self, interval_str, offset_str):
-        results = {}
+        results = {"statistics": {}, "messages": []}
         for query in self.prom_queries:
-            results[query.query_spec["query_name"]] = query.query_from_template(interval_str, offset_str)
+            prom_result = query.query_from_template(interval_str, offset_str)
+            results["statistics"][query.query_spec["query_name"]] = prom_result["value"]
+            results["messages"].append(str(query.query_spec["query_name"]+": "+ prom_result["message"]))
         """
         Format of results:
         results = {'sample_size': {'value': 12, 'message': 'Query success, result found'}, 'value': {'value': 2, 'message': 'Query success, result found'}}
