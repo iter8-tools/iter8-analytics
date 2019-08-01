@@ -134,15 +134,9 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
             entity["start_time"], entity["end_time"])
         prometheus_results_per_success_criteria = metrics_object.get_stats(interval_str, offset_str)
         return {
-<<<<<<< HEAD
             "metric_name": criterion["metric_name"],
             "metric_type": criterion["metric_type"],
             "statistics": prometheus_results_per_success_criteria["statistics"]
-=======
-            "metric_name": metric_name,
-            "metric_type": metrics_config[metric_name]["metric_type"],
-            "statistics": statistics
->>>>>>> 8c8491d19b805a62f5bbaa4db8bc9f895c1d7f14
         }
 
     def append_success_criteria(self, criterion):
@@ -153,10 +147,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
         else:
             self.response["assessment"]["success_criteria"].append(
                 ThresholdCriterion(criterion, self.response["canary"]["metrics"][-1]).test())
-<<<<<<< HEAD
         log.info(" Success Criteria appended")
-=======
->>>>>>> 8c8491d19b805a62f5bbaa4db8bc9f895c1d7f14
 
     def append_assessment_summary(self):
         self.response["assessment"]["summary"]["all_success_criteria_met"] = all(
