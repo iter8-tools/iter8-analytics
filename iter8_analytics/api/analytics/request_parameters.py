@@ -30,6 +30,12 @@ version_definition = api.model('version_definition', {
 })
 
 METRIC_NAME_STR = 'metric_name'
+METRIC_TYPE_STR = 'metric_type'
+PERFORMANCE_METRIC_TYPE_STR = 'Performance'
+CORRECTNESS_METRIC_TYPE_STR = 'Correctness'
+METRIC_QUERY_TEMPLATE_STR = 'metric_query_template'
+METRIC_SAMPLE_SIZE_QUERY_TEMPLATE = 'metric_sample_size_query_template'
+
 CRITERION_TYPE_STR = 'type'
 DELTA_CRITERION_STR = 'delta'
 THRESHOLD_CRITERION_STR = 'threshold'
@@ -39,11 +45,27 @@ CRITERION_ENABLE_TRAFFIC_CONTROL_STR = 'enable_traffic_control'
 CRITERION_CONFIDENCE_STR = 'confidence'
 CRITERION_STOP_ON_FAILURE_STR = 'stop_on_failure'
 
+
 success_criterion = api.model('success_criterion', {
     METRIC_NAME_STR: fields.String(
         required=True,
         description='Name of the metric to which the criterion applies',
         example='iter8_latency'),
+    METRIC_TYPE_STR: fields.String(
+        required=True, enum=[PERFORMANCE_METRIC_TYPE_STR, CORRECTNESS_METRIC_TYPE_STR],
+        description='Metric type. Options: "Performance": Metrics which '
+        'measure the performance of a microservice; '
+        '"Correctness": Metrics which measure the correctness of a microservice'),
+    METRIC_QUERY_TEMPLATE_STR: fields.String(
+        required=True,
+        description='Prometheus Query of the metric to which the criterion applies',
+        example='sum(increase(istio_requests_total{response_code=~"5..",'
+        'reporter="source"}[$interval]$offset_str)) by ($entity_labels)'),
+    METRIC_SAMPLE_SIZE_QUERY_TEMPLATE: fields.String(
+        required=True,
+        description='Sample Size Query for the metric to which the criterion applies',
+        example='sum(increase(istio_requests_total{reporter="source"}'
+        '[$interval]$offset_str)) by ($entity_labels)'),
     CRITERION_TYPE_STR: fields.String(
         required=True, enum=[DELTA_CRITERION_STR, THRESHOLD_CRITERION_STR],
         description='Criterion type. Options: "delta": compares the canary '

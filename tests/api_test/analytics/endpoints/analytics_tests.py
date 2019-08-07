@@ -299,6 +299,186 @@ class TestAnalyticsAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 400, 'Unknown type in success_criteria')
             assert b'\'normal\' is not one of [\'delta\', \'threshold\']' in resp.data
 
+            ##################
+            # Test request with metric type missing in payload
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with metric_type missing in payload")
+
+            parameters = {
+                "baseline": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v1"
+                    }
+                },
+                "canary": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                    "success_criteria": [
+                        {
+                            "metric_name": "iter8_error_count",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "threshold",
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
+                        }
+                    ]
+                },
+                "_last_state": {}
+            }
+            # Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            # We should get a BAD REQUEST HTTP error
+            self.assertEqual(resp.status_code, 400, 'success_criteria missing in payload')
+
+            assert b'\'metric_type\' is a required property' in resp.data
+
+            ##################
+            # Test request with new metric type in payload
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with new metric_type in payload")
+
+            parameters = {
+                "baseline": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v1"
+                    }
+                },
+                "canary": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                    "success_criteria": [
+                        {
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "random",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "threshold",
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
+                        }
+                    ]
+                },
+                "_last_state": {}
+            }
+            # Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            # We should get a BAD REQUEST HTTP error
+            self.assertEqual(resp.status_code, 400, 'new metric_type in payload')
+
+            assert b'\'random\' is not one of [\'Performance\', \'Correctness\']' in resp.data
+
+            ##################
+            # Test request with metric_query_template missing in payload
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with metric_query_template missing in payload")
+
+            parameters = {
+                "baseline": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v1"
+                    }
+                },
+                "canary": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                    "success_criteria": [
+                        {
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "threshold",
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
+                        }
+                    ]
+                },
+                "_last_state": {}
+            }
+            # Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            # We should get a BAD REQUEST HTTP error
+            self.assertEqual(resp.status_code, 400, 'metric_query_template missing in payload')
+
+            assert b'\'metric_query_template\' is a required property' in resp.data
+
+
+            ##################
+            # Test request with metric_sample_size_query_template missing in payload
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with metric_sample_size_query_template missing in payload")
+
+            parameters = {
+                "baseline": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v1"
+                    }
+                },
+                "canary": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                    "success_criteria": [
+                        {
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "threshold",
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
+                        }
+                    ]
+                },
+                "_last_state": {}
+            }
+            # Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            # We should get a BAD REQUEST HTTP error
+            self.assertEqual(resp.status_code, 400, 'metric_query_template missing in payload')
+
+            assert b'\'metric_sample_size_query_template\' is a required property' in resp.data
+
+
+
     def test_no_data_from_prometheus(self):
         """Tests the REST endpoint /analytics/canary/check_and_increment."""
 
