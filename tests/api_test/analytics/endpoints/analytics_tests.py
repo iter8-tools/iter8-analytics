@@ -42,60 +42,13 @@ class TestAnalyticsAPI(unittest.TestCase):
         log.info('Completed initialization for all analytics REST API tests.')
 
 
-    def conduct_experiment(self,experiment_data):
-        for iteration in experiment_data:
-            with patch('requests.get') as mock_get:
-                response_list = []
-                for each_dict in iteration["prometheus_responses"]:
-                    the_response = Response()
-                    the_response._content=bytes(json.dumps(each_dict), 'utf-8')
-                    response_list.append(the_response)
-
-                log.info(iteration["prometheus_responses"])
-
-                mock_get.side_effect = response_list
-
-                payload = iteration["request_payload"]
-
-                resp = self.flask_test.post(self.endpoint, json=payload)
-                bytecode_response = resp.data
-                json_response = json.loads(bytecode_response.decode('utf8').replace("'", '"'))
-
-                self.assertEqual(json_response["_last_state"], iteration["service_response"]["_last_state"])
-                self.assertEqual(json_response["assessment"]["summary"]["all_success_criteria_met"], iteration["service_response"]["assessment"]["summary"]["all_success_criteria_met"])
-                self.assertEqual(json_response["assessment"]["summary"]["abort_experiment"], iteration["service_response"]["assessment"]["summary"]["abort_experiment"])
-                conclusion_check = True if set(iteration["service_response"]["assessment"]["summary"]["conclusions"]).issubset(json_response["assessment"]["summary"]["conclusions"]) else False
-                self.assertTrue(conclusion_check)
-
-
-    def test_rollforward(self):
-        all_files = os.listdir("tests/data/rf")
-
-        for each_file in all_files:
-            if each_file == ".DS_Store":
-                continue
-            with open("tests/data/rf/"+each_file) as f:
-                experiment_data = json.load(f)
-                self.conduct_experiment(experiment_data)
-
-
-    def test_rollback(self):
-        all_files = os.listdir("tests/data/rb")
-
-        for each_file in all_files:
-            if each_file == ".DS_Store":
-                continue
-            with open("tests/data/rb/"+each_file) as f:
-                experiment_data = json.load(f)
-                self.conduct_experiment(experiment_data)
-
     def test_payload_check_and_increment(self):
         """Tests the REST endpoint /analytics/canary/check_and_increment."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
 
         with requests_mock.mock() as m:
-            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data_test/prometheus_sample_response.json")))
 
             ###################
             # Test request with some required parameters
@@ -108,21 +61,28 @@ class TestAnalyticsAPI(unittest.TestCase):
                 "baseline": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v1"
                     }
                 },
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
                     "success_criteria": [
                         {
-                            "metric_name": "iter8_latency",
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "delta",
-                            "value": 0.02
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
                         }
                     ]
                 },
@@ -144,21 +104,28 @@ class TestAnalyticsAPI(unittest.TestCase):
             parameters = {
                 "baseline": {
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v1"
                     }
                 },
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
                     "success_criteria": [
                         {
-                            "metric_name": "iter8_latency",
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "delta",
-                            "value": 0.02
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
                         }
                     ]
                 },
@@ -181,16 +148,17 @@ class TestAnalyticsAPI(unittest.TestCase):
                 "baseline": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v1"
                     }
                 },
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
+
                 },
                 "_last_state": {}
             }
@@ -213,15 +181,22 @@ class TestAnalyticsAPI(unittest.TestCase):
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
                     "success_criteria": [
                         {
-                            "metric_name": "iter8_latency",
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "delta",
-                            "value": 0.02
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
                         }
                     ]
                 },
@@ -245,20 +220,27 @@ class TestAnalyticsAPI(unittest.TestCase):
                 "baseline": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v1"
                     }
                 },
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
                     "success_criteria": [
                         {
-                            "metric_name": "iter8_latency",
-                            "type": "delta"
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "delta",
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
                         }
                     ]
                 },
@@ -273,45 +255,6 @@ class TestAnalyticsAPI(unittest.TestCase):
             assert b'\'value\' is a required property' in resp.data
 
             ###################
-            # Test request with unknown metric_name in success_criteria
-            ###################
-            log.info("\n\n\n")
-            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with unknown metric_name in success_criteria")
-
-            parameters = {
-                "baseline": {
-                    "start_time": "2019-04-24T19:40:32.017Z",
-                    "tags": {
-                        "destination_service_name": "reviews-v2"
-                    }
-                },
-                "canary": {
-                    "start_time": "2019-04-24T19:40:32.017Z",
-                    "tags": {
-                        "destination_service_name": "reviews-v2"
-                    }
-                },
-                "traffic_control": {
-                    "success_criteria": [
-                        {
-                            "metric_name": "iter8_throughput",
-                            "type": "delta",
-                            "value": 0.02
-                        }
-                    ]
-                },
-                "_last_state": {}
-            }
-
-            # Call the REST API via the test client
-            resp = self.flask_test.post(endpoint, json=parameters)
-
-            self.assertEqual(resp.status_code, 400, 'Unknown metric_name in success_criteria')
-
-            assert b'Metric name not found' in resp.data
-
-            ###################
             # Test request with unknown type in success_criteria
             ###################
             log.info("\n\n\n")
@@ -322,21 +265,28 @@ class TestAnalyticsAPI(unittest.TestCase):
                 "baseline": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v1"
                     }
                 },
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
                     "success_criteria": [
                         {
-                            "metric_name": "iter8_latency",
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "normal",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "normal",
-                            "value": 0.02
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
                         }
                     ]
                 },
@@ -355,7 +305,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
 
         with requests_mock.mock() as m:
-            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_no_data_response.json")))
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data_test/prometheus_no_data_response.json")))
 
             ###################
             # Test request with no data from prometheus
@@ -368,21 +318,28 @@ class TestAnalyticsAPI(unittest.TestCase):
                 "baseline": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v1"
                     }
                 },
                 "canary": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
-                        "destination_service_name": "reviews-v2"
+                        "destination_workload": "reviews-v3"
                     }
                 },
                 "traffic_control": {
                     "success_criteria": [
                         {
-                            "metric_name": "iter8_latency",
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "delta",
-                            "value": 0.02
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "enable_traffic_control": True,
+                            "confidence": 0
                         }
                     ]
                 },
@@ -393,27 +350,3 @@ class TestAnalyticsAPI(unittest.TestCase):
             resp = self.flask_test.post(endpoint, json=parameters)
 
             self.assertEqual(resp.status_code, 200, resp.data)
-
-
-    def test_rollforward_rollback(self):
-        pass
-
-    def test_rollback_rollforward(self):
-        pass
-
-    def test_rollback_rollback(self):
-        pass
-
-    def test_abort_experiment(self):
-        sc = SuccessCriterion({
-                        "metric_name": "iter8_error_rate",
-                        "type": "threshold",
-                        "value": 0.02,
-                        "stop_on_failure": True
-                    })
-
-        tr = sc.post_process_test_result({
-            "sample_size_sufficient": False,
-            "success": False
-        })
-        assert(not tr["abort_experiment"])
