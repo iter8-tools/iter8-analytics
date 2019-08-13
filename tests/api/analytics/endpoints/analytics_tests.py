@@ -48,7 +48,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
 
         with requests_mock.mock() as m:
-            m.get(self.metrics_endpoint, json=json.load(open("tests/data_test/prometheus_sample_response.json")))
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
 
             ###################
             # Test request with some required parameters
@@ -485,7 +485,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
 
         with requests_mock.mock() as m:
-            m.get(self.metrics_endpoint, json=json.load(open("tests/data_test/prometheus_no_data_response.json")))
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_no_data_response.json")))
 
             ###################
             # Test request with no data from prometheus

@@ -117,7 +117,6 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
         }
 
     def append_metrics_and_success_criteria(self):
-        all_messages= []
         for criterion in self.experiment["traffic_control"]["success_criteria"]:
             self.response["baseline"]["metrics"].append(self.get_results(
                 criterion, self.experiment["baseline"]))
