@@ -1,4 +1,4 @@
-"""Tests for the analytics REST API."""
+"""Tests for the SuccessCriteria class."""
 
 import unittest
 from unittest.mock import Mock
@@ -24,21 +24,6 @@ import re
 from urllib.parse import urlencode
 
 class TestAnalyticsAPI(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Setup common to all tests."""
-
-        # Initialize the Flask app for testing
-        flask_app.app.testing = True
-        flask_app.config_logger()
-        #flask_app.initialize(flask_app.app)
-
-        # Get an internal Flask test client
-        cls.flask_test = flask_app.app.test_client()
-
-        cls.backend_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
-        cls.metrics_endpoint = f'{cls.backend_url}/api/v1/query'
-
     def test_abort_experiment(self):
         sc = SuccessCriterion({
                         "metric_name": "iter8_error_rate",

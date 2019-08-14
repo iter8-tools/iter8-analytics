@@ -1,4 +1,4 @@
-"""Tests for the analytics REST API."""
+"""Tests for the PrometheusQuery Class."""
 
 import unittest
 from unittest.mock import Mock
@@ -24,24 +24,6 @@ import re
 from urllib.parse import urlencode
 
 class TestAnalyticsAPI(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        """Setup common to all tests."""
-
-        # Initialize the Flask app for testing
-        flask_app.app.testing = True
-        flask_app.config_logger()
-        #flask_app.initialize(flask_app.app)
-
-        # Get an internal Flask test client
-        cls.flask_test = flask_app.app.test_client()
-
-        cls.backend_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
-        cls.metrics_endpoint = f'{cls.backend_url}/api/v1/query'
-        cls.endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
-        log.info('Completed initialization for all analytics REST API tests.')
-
-
     def test_prometheus_responses(self):
         #No value for Correctness query
         query_spec = {
