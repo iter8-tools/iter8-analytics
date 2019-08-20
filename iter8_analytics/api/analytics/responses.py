@@ -72,10 +72,10 @@ stat_details = api.model('stat_details', {
 METRIC_BACKEND_URL_STR = 'metric_backend_url'
 METRIC_NAME_STR = 'metric_name'
 METRIC_TYPE_STR = 'metric_type'
+STATISTICS_STR = 'statistics'
 HISTOGRAM_METRIC_TYPE_STR = 'histogram'
 GAUGE_METRIC_TYPE_STR = 'gauge'
 COUNTER_METRIC_TYPE_STR = 'counter'
-STATISTICS_STR = 'statistics'
 
 metric_details = api.model('metric_details', {
     METRIC_NAME_STR: fields.String(
@@ -83,8 +83,7 @@ metric_details = api.model('metric_details', {
         description='Name identifying the metric'),
     METRIC_TYPE_STR: fields.String(
         required=True,
-        enum=[HISTOGRAM_METRIC_TYPE_STR, GAUGE_METRIC_TYPE_STR,
-              COUNTER_METRIC_TYPE_STR],
+        enum=[request_parameters.CORRECTNESS_METRIC_TYPE_STR, request_parameters.PERFORMANCE_METRIC_TYPE_STR],
         example=HISTOGRAM_METRIC_TYPE_STR, description='Metric type'),
     STATISTICS_STR: fields.Nested(
         stat_details, required=True,
@@ -106,8 +105,10 @@ version_measurements = api.model('version_measurements', {
         'version')
 })
 
+SAMPLE_SIZE_SUFFICIENT_STR = 'sample_size_sufficient'
+SUCCESS_STR = 'success'
 CONCLUSIONS_STR = 'conclusions'
-ALL_SUCCESS_CRITERIA_MET = 'all_success_criteria_met'
+ALL_SUCCESS_CRITERIA_MET_STR = 'all_success_criteria_met'
 SUCCESS_CRITERION_MET_STR = 'success_criterion_met'
 ABORT_EXPERIMENT_STR = 'abort_experiment'
 
@@ -121,7 +122,7 @@ summary = api.model('summary', {
         ],
         description='List of plain-English sentences summarizing the '
         'the canary assessment'),
-    ALL_SUCCESS_CRITERIA_MET: fields.Boolean(
+    ALL_SUCCESS_CRITERIA_MET_STR: fields.Boolean(
         required=True, example=False, default=False,
         description='Indicates whether or not all success criteria for '
         'assessing the canary version have been met'

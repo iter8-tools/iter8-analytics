@@ -1,3 +1,5 @@
+import iter8_analytics.api.analytics.request_parameters as request_parameters
+import iter8_analytics.api.analytics.responses as responses
 from iter8_analytics.metrics_backend.prometheusquery import PrometheusQuery
 import dateutil.parser as parser
 from datetime import datetime, timezone, timedelta
@@ -16,10 +18,10 @@ class Iter8MetricFactory:
     @staticmethod
     def create_metric_spec(criterion, entity_tag):
         metric_spec = {}
-        metric_spec["name"] = criterion["metric_name"]
-        metric_spec["metric_type"] = criterion["metric_type"]
-        metric_spec["query_specs"] = [{"query_name": "value", "query_template": criterion["metric_query_template"], "metric_type": criterion["metric_type"], "entity_tags": entity_tag},
-        {"query_name": "sample_size", "query_template": criterion["metric_sample_size_query_template"], "metric_type": "Correctness", "entity_tags": entity_tag}]
+        metric_spec["name"] = criterion[request_parameters.METRIC_NAME_STR]
+        metric_spec[request_parameters.METRIC_TYPE_STR] = criterion[request_parameters.METRIC_TYPE_STR]
+        metric_spec["query_specs"] = [{"query_name": "value", "query_template": criterion["metric_query_template"], request_parameters.METRIC_TYPE_STR: criterion[request_parameters.METRIC_TYPE_STR], "entity_tags": entity_tag},
+        {"query_name": "sample_size", "query_template": criterion["metric_sample_size_query_template"], request_parameters.METRIC_TYPE_STR: request_parameters.CORRECTNESS_METRIC_TYPE_STR, "entity_tags": entity_tag}]
         return metric_spec
 
     @staticmethod
@@ -42,19 +44,19 @@ class Iter8MetricFactory:
 class Iter8Metric:
     def __init__(self, metric_spec, metrics_backend_url):
         self.name = metric_spec["name"]
-        self.metric_type = metric_spec["metric_type"]
+        self.metric_type = metric_spec[request_parameters.METRIC_TYPE_STR]
         self.query_specs = metric_spec["query_specs"]
         self.metrics_backend_url = metrics_backend_url
         self.prom_queries = [PrometheusQuery(self.metrics_backend_url, query_spec) for query_spec in self.query_specs]
 
     def get_stats(self, interval_str, offset_str):
-        results = {"statistics": {}, "messages": []}
+        results = {responses.STATISTICS_STR: {}, "messages": []}
         for query in self.prom_queries:
             prom_result = query.query_from_template(interval_str, offset_str)
-            results["statistics"][query.query_spec["query_name"]] = prom_result["value"]
+            results[responses.STATISTICS_STR][query.query_spec["query_name"]] = prom_result["value"]
             results["messages"].append(str(query.query_spec["query_name"]+": "+ prom_result["message"]))
-            
-        log.info(results)
+
+        log.debug(results)
         """
         Format of results:
         results = {'statistics': {'sample_size': '12', 'value': 13}, 'messages': ["sample_size: Query success, result found", "value: Query success, result found"]}
