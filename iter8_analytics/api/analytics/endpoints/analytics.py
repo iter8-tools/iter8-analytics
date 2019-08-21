@@ -8,7 +8,7 @@ from iter8_analytics.api.restplus import api
 from iter8_analytics.metrics_backend.iter8metric import Iter8MetricFactory
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 from iter8_analytics.metrics_backend.successcriteria import DeltaCriterion, ThresholdCriterion
-from iter8_analytics.metrics_backend.response import Response
+from iter8_analytics.metrics_backend.iter8response import Response
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
