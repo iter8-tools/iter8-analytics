@@ -36,6 +36,7 @@ class PrometheusQuery():
         metric_type_flag = False
         if query_result["status"] != "success":
             prom_result["message"] = "Query did not succeed. Check your query template."
+            raise ValueError("Query did not succeed. Check your query template.")
         elif "data" not in query_result:
             prom_result["message"] = "No data found in Prometheus but query succeeded. Check load generator. Returning None"
         else:
