@@ -2,42 +2,44 @@ import iter8_analytics.api.analytics.request_parameters as request_parameters
 import iter8_analytics.api.analytics.responses as responses
 import logging
 log = logging.getLogger(__name__)
+SAMPLE_SIZE_SUFFICIENT_STR = 'sample_size_sufficient'
+SUCCESS_STR = 'success'
 
 class StatisticalTests: # only provides class methods for statistical tests; cannot be instantiated
     @staticmethod
     def simple_threshold(candidate_metric, criterion):
         #handle None response
         test_result = {
-            responses.SAMPLE_SIZE_SUFFICIENT_STR: True
+            SAMPLE_SIZE_SUFFICIENT_STR: True
         }
         if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion[responses.SAMPLE_SIZE_STR]:
-            test_result[responses.SAMPLE_SIZE_SUFFICIENT_STR] = False
-            test_result[responses.SUCCESS_STR] = False
+            test_result[SAMPLE_SIZE_SUFFICIENT_STR] = False
+            test_result[SUCCESS_STR] = False
         else:
             if candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None:
-                test_result[responses.SUCCESS_STR] = False
+                test_result[SUCCESS_STR] = False
             elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= criterion[responses.VALUE_STR]:
-                test_result[responses.SUCCESS_STR] = True
+                test_result[SUCCESS_STR] = True
             else:
-                test_result[responses.SUCCESS_STR] = False
+                test_result[SUCCESS_STR] = False
         return test_result
 
     @staticmethod
     def simple_delta(baseline_metric, candidate_metric, criterion):
         #handle None response
         test_result = {
-            responses.SAMPLE_SIZE_SUFFICIENT_STR: True
+            SAMPLE_SIZE_SUFFICIENT_STR: True
         }
         if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion[responses.SAMPLE_SIZE_STR] or baseline_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion[responses.SAMPLE_SIZE_STR]:
-            test_result[responses.SAMPLE_SIZE_SUFFICIENT_STR] = False
-            test_result[responses.SUCCESS_STR] = False
+            test_result[SAMPLE_SIZE_SUFFICIENT_STR] = False
+            test_result[SUCCESS_STR] = False
         else:
             if (candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None) or (baseline_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None):
-                test_result[responses.SUCCESS_STR] = False
+                test_result[SUCCESS_STR] = False
             elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= ((1 + criterion[responses.VALUE_STR]) * baseline_metric[responses.STATISTICS_STR][responses.VALUE_STR]):
-                test_result[responses.SUCCESS_STR] = True
+                test_result[SUCCESS_STR] = True
             else:
-                test_result[responses.SUCCESS_STR] = False
+                test_result[SUCCESS_STR] = False
         return test_result
 
 class SuccessCriterion:
@@ -69,18 +71,18 @@ class SuccessCriterion:
         raise NotImplementedError()
 
     def post_process_test_result(self, test_result):
-        is_or_is_not = "is" if test_result[responses.SUCCESS_STR] else "is not"
+        is_or_is_not = "is" if test_result[SUCCESS_STR] else "is not"
         delta_or_threshold = "delta" if self.criterion["type"] == "delta" else "threshold"
         confidence_str = f"with confidence {self.criterion[request_parameters.CRITERION_CONFIDENCE_STR]}%" if ("confidence" in self.criterion and (self.criterion[request_parameters.CRITERION_CONFIDENCE_STR] > 0)) else ""
         baseline_str = "of the baseline" if self.criterion["type"] == "delta" else ""
         result_str = f"{self.metric_name} of the candidate {is_or_is_not} within {delta_or_threshold} {self.criterion['value']} {confidence_str} {baseline_str}. "
-        conclusion_str = "Insufficient sample size. " if not test_result[responses.SAMPLE_SIZE_SUFFICIENT_STR] else result_str
+        conclusion_str = "Insufficient sample size. " if not test_result[SAMPLE_SIZE_SUFFICIENT_STR] else result_str
 
         return {
             request_parameters.METRIC_NAME_STR: self.metric_name,
             responses.CONCLUSIONS_STR: [conclusion_str],
-            responses.SUCCESS_CRITERION_MET_STR: test_result[responses.SUCCESS_STR],
-            responses.ABORT_EXPERIMENT_STR: self.criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR] and test_result[responses.SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[responses.SUCCESS_STR]
+            responses.SUCCESS_CRITERION_MET_STR: test_result[SUCCESS_STR],
+            responses.ABORT_EXPERIMENT_STR: self.criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR] and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]
         }
 
 class DeltaCriterion(SuccessCriterion):

@@ -10,7 +10,7 @@ from iter8_analytics import app as flask_app
 from iter8_analytics.api.analytics import responses as responses
 from iter8_analytics.api.analytics import request_parameters as request_parameters
 import iter8_analytics.constants as constants
-from iter8_analytics.metrics_backend.successcriteria import StatisticalTests, SuccessCriterion, DeltaCriterion, ThresholdCriterion
+from iter8_analytics.api.analytics.successcriteria import StatisticalTests, SuccessCriterion, DeltaCriterion, ThresholdCriterion
 import dateutil.parser as parser
 
 import logging

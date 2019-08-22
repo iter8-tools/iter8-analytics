@@ -136,7 +136,6 @@ traffic_control = api.model('traffic_control', {
 TRAFFIC_CONTROL_STR = 'traffic_control'
 
 LAST_STATE_STR = '_last_state'
-FIRST_ITERATION_STR = 'first_iteration'
 
 check_and_increment_parameters = api.model('check_and_increment_parameters', {
     BASELINE_STR: fields.Nested(

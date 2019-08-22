@@ -5,10 +5,8 @@ REST resources related to canary analytics.
 import iter8_analytics.api.analytics.request_parameters as request_parameters
 import iter8_analytics.api.analytics.responses as responses
 from iter8_analytics.api.restplus import api
-from iter8_analytics.metrics_backend.iter8metric import Iter8MetricFactory
 from iter8_analytics.metrics_backend.datacapture import DataCapture
-from iter8_analytics.metrics_backend.successcriteria import DeltaCriterion, ThresholdCriterion
-from iter8_analytics.metrics_backend.iter8response import Response
+from iter8_analytics.api.analytics.iter8response import Response
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
@@ -76,9 +74,9 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
                 }
             }
             payload[request_parameters.LAST_STATE_STR] = last_state
-            payload[request_parameters.FIRST_ITERATION_STR] = True
+            payload["first_iteration"] = True
         else:
-            payload[request_parameters.FIRST_ITERATION_STR] = False
+            payload["first_iteration"] = False
 
         if not request_parameters.END_TIME_PARAM_STR in payload[request_parameters.BASELINE_STR]:
             payload[request_parameters.BASELINE_STR][request_parameters.END_TIME_PARAM_STR] = str(datetime.now(timezone.utc))

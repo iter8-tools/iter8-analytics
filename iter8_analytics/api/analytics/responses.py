@@ -73,9 +73,6 @@ METRIC_BACKEND_URL_STR = 'metric_backend_url'
 METRIC_NAME_STR = 'metric_name'
 METRIC_TYPE_STR = 'metric_type'
 STATISTICS_STR = 'statistics'
-HISTOGRAM_METRIC_TYPE_STR = 'histogram'
-GAUGE_METRIC_TYPE_STR = 'gauge'
-COUNTER_METRIC_TYPE_STR = 'counter'
 
 metric_details = api.model('metric_details', {
     METRIC_NAME_STR: fields.String(
@@ -84,7 +81,7 @@ metric_details = api.model('metric_details', {
     METRIC_TYPE_STR: fields.String(
         required=True,
         enum=[request_parameters.CORRECTNESS_METRIC_TYPE_STR, request_parameters.PERFORMANCE_METRIC_TYPE_STR],
-        example=HISTOGRAM_METRIC_TYPE_STR, description='Metric type'),
+        example=request_parameters.CORRECTNESS_METRIC_TYPE_STR, description='Metric type'),
     STATISTICS_STR: fields.Nested(
         stat_details, required=True,
         description='Measurements computed for the metric')
@@ -105,8 +102,6 @@ version_measurements = api.model('version_measurements', {
         'version')
 })
 
-SAMPLE_SIZE_SUFFICIENT_STR = 'sample_size_sufficient'
-SUCCESS_STR = 'success'
 CONCLUSIONS_STR = 'conclusions'
 ALL_SUCCESS_CRITERIA_MET_STR = 'all_success_criteria_met'
 SUCCESS_CRITERION_MET_STR = 'success_criterion_met'

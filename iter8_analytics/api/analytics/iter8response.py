@@ -3,7 +3,7 @@ import iter8_analytics.api.analytics.responses as responses
 from iter8_analytics.api.restplus import api
 from iter8_analytics.metrics_backend.iter8metric import Iter8MetricFactory
 from iter8_analytics.metrics_backend.datacapture import DataCapture
-from iter8_analytics.metrics_backend.successcriteria import DeltaCriterion, ThresholdCriterion
+from iter8_analytics.api.analytics.successcriteria import DeltaCriterion, ThresholdCriterion
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
@@ -94,7 +94,7 @@ class Response():
         if ((datetime.now(timezone.utc) - parser.parse(self.experiment[request_parameters.BASELINE_STR][request_parameters.END_TIME_PARAM_STR])).total_seconds() >= 1800) or ((datetime.now(timezone.utc) - parser.parse(self.experiment["canary"]["end_time"])).total_seconds() >= 10800):
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append("The experiment end time is more than 30 mins ago")
 
-        if self.experiment[request_parameters.FIRST_ITERATION_STR]:
+        if self.experiment["first_iteration"]:
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"Experiment started")
         else:
             success_criteria_met_str = "not" if not(self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]) else ""
@@ -105,7 +105,7 @@ class Response():
     def append_traffic_decision(self):
         last_state = self.experiment[request_parameters.LAST_STATE_STR]
         # Compute current decisions below based on increment or hold
-        if self.experiment[request_parameters.FIRST_ITERATION_STR] or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+        if self.experiment["first_iteration"] or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
             new_canary_traffic_percentage = min(
                 last_state[request_parameters.CANARY_STR][responses.TRAFFIC_PERCENTAGE_STR] +
                 self.experiment[request_parameters.TRAFFIC_CONTROL_STR][request_parameters.STEP_SIZE_STR],
