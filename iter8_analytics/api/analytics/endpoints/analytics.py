@@ -7,6 +7,7 @@ import iter8_analytics.api.analytics.responses as responses
 from iter8_analytics.api.restplus import api
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 from iter8_analytics.api.analytics.iter8response import Response
+from iter8_analytics.api.analytics.iter8experiment import Experiment
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
@@ -52,6 +53,8 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
             log.info("Extracted payload")
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = self.fix_experiment_defaults(payload)
+
+            self.experiment2 = Experiment(payload)
             log.info("Fixed experiment")
             self.response_object = Response(self.experiment, prom_url)
             log.info("Created response object")
