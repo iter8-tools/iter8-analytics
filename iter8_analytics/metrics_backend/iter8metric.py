@@ -18,10 +18,10 @@ class Iter8MetricFactory:
     @staticmethod
     def create_metric_spec(criterion, entity_tag):
         metric_spec = {}
-        metric_spec["name"] = criterion[request_parameters.METRIC_NAME_STR]
-        metric_spec[request_parameters.METRIC_TYPE_STR] = criterion[request_parameters.METRIC_TYPE_STR]
-        metric_spec["query_specs"] = [{"query_name": "value", "query_template": criterion["metric_query_template"], request_parameters.METRIC_TYPE_STR: criterion[request_parameters.METRIC_TYPE_STR], "entity_tags": entity_tag},
-        {"query_name": "sample_size", "query_template": criterion["metric_sample_size_query_template"], request_parameters.METRIC_TYPE_STR: request_parameters.CORRECTNESS_METRIC_TYPE_STR, "entity_tags": entity_tag}]
+        metric_spec["name"] = criterion.metric_name
+        metric_spec[request_parameters.METRIC_TYPE_STR] = criterion.metric_type
+        metric_spec["query_specs"] = [{"query_name": "value", "query_template": criterion.metric_query_template, request_parameters.METRIC_TYPE_STR: criterion.metric_type, "entity_tags": entity_tag},
+        {"query_name": "sample_size", "query_template": criterion.metric_sample_size_query_template, request_parameters.METRIC_TYPE_STR: request_parameters.CORRECTNESS_METRIC_TYPE_STR, "entity_tags": entity_tag}]
         return metric_spec
 
     @staticmethod

@@ -22,7 +22,7 @@
     ],
     "traffic_percentage": 10
   },
-  "canary": {
+  "candidate": {
     "metrics": [
       {
         "metric_name": "iter8_latency",
@@ -57,7 +57,7 @@
       {
         "metric_name": "iter8_latency",
         "conclusions": [
-          "iter8_latency of the canary is within 0.1 of the baseline"
+          "iter8_latency of the candidate is within 0.1 of the baseline"
         ],
         "success_criterion_met": false,
         "abort_experiment": false

@@ -21,9 +21,10 @@ class Response():
     def __init__(self, experiment, prom_url):
         """Create response object corresponding to payload. This has everything and more."""
         self.experiment = experiment
+        log.info(experiment.first_iteration)
         self.response = {
             responses.METRIC_BACKEND_URL_STR: prom_url,
-            request_parameters.CANARY_STR: {
+            request_parameters.CANDIDATE_STR: {
                 responses.METRICS_STR: [],
                 responses.TRAFFIC_PERCENTAGE_STR: None
             },
@@ -48,38 +49,38 @@ class Response():
 
 
     def append_metrics_and_success_criteria(self):
-        for criterion in self.experiment[request_parameters.TRAFFIC_CONTROL_STR][responses.SUCCESS_CRITERIA_STR]:
+        for criterion in self.experiment.traffic_control.success_criteria:
             self.response[request_parameters.BASELINE_STR][responses.METRICS_STR].append(self.get_results(
-                criterion, self.experiment[request_parameters.BASELINE_STR]))
-            self.response[request_parameters.CANARY_STR][responses.METRICS_STR].append(self.get_results(
-                criterion, self.experiment[request_parameters.CANARY_STR]))
-            log.info(f"Appended metric: {criterion[request_parameters.METRIC_NAME_STR]}")
+                criterion, self.experiment.baseline))
+            self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR].append(self.get_results(
+                criterion, self.experiment.candidate))
+            log.info(f"Appended metric: {criterion.metric_name}")
             self.append_success_criteria(criterion)
 
     def get_results(self, criterion, entity):
         metric_spec = self.metric_factory.create_metric_spec(
-            criterion, entity[request_parameters.TAGS_PARAM_STR])
+            criterion, entity.tags)
         metrics_object = self.metric_factory.get_iter8_metric(metric_spec)
         interval_str, offset_str = self.metric_factory.get_interval_and_offset_str(
-            entity[request_parameters.START_TIME_PARAM_STR], entity[request_parameters.END_TIME_PARAM_STR])
+            entity.start_time, entity.end_time)
         prometheus_results_per_success_criteria = metrics_object.get_stats(interval_str, offset_str)
         """
         prometheus_results_per_success_criteria = {'statistics': {'sample_size': '12', 'value': 13}, 'messages': ["sample_size: Query success, result found", "value: Query success, result found"]}
         """
         return {
-            request_parameters.METRIC_NAME_STR: criterion[request_parameters.METRIC_NAME_STR],
-            request_parameters.METRIC_TYPE_STR: criterion[request_parameters.METRIC_TYPE_STR],
+            request_parameters.METRIC_NAME_STR: criterion.metric_name,
+            request_parameters.METRIC_TYPE_STR: criterion.metric_type,
             responses.STATISTICS_STR: prometheus_results_per_success_criteria[responses.STATISTICS_STR]
         }
 
     def append_success_criteria(self, criterion):
         log.info("Appending Success Criteria")
-        if criterion[request_parameters.CRITERION_TYPE_STR] == request_parameters.DELTA_CRITERION_STR:
+        if criterion.type == request_parameters.DELTA_CRITERION_STR:
             self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(DeltaCriterion(
-                criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANARY_STR][responses.METRICS_STR][-1]).test())
-        elif criterion[request_parameters.CRITERION_TYPE_STR] == request_parameters.THRESHOLD_CRITERION_STR:
+                criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test())
+        elif criterion.type == request_parameters.THRESHOLD_CRITERION_STR:
             self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(
-                ThresholdCriterion(criterion, self.response[request_parameters.CANARY_STR][responses.METRICS_STR][-1]).test())
+                ThresholdCriterion(criterion, self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test())
         else:
             raise ValueError("Criterion type can either be Threshold or Delta")
         log.info(" Success Criteria appended")
@@ -91,10 +92,10 @@ class Response():
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ABORT_EXPERIMENT_STR] = any(
             criterion[responses.ABORT_EXPERIMENT_STR] for criterion in self.response[responses.ASSESSMENT_STR][request_parameters.SUCCESS_CRITERIA_STR])
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR] = []
-        if ((datetime.now(timezone.utc) - parser.parse(self.experiment[request_parameters.BASELINE_STR][request_parameters.END_TIME_PARAM_STR])).total_seconds() >= 1800) or ((datetime.now(timezone.utc) - parser.parse(self.experiment["canary"]["end_time"])).total_seconds() >= 10800):
+        if ((datetime.now(timezone.utc) - parser.parse(self.experiment.baseline.end_time)).total_seconds() >= 1800) or ((datetime.now(timezone.utc) - parser.parse(self.experiment.candidate.end_time)).total_seconds() >= 10800):
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append("The experiment end time is more than 30 mins ago")
 
-        if self.experiment["first_iteration"]:
+        if self.experiment.first_iteration:
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"Experiment started")
         else:
             success_criteria_met_str = "not" if not(self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]) else ""
@@ -103,27 +104,27 @@ class Response():
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"All success criteria were {success_criteria_met_str} met")
 
     def append_traffic_decision(self):
-        last_state = self.experiment[request_parameters.LAST_STATE_STR]
+        last_state = self.experiment.last_state.last_state
         # Compute current decisions below based on increment or hold
-        if self.experiment["first_iteration"] or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
-            new_canary_traffic_percentage = min(
-                last_state[request_parameters.CANARY_STR][responses.TRAFFIC_PERCENTAGE_STR] +
-                self.experiment[request_parameters.TRAFFIC_CONTROL_STR][request_parameters.STEP_SIZE_STR],
-                self.experiment[request_parameters.TRAFFIC_CONTROL_STR][request_parameters.MAX_TRAFFIC_PERCENT_STR])
+        if self.experiment.first_iteration or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+            new_candidate_traffic_percentage = min(
+                last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] +
+                self.experiment.traffic_control.step_size,
+                self.experiment.traffic_control.max_traffic_percent)
         else:
-            new_canary_traffic_percentage = last_state[request_parameters.CANARY_STR][responses.TRAFFIC_PERCENTAGE_STR]
-        new_baseline_traffic_percentage = 100.0 - new_canary_traffic_percentage
+            new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+        new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
 
         self.response[request_parameters.LAST_STATE_STR] = {
             request_parameters.BASELINE_STR: {
                 responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage
             },
-            request_parameters.CANARY_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: new_canary_traffic_percentage
+            request_parameters.CANDIDATE_STR: {
+                responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage
             }
         }
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
-        self.response[request_parameters.CANARY_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_canary_traffic_percentage
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
 
     def jsonify(self):
         return self.response

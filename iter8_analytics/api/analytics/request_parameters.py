@@ -41,7 +41,6 @@ DELTA_CRITERION_STR = 'delta'
 THRESHOLD_CRITERION_STR = 'threshold'
 CRITERION_SAMPLE_SIZE_STR = 'sample_size'
 CRITERION_VALUE_STR = 'value'
-CRITERION_ENABLE_TRAFFIC_CONTROL_STR = 'enable_traffic_control'
 CRITERION_CONFIDENCE_STR = 'confidence'
 CRITERION_STOP_ON_FAILURE_STR = 'stop_on_failure'
 
@@ -68,9 +67,9 @@ success_criterion = api.model('success_criterion', {
         '[$interval]$offset_str)) by ($entity_labels)'),
     CRITERION_TYPE_STR: fields.String(
         required=True, enum=[DELTA_CRITERION_STR, THRESHOLD_CRITERION_STR],
-        description='Criterion type. Options: "delta": compares the canary '
+        description='Criterion type. Options: "delta": compares the candidate '
         'against the baseline version with respect to the metric; '
-        '"threshold": checks the canary with respect to the metric'),
+        '"threshold": checks the candidate with respect to the metric'),
     CRITERION_VALUE_STR: fields.Float(
         required=True, description='Value to check',
         example=0.02),
@@ -83,11 +82,6 @@ success_criterion = api.model('success_criterion', {
         required=False, default=False,
         description='Indicates whether or not the experiment must finish if '
         'this criterion is not satisfied; defaults to false'),
-    CRITERION_ENABLE_TRAFFIC_CONTROL_STR: fields.Boolean(
-        required=False,
-        description='Indicates whether or not this criterion is considered '
-        'for traffic-control decisions; defaults to true'
-    ),
     CRITERION_CONFIDENCE_STR: fields.Float(
         required=False,
         description='Indicates that this criterion is based on statistical '
@@ -99,9 +93,8 @@ success_criterion = api.model('success_criterion', {
 WARMUP_REQUEST_COUNT_STR = 'warmup_request_count'
 MAX_TRAFFIC_PERCENT_STR = 'max_traffic_percent'
 STEP_SIZE_STR = 'step_size'
-ON_SUCCESS_VERSION_STR = 'on_success'
 BASELINE_STR = 'baseline'
-CANARY_STR = 'canary'
+CANDIDATE_STR = 'candidate'
 BOTH_STR = 'both'
 SUCCESS_CRITERIA_STR = 'success_criteria'
 
@@ -112,25 +105,17 @@ traffic_control = api.model('traffic_control', {
         'the canary analysis; defaults to 10'),
     MAX_TRAFFIC_PERCENT_STR: fields.Float(
         required=False, example=50.0, min=0.0, default=50.0,
-        description='Maximum percentage of traffic that the canary version '
+        description='Maximum percentage of traffic that the candidate version '
         'will receive during the experiment; defaults to 50%'),
     STEP_SIZE_STR: fields.Float(
         required=False, example=2.0, min=0.1, default=1.0,
         description='Increment (in percent points) to be applied to the '
-        'traffic received by the canary version each time it passes the '
+        'traffic received by the candidate version each time it passes the '
         'success criteria; defaults to 1 percent point'),
-    ON_SUCCESS_VERSION_STR: fields.String(
-        required=False, enum=[BASELINE_STR, CANARY_STR, BOTH_STR],
-        default='canary', example='canary',
-        description='Determines how the traffic must be split at the end of '
-        'the experiment; options: "baseline": all traffic goes to the '
-        'baseline version; "canary": all traffic goes to the canary version; '
-        '"both": traffic is split across baseline and canary. Defaults to '
-        '"canary"'),
     SUCCESS_CRITERIA_STR: fields.List(
         fields.Nested(success_criterion),
         required=True,
-        description='List of criteria for assessing the canary version')
+        description='List of criteria for assessing the candidate version')
 })
 
 TRAFFIC_CONTROL_STR = 'traffic_control'
@@ -143,10 +128,10 @@ check_and_increment_parameters = api.model('check_and_increment_parameters', {
         description='Specifies a time interval and key-value pairs for '
         'retrieving and processing data pertaining to the baseline '
         'version'),
-    CANARY_STR: fields.Nested(
+    CANDIDATE_STR: fields.Nested(
         version_definition, required=True,
         description='Specifies a time interval and key-value pairs for '
-        'retrieving and processing data pertaining to the canary '
+        'retrieving and processing data pertaining to the candidate '
         'version'),
     TRAFFIC_CONTROL_STR: fields.Nested(
         traffic_control, required=True,

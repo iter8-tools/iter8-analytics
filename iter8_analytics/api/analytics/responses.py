@@ -116,7 +116,7 @@ summary = api.model('summary', {
             'Experiment can continue safely.'
         ],
         description='List of plain-English sentences summarizing the '
-        'the canary assessment'),
+        'the candidate assessment'),
     ALL_SUCCESS_CRITERIA_MET_STR: fields.Boolean(
         required=True, example=False, default=False,
         description='Indicates whether or not all success criteria for '
@@ -135,7 +135,7 @@ success_criterion_output = api.model('success_criterion_output', {
         description='Name identifying the metric'),
     CONCLUSIONS_STR: fields.List(
         fields.String, required=True,
-        example=['iter8_latency of the canary is within 0.1 of the '
+        example=['iter8_latency of the candidate is within 0.1 of the '
                  'baseline'],
         description='List of plain-English sentences summarizing the '
         'findings with respect to the corresponding metric'),
@@ -177,15 +177,15 @@ check_and_increment_response = api.model('check_and_increment_response', {
         required=True,
         description='Measurements and traffic recommendation for the '
         'baseline version'),
-    request_parameters.CANARY_STR: fields.Nested(
+    request_parameters.CANDIDATE_STR: fields.Nested(
         version_measurements,
         required=True,
         description='Measurements and traffic recommendation for the '
-        'canary version'),
+        'candidate version'),
     ASSESSMENT_STR: fields.Nested(
         assessment,
         required=True,
-        description='Summary of the canary assessment based on success '
+        description='Summary of the candidate assessment based on success '
         'criteria'),
     request_parameters.LAST_STATE_STR: fields.Raw(
         required=True,

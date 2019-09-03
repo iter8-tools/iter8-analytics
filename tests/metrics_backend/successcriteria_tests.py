@@ -12,6 +12,7 @@ from iter8_analytics.api.analytics import request_parameters as request_paramete
 import iter8_analytics.constants as constants
 from iter8_analytics.api.analytics.successcriteria import StatisticalTests, SuccessCriterion, DeltaCriterion, ThresholdCriterion
 import dateutil.parser as parser
+from iter8_analytics.api.analytics.iter8experiment import SuccessCriterion as SC
 
 import logging
 import os
@@ -25,12 +26,17 @@ from urllib.parse import urlencode
 
 class TestAnalyticsAPI(unittest.TestCase):
     def test_abort_experiment(self):
-        sc = SuccessCriterion({
+        criterion = SC({
                         "metric_name": "iter8_error_rate",
+                        "metric_type": "Correctness",
                         "type": "threshold",
                         "value": 0.02,
-                        "stop_on_failure": True
+                        "stop_on_failure": True,
+                        "metric_query_template": "iter8-error-rate-query-template",
+                        "metric_sample_size_query_template": "sample-size-query-template",
+                        "sample_size": 0
                     })
+        sc = SuccessCriterion(criterion)
 
         tr = sc.post_process_test_result({
             "sample_size_sufficient": False,
@@ -40,7 +46,7 @@ class TestAnalyticsAPI(unittest.TestCase):
 
     def test_each_criterion(self):
         #Testing Threshold Criterion
-        criterion = {
+        criterion = SC({
         "metric_name": "iter8_error_count",
         "metric_type": "Correctness",
         "metric_query_template": "query_template",
@@ -48,9 +54,8 @@ class TestAnalyticsAPI(unittest.TestCase):
         "type": "threshold",
         "value": 10,
         "sample_size": 10,
-        "enable_traffic_control": True,
         "confidence": 0
-        }
+        })
 
         candidate_metrics = {
         "metric_name": "iter8_error_count",
@@ -79,8 +84,8 @@ class TestAnalyticsAPI(unittest.TestCase):
         "statistics": {'sample_size': 30, 'value': 12}
         }
 
-        criterion["type"] = "delta"
-        criterion["value"] = 0.5
+        criterion.type = "delta"
+        criterion.value = 0.5
 
         baseline_metrics["statistics"]["value"] = 10
         candidate_metrics["statistics"]["value"] = 12
@@ -100,7 +105,7 @@ class TestAnalyticsAPI(unittest.TestCase):
 
     def test_sample_size(self):
         #Testing Threshold Criterion
-        criterion = {
+        criterion = SC({
         "metric_name": "iter8_error_count",
         "metric_type": "Correctness",
         "metric_query_template": "query_template",
@@ -108,9 +113,8 @@ class TestAnalyticsAPI(unittest.TestCase):
         "type": "threshold",
         "value": 10,
         "sample_size": 20,
-        "enable_traffic_control": True,
         "confidence": 0
-        }
+        })
 
         candidate_metrics = {
         "metric_name": "iter8_error_count",

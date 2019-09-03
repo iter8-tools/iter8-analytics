@@ -64,7 +64,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -81,7 +81,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -91,7 +90,6 @@ class TestAnalyticsAPI(unittest.TestCase):
 
             # Call the REST API via the test client
             resp = self.flask_test.post(endpoint, json=parameters)
-
             self.assertEqual(resp.status_code, 200, resp.data)
 
             ##################
@@ -107,7 +105,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -124,7 +122,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -151,7 +148,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -178,7 +175,7 @@ class TestAnalyticsAPI(unittest.TestCase):
             log.info("Test request with baseline missing in payload")
 
             parameters = {
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -195,7 +192,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -223,7 +219,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -239,7 +235,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "type": "delta",
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -268,7 +263,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -285,7 +280,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -313,7 +307,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -329,7 +323,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -357,7 +350,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -374,7 +367,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -402,7 +394,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -418,7 +410,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -447,7 +438,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -463,7 +454,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]
@@ -501,7 +491,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                         "destination_workload": "reviews-v1"
                     }
                 },
-                "canary": {
+                "candidate": {
                     "start_time": "2019-04-24T19:40:32.017Z",
                     "tags": {
                         "destination_workload": "reviews-v3"
@@ -518,7 +508,6 @@ class TestAnalyticsAPI(unittest.TestCase):
                             "value": 0.02,
                             "sample_size": 0,
                             "stop_on_failure": False,
-                            "enable_traffic_control": True,
                             "confidence": 0
                         }
                     ]

@@ -12,13 +12,13 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             SAMPLE_SIZE_SUFFICIENT_STR: True
         }
-        if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion[responses.SAMPLE_SIZE_STR]:
+        if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion.sample_size:
             test_result[SAMPLE_SIZE_SUFFICIENT_STR] = False
             test_result[SUCCESS_STR] = False
         else:
             if candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None:
                 test_result[SUCCESS_STR] = False
-            elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= criterion[responses.VALUE_STR]:
+            elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= criterion.value:
                 test_result[SUCCESS_STR] = True
             else:
                 test_result[SUCCESS_STR] = False
@@ -30,13 +30,13 @@ class StatisticalTests: # only provides class methods for statistical tests; can
         test_result = {
             SAMPLE_SIZE_SUFFICIENT_STR: True
         }
-        if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion[responses.SAMPLE_SIZE_STR] or baseline_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion[responses.SAMPLE_SIZE_STR]:
+        if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion.sample_size or baseline_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion.sample_size:
             test_result[SAMPLE_SIZE_SUFFICIENT_STR] = False
             test_result[SUCCESS_STR] = False
         else:
             if (candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None) or (baseline_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None):
                 test_result[SUCCESS_STR] = False
-            elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= ((1 + criterion[responses.VALUE_STR]) * baseline_metric[responses.STATISTICS_STR][responses.VALUE_STR]):
+            elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= ((1 + criterion.value) * baseline_metric[responses.STATISTICS_STR][responses.VALUE_STR]):
                 test_result[SUCCESS_STR] = True
             else:
                 test_result[SUCCESS_STR] = False
@@ -57,39 +57,34 @@ class SuccessCriterion:
                         "value": 0.02,
                         "sample_size": 0,
                         "stop_on_failure": false,
-                        "enable_traffic_control": true,
                         "confidence": 0
                     }
         """
-        self.metric_name = criterion[responses.METRIC_NAME_STR]
         self.criterion = criterion
-        if request_parameters.CRITERION_STOP_ON_FAILURE_STR not in self.criterion:
-            self.criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR] = False
-#        self.iter8metric = Iter8Metric.create(name, entity_tags)
 
     def test(self):
         raise NotImplementedError()
 
     def post_process_test_result(self, test_result):
         is_or_is_not = "is" if test_result[SUCCESS_STR] else "is not"
-        delta_or_threshold = "delta" if self.criterion["type"] == "delta" else "threshold"
-        confidence_str = f"with confidence {self.criterion[request_parameters.CRITERION_CONFIDENCE_STR]}%" if ("confidence" in self.criterion and (self.criterion[request_parameters.CRITERION_CONFIDENCE_STR] > 0)) else ""
-        baseline_str = "of the baseline" if self.criterion["type"] == "delta" else ""
-        result_str = f"{self.metric_name} of the candidate {is_or_is_not} within {delta_or_threshold} {self.criterion['value']} {confidence_str} {baseline_str}. "
+        delta_or_threshold = "delta" if self.criterion.type == "delta" else "threshold"
+        confidence_str = f"with confidence {self.criterion.confidence}%" if (self.criterion.confidence > 0) else ""
+        baseline_str = "of the baseline" if self.criterion.type == "delta" else ""
+        result_str = f"{self.criterion.metric_name} of the candidate {is_or_is_not} within {delta_or_threshold} {self.criterion.value} {confidence_str} {baseline_str}. "
         conclusion_str = "Insufficient sample size. " if not test_result[SAMPLE_SIZE_SUFFICIENT_STR] else result_str
 
         return {
-            request_parameters.METRIC_NAME_STR: self.metric_name,
+            request_parameters.METRIC_NAME_STR: self.criterion.metric_name,
             responses.CONCLUSIONS_STR: [conclusion_str],
             responses.SUCCESS_CRITERION_MET_STR: test_result[SUCCESS_STR],
-            responses.ABORT_EXPERIMENT_STR: self.criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR] and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]
+            responses.ABORT_EXPERIMENT_STR: self.criterion.stop_on_failure and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]
         }
 
 class DeltaCriterion(SuccessCriterion):
-    def __init__(self, criterion, baseline_metrics, canary_metrics):
+    def __init__(self, criterion, baseline_metrics, candidate_metrics):
         super().__init__(criterion)
         self.baseline_metric = baseline_metrics
-        self.candidate_metric = canary_metrics
+        self.candidate_metric = candidate_metrics
 
     def test(self):
         # t_delta, bernoulli_delta are the other options beyond simple_delta
@@ -98,9 +93,9 @@ class DeltaCriterion(SuccessCriterion):
 
 
 class ThresholdCriterion(SuccessCriterion):
-    def __init__(self, criterion, canary_metrics):
+    def __init__(self, criterion, candidate_metrics):
         super().__init__(criterion)
-        self.candidate_metric = canary_metrics
+        self.candidate_metric = candidate_metrics
 
     def test(self):
         # t_test, bernoulli_test are the other options beyond simple_threshold
