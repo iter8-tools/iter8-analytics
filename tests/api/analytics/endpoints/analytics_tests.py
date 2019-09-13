@@ -146,6 +146,8 @@ class TestAnalyticsAPI(unittest.TestCase):
             resp = self.flask_test.post(endpoint, json=parameters)
             message = b'"_last_state":{"baseline":{"traffic_percentage":75.0,"success_criterion_information":[[0,0]]},"candidate":{"traffic_percentage":25,"success_criterion_information":[[0,0]]}}'
             self.assertEqual(resp.status_code, 200, resp.data)
+            log.info(f"{message}")
+            log.info(f"{resp.data}")
             assert message in resp.data
 
 
