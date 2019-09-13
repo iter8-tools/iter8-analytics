@@ -4,14 +4,17 @@ import iter8_analytics.api.analytics.responses as responses
 from datetime import datetime, timezone, timedelta
 
 class LastState():
-    def __init__(self, baseline_traffic, candidate_traffic):
+    def __init__(self, baseline_traffic, candidate_traffic, baseline_success_criterion_information, candidate_success_criterion_information):
         self.last_state = {
             request_parameters.BASELINE_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: baseline_traffic
+                responses.TRAFFIC_PERCENTAGE_STR: baseline_traffic,
+                "success_criterion_information": baseline_success_criterion_information
             },
             request_parameters.CANDIDATE_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: candidate_traffic
-            }
+                responses.TRAFFIC_PERCENTAGE_STR: candidate_traffic,
+                "success_criterion_information": candidate_success_criterion_information
+            },
+            "change_observed": False
         }
 
 class ServicePayload():
@@ -60,10 +63,10 @@ class Experiment():
     def __init__(self, payload):
         self.experiment = {}
         if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
-            last_state = LastState(100, 0)
+            last_state = LastState(100, 0, [], [])
             first_iteration = "True"
         else:
-            last_state = LastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR])
+            last_state = LastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR]["success_criterion_information"])
             first_iteration = "False"
 
         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])

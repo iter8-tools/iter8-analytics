@@ -21,7 +21,7 @@ class Response():
     def __init__(self, experiment, prom_url):
         """Create response object corresponding to payload. This has everything and more."""
         self.experiment = experiment
-        log.info(experiment.first_iteration)
+        log.info(f"First Iteration: {experiment.first_iteration}")
         self.response = {
             responses.METRIC_BACKEND_URL_STR: prom_url,
             request_parameters.CANDIDATE_STR: {
@@ -47,13 +47,17 @@ class Response():
         self.append_traffic_decision()
         log.info("Append traffic decision")
 
-
     def append_metrics_and_success_criteria(self):
+        i = 0
         for criterion in self.experiment.traffic_control.success_criteria:
             self.response[request_parameters.BASELINE_STR][responses.METRICS_STR].append(self.get_results(
                 criterion, self.experiment.baseline))
+
             self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR].append(self.get_results(
                 criterion, self.experiment.candidate))
+            self.change_observed(request_parameters.BASELINE_STR, i)
+            self.change_observed(request_parameters.CANDIDATE_STR, i)
+            i = i + 1
             log.info(f"Appended metric: {criterion.metric_name}")
             self.append_success_criteria(criterion)
 
@@ -73,8 +77,15 @@ class Response():
             responses.STATISTICS_STR: prometheus_results_per_success_criteria[responses.STATISTICS_STR]
         }
 
+    def change_observed(self, service, iteration):
+        if len(self.experiment.last_state.last_state[service]["success_criterion_information"]) == iteration:
+            self.experiment.last_state.last_state["change_observed"] = True
+            self.experiment.last_state.last_state[service]["success_criterion_information"].append([self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']])
+        if [self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']] != self.experiment.last_state.last_state[service]["success_criterion_information"][iteration]:
+            self.experiment.last_state.last_state["change_observed"] = True
+            self.experiment.last_state.last_state[service]["success_criterion_information"][iteration] = [self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']]
+
     def append_success_criteria(self, criterion):
-        log.info("Appending Success Criteria")
         if criterion.type == request_parameters.DELTA_CRITERION_STR:
             self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(DeltaCriterion(
                 criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test())
@@ -83,7 +94,7 @@ class Response():
                 ThresholdCriterion(criterion, self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test())
         else:
             raise ValueError("Criterion type can either be Threshold or Delta")
-        log.info(" Success Criteria appended")
+        log.info("Appended Success Criteria")
 
 
     def append_assessment_summary(self):
@@ -102,11 +113,16 @@ class Response():
             if self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ABORT_EXPERIMENT_STR]:
                 self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"The experiment needs to be aborted")
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"All success criteria were {success_criteria_met_str} met")
+        if not self.experiment.last_state.last_state["change_observed"]:
+            self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append("No change observed in this iteration. Traffic percentage is not altered")
+
 
     def append_traffic_decision(self):
         last_state = self.experiment.last_state.last_state
         # Compute current decisions below based on increment or hold
-        if self.experiment.first_iteration or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+        if not self.experiment.last_state.last_state["change_observed"]:
+            new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+        elif self.experiment.first_iteration or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
             new_candidate_traffic_percentage = min(
                 last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] +
                 self.experiment.traffic_control.step_size,
@@ -117,10 +133,12 @@ class Response():
 
         self.response[request_parameters.LAST_STATE_STR] = {
             request_parameters.BASELINE_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage
+                responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage,
+                "success_criterion_information": last_state[request_parameters.BASELINE_STR]["success_criterion_information"]
             },
             request_parameters.CANDIDATE_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage
+                responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage,
+                "success_criterion_information": last_state[request_parameters.CANDIDATE_STR]["success_criterion_information"]
             }
         }
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
