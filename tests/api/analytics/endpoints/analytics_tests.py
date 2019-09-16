@@ -144,9 +144,11 @@ class TestAnalyticsAPI(unittest.TestCase):
 
             # Call the REST API via the test client
             resp = self.flask_test.post(endpoint, json=parameters)
-            message = '"_last_state":{"baseline":{"traffic_percentage":75.0,"success_criterion_information":[[0,0]]},"candidate":{"traffic_percentage":25,"success_criterion_information":[[0,0]]}}'
+
+            correct_response = {"baseline":{"traffic_percentage":75.0,"success_criterion_information":[[0,0]]},"candidate":{"traffic_percentage":25,"success_criterion_information":[[0,0]]}}
             self.assertEqual(resp.status_code, 200, resp.data)
-            assert message in resp.data.decode("utf-8")
+
+            self.assertEqual(resp.get_json()["_last_state"], correct_response)
 
 
             ##################
