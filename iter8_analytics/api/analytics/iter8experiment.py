@@ -2,7 +2,7 @@ import iter8_analytics.api.analytics.request_parameters as request_parameters
 import iter8_analytics.api.analytics.responses as responses
 
 from datetime import datetime, timezone, timedelta
-
+CHANGE_OBSERVED_STR = "change_observed"
 class LastState():
     def __init__(self, baseline_traffic, candidate_traffic, baseline_success_criterion_information, candidate_success_criterion_information):
         self.last_state = {
@@ -14,7 +14,7 @@ class LastState():
                 responses.TRAFFIC_PERCENTAGE_STR: candidate_traffic,
                 "success_criterion_information": candidate_success_criterion_information
             },
-            "change_observed": False
+            CHANGE_OBSERVED_STR: False
         }
 
 class ServicePayload():
@@ -64,10 +64,10 @@ class Experiment():
         self.experiment = {}
         if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
             last_state = LastState(100, 0, [], [])
-            first_iteration = "True"
+            first_iteration = True
         else:
             last_state = LastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR]["success_criterion_information"])
-            first_iteration = "False"
+            first_iteration = False
 
         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
         candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])

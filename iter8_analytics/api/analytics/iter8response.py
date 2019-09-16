@@ -4,6 +4,7 @@ from iter8_analytics.api.restplus import api
 from iter8_analytics.metrics_backend.iter8metric import Iter8MetricFactory
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 from iter8_analytics.api.analytics.successcriteria import DeltaCriterion, ThresholdCriterion
+from iter8_analytics.api.analytics import iter8experiment
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
@@ -79,10 +80,10 @@ class Response():
 
     def change_observed(self, service, iteration):
         if len(self.experiment.last_state.last_state[service]["success_criterion_information"]) == iteration:
-            self.experiment.last_state.last_state["change_observed"] = True
+            self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR] = True
             self.experiment.last_state.last_state[service]["success_criterion_information"].append([self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']])
         if [self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']] != self.experiment.last_state.last_state[service]["success_criterion_information"][iteration]:
-            self.experiment.last_state.last_state["change_observed"] = True
+            self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR] = True
             self.experiment.last_state.last_state[service]["success_criterion_information"][iteration] = [self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']]
 
     def append_success_criteria(self, criterion):
@@ -113,14 +114,14 @@ class Response():
             if self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ABORT_EXPERIMENT_STR]:
                 self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"The experiment needs to be aborted")
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"All success criteria were {success_criteria_met_str} met")
-        if not self.experiment.last_state.last_state["change_observed"]:
+        if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append("No change observed in this iteration. Traffic percentage is not altered")
 
 
     def append_traffic_decision(self):
         last_state = self.experiment.last_state.last_state
         # Compute current decisions below based on increment or hold
-        if not self.experiment.last_state.last_state["change_observed"]:
+        if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
             new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
         elif self.experiment.first_iteration or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
             new_candidate_traffic_percentage = min(

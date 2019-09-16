@@ -1,5 +1,5 @@
 """
-REST resources related to candidate analytics.
+REST resources related to analytics for canary releases and A/B testing
 """
 
 import iter8_analytics.api.analytics.request_parameters as request_parameters
