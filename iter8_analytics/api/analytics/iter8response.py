@@ -78,13 +78,30 @@ class Response():
             responses.STATISTICS_STR: prometheus_results_per_success_criteria[responses.STATISTICS_STR]
         }
 
-    def change_observed(self, service, iteration):
-        if len(self.experiment.last_state.last_state[service]["success_criterion_information"]) == iteration:
+    def change_observed(self, service_version, success_criterion_number):
+        """
+        Checks if any change was observed between the metrics collected in the previous iteration and the current iteration
+        (i.e. between last state and current response)
+            Arguments:
+                `service_version`: Str; Baseline or canary
+                `success_criterion_number`: int; Denotes the number of succes criteria the function is observing changes in
+        """
+        #if condition when there is no last state information- assumes that change was observed in this case
+        #The next line checks if there was any last state information for 'success_criterion_number' success criteria, if not it appends current metric values to current iteration's last state
+        if len(self.experiment.last_state.last_state[service_version]["success_criterion_information"]) == success_criterion_number:
             self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR] = True
-            self.experiment.last_state.last_state[service]["success_criterion_information"].append([self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']])
-        if [self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']] != self.experiment.last_state.last_state[service]["success_criterion_information"][iteration]:
+            self.experiment.last_state.last_state[service_version]["success_criterion_information"].append([int(self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size']), self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']])
+
+        # if condition to check if the current sample size is atleast greater than previously observed sample size
+        # If yes, change was observed
+        if int(self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size']) > self.experiment.last_state.last_state[service_version]["success_criterion_information"][success_criterion_number][0]:
             self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR] = True
-            self.experiment.last_state.last_state[service]["success_criterion_information"][iteration] = [self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size'], self.response[service][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']]
+            self.experiment.last_state.last_state[service_version]["success_criterion_information"][success_criterion_number] = [int(self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size']), self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']]
+        #if condition to check if the current metric value is NOT the same as previously observed metric Value
+        # If yes, change was observed
+        elif self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value'] != self.experiment.last_state.last_state[service_version]["success_criterion_information"][success_criterion_number][1]:
+            self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR] = True
+            self.experiment.last_state.last_state[service_version]["success_criterion_information"][success_criterion_number] = [int(self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['sample_size']), self.response[service_version][responses.METRICS_STR][-1][responses.STATISTICS_STR]['value']]
 
     def append_success_criteria(self, criterion):
         if criterion.type == request_parameters.DELTA_CRITERION_STR:

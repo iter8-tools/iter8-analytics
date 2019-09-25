@@ -50,7 +50,7 @@ class PrometheusQuery():
                     if each_result["metric"] == match_key:
                         result_float = float(each_result["value"][1])
                         if not math.isnan(result_float):
-                            prom_result["value"] = float(each_result["value"][1])
+                            prom_result["value"] = float("%.3f" % float(each_result["value"][1]))
                             prom_result["message"] = "Query success, result found"
                             return prom_result
                 prom_result["message"] = "No matching entity found in Prometheus or result was NaN. Return value based on metric type"
