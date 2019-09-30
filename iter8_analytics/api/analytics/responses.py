@@ -167,7 +167,7 @@ assessment = api.model('assessment', {
 
 ASSESSMENT_STR = 'assessment'
 
-check_and_increment_response = api.model('check_and_increment_response', {
+default_response = api.model('default_response', {
     METRIC_BACKEND_URL_STR: fields.String(
         required=True,
         example='http://localhost:9090',

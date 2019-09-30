@@ -136,6 +136,16 @@ class Response():
 
 
     def append_traffic_decision(self):
+        raise NotImplementedError("Must override")
+
+    def jsonify(self):
+        return self.response
+
+class CheckAndIncrementResponse(Response):
+    def __init__(self, experiment, prom_url):
+        super().__init__(experiment, prom_url)
+
+    def append_traffic_decision(self):
         last_state = self.experiment.last_state.last_state
         # Compute current decisions below based on increment or hold
         if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
@@ -162,5 +172,40 @@ class Response():
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
 
-    def jsonify(self):
-        return self.response
+class EpsilonTGreedyResponse(Response):
+    def __init__(self, experiment, prom_url):
+        super().__init__(experiment, prom_url)
+
+    def append_traffic_decision(self):
+        last_state = self.experiment.last_state.last_state
+        # If there was no change observed in this iteration then do not increment traffic percentage
+        if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
+            new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+        # checking if candidate version is the best feasible option
+        elif self.experiment.first_iteration or self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+            #Here, the candidate is the best feasible version among the two and it will be exploited
+            last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
+            epsilon = 1/last_state["effective_iteration_count"]
+            exploitation_rate = int((1 - epsilon + (epsilon / 2)) * 100)
+            new_candidate_traffic_percentage = min(exploitation_rate, self.experiment.traffic_control.max_traffic_percent)
+        elif not self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+            #Here, the baseline is the best feasible version among the two and it will be exploited; candidate will be explored
+            last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
+            epsilon = 1/last_state["effective_iteration_count"]
+            exploration_rate = int((epsilon / 2) * 100)
+            new_candidate_traffic_percentage = min(exploration_rate, self.experiment.traffic_control.max_traffic_percent)
+        new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
+
+        self.response[request_parameters.LAST_STATE_STR] = {
+            request_parameters.BASELINE_STR: {
+                responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage,
+                "success_criterion_information": last_state[request_parameters.BASELINE_STR]["success_criterion_information"]
+            },
+            request_parameters.CANDIDATE_STR: {
+                responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage,
+                "success_criterion_information": last_state[request_parameters.CANDIDATE_STR]["success_criterion_information"]
+            },
+            "effective_iteration_count": last_state["effective_iteration_count"]
+        }
+        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage

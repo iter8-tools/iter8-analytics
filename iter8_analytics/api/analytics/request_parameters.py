@@ -49,9 +49,9 @@ success_criterion = api.model('success_criterion', {
     METRIC_NAME_STR: fields.String(
         required=True,
         description='Name of the metric to which the criterion applies',
-        example='iter8_latency'),
+        example='iter8_error_count'),
     METRIC_TYPE_STR: fields.String(
-        required=True, enum=[PERFORMANCE_METRIC_TYPE_STR, CORRECTNESS_METRIC_TYPE_STR],
+        required=True, enum=[CORRECTNESS_METRIC_TYPE_STR, PERFORMANCE_METRIC_TYPE_STR],
         description='Metric type. Options: "Performance": Metrics which '
         'measure the performance of a microservice; '
         '"Correctness": Metrics which measure the correctness of a microservice'),
@@ -98,7 +98,7 @@ CANDIDATE_STR = 'candidate'
 BOTH_STR = 'both'
 SUCCESS_CRITERIA_STR = 'success_criteria'
 
-traffic_control = api.model('traffic_control', {
+traffic_control_check_and_increment = api.model('traffic_control', {
     WARMUP_REQUEST_COUNT_STR: fields.Integer(
         required=False, example=100, min=0, default=10,
         description='Minimum number of data points required for '
@@ -112,6 +112,21 @@ traffic_control = api.model('traffic_control', {
         description='Increment (in percent points) to be applied to the '
         'traffic received by the candidate version each time it passes the '
         'success criteria; defaults to 1 percent point'),
+    SUCCESS_CRITERIA_STR: fields.List(
+        fields.Nested(success_criterion),
+        required=True,
+        description='List of criteria for assessing the candidate version')
+})
+
+traffic_control_epsilon_t_greedy = api.model('traffic_control', {
+    WARMUP_REQUEST_COUNT_STR: fields.Integer(
+        required=False, example=100, min=0, default=10,
+        description='Minimum number of data points required for '
+        'the canary analysis; defaults to 10'),
+    MAX_TRAFFIC_PERCENT_STR: fields.Float(
+        required=False, example=50.0, min=0.0, default=50.0,
+        description='Maximum percentage of traffic that the candidate version '
+        'will receive during the experiment; defaults to 50%'),
     SUCCESS_CRITERIA_STR: fields.List(
         fields.Nested(success_criterion),
         required=True,
@@ -134,7 +149,26 @@ check_and_increment_parameters = api.model('check_and_increment_parameters', {
         'retrieving and processing data pertaining to the candidate '
         'version'),
     TRAFFIC_CONTROL_STR: fields.Nested(
-        traffic_control, required=True,
+        traffic_control_check_and_increment, required=True,
+        description='Parameters controlling the behavior of the analytics'),
+    LAST_STATE_STR: fields.Raw(
+        required=True,
+        description='State returned by the server on the previous call')
+})
+
+epsilon_t_greedy_parameters = api.model('epsilon_t_greedy_parameters', {
+    BASELINE_STR: fields.Nested(
+        version_definition, required=True,
+        description='Specifies a time interval and key-value pairs for '
+        'retrieving and processing data pertaining to the baseline '
+        'version'),
+    CANDIDATE_STR: fields.Nested(
+        version_definition, required=True,
+        description='Specifies a time interval and key-value pairs for '
+        'retrieving and processing data pertaining to the candidate '
+        'version'),
+    TRAFFIC_CONTROL_STR: fields.Nested(
+        traffic_control_epsilon_t_greedy, required=True,
         description='Parameters controlling the behavior of the analytics'),
     LAST_STATE_STR: fields.Raw(
         required=True,
