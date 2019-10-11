@@ -209,3 +209,21 @@ class EpsilonTGreedyResponse(Response):
         }
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
+
+
+class PosteriorBayesianRoutingResponse(Response):
+    def __init__(self, experiment, prom_url):
+        super().__init__(experiment, prom_url)
+
+    def append_traffic_decision(self):
+        last_state = self.experiment.last_state.last_state
+        # If there was no change observed in this iteration then do not increment traffic percentage
+        if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
+            new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+
+        # If first iteration then send 50/50 traffic with 0.1 alpha beta
+        # Check if both versions satisfy all the constraints
+        # If they do then find best reward
+        # For the version with the best reward do everything under compute_traffic_split
+        # 100-that for the other service
+        # return with an updated alpha, beta value and traffic split

@@ -132,6 +132,24 @@ traffic_control_epsilon_t_greedy = api.model('traffic_control', {
         required=True,
         description='List of criteria for assessing the candidate version')
 })
+POSTERIOR_SAMPLE_SIZE_STR="posterior_sample_size"
+traffic_control_posterior_bayesian_routing = api.model('traffic_control', {
+    WARMUP_REQUEST_COUNT_STR: fields.Integer(
+        required=False, example=100, min=0, default=10,
+        description='Minimum number of data points required for '
+        'the canary analysis; defaults to 10'),
+    POSTERIOR_SAMPLE_SIZE_STR: fields.Integer(
+        required=False, example=100, min=10, default=1000,
+        description='Required for the traffic splitting function in the PBR algorithm'),
+    MAX_TRAFFIC_PERCENT_STR: fields.Float(
+        required=False, example=50.0, min=0.0, default=50.0,
+        description='Maximum percentage of traffic that the candidate version '
+        'will receive during the experiment; defaults to 50%'),
+    SUCCESS_CRITERIA_STR: fields.List(
+        fields.Nested(success_criterion),
+        required=True,
+        description='List of criteria for assessing the candidate version')
+})
 
 TRAFFIC_CONTROL_STR = 'traffic_control'
 
@@ -169,6 +187,26 @@ epsilon_t_greedy_parameters = api.model('epsilon_t_greedy_parameters', {
         'version'),
     TRAFFIC_CONTROL_STR: fields.Nested(
         traffic_control_epsilon_t_greedy, required=True,
+        description='Parameters controlling the behavior of the analytics'),
+    LAST_STATE_STR: fields.Raw(
+        required=True,
+        description='State returned by the server on the previous call')
+})
+
+
+posterior_bayesian_routing_parameters = api.model('posterior_bayesian_routing_parameters', {
+    BASELINE_STR: fields.Nested(
+        version_definition, required=True,
+        description='Specifies a time interval and key-value pairs for '
+        'retrieving and processing data pertaining to the baseline '
+        'version'),
+    CANDIDATE_STR: fields.Nested(
+        version_definition, required=True,
+        description='Specifies a time interval and key-value pairs for '
+        'retrieving and processing data pertaining to the candidate '
+        'version'),
+    TRAFFIC_CONTROL_STR: fields.Nested(
+        traffic_control_posterior_bayesian_routing, required=True,
         description='Parameters controlling the behavior of the analytics'),
     LAST_STATE_STR: fields.Raw(
         required=True,
