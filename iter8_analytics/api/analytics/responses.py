@@ -166,6 +166,7 @@ assessment = api.model('assessment', {
 })
 
 ASSESSMENT_STR = 'assessment'
+ALPHA_BETA_STR = 'alpha_beta'
 
 default_response = api.model('default_response', {
     METRIC_BACKEND_URL_STR: fields.String(
