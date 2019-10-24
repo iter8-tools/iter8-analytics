@@ -116,11 +116,11 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
             log.info("Fixed experiment")
             self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
             log.info("Created response object")
-        #     self.response_object.compute_test_results_and_summary()
+            self.response_object.compute_test_results_and_summary()
         #
         #     DataCapture.fill_value("service_response", self.response_object.response)
         #     DataCapture.save_data()
         except Exception as e:
             flask_restplus.errors.abort(code=400, message=str(e))
         # return self.response_object.jsonify()
-        return {'All Done': True }
+        return self.response_object.jsonify()
