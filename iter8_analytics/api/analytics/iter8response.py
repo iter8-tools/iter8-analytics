@@ -215,12 +215,52 @@ class PosteriorBayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
 
+    def find_traffic_split(self, version):
+        # calculate traffic split using the compute_traffic_split function in the notebook
+        pass
+
     def append_traffic_decision(self):
         last_state = self.experiment.last_state.last_state
+        baseline_alpha_beta = self.experiment.last_state.last_state[request_parameters.BASELINE_STR][responses.ALPHA_BETA_STR]
+        candidate_alpha_beta = self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][responses.ALPHA_BETA_STR]
         # If there was no change observed in this iteration then do not increment traffic percentage
         if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
-            new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+             new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+        elif self.experiment.first_iteration:
+            new_candidate_traffic_percentage = 50
+            last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
 
+        elif self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+            # both candidate and baseline could be feasible versions
+            # we will find the best reward to see which version should be explored, so the traffic split is calculated accordingly
+            candidate_alpha_beta = [candidate_alpha_beta[0]+1, candidate_alpha_beta[1]]
+            baseline_alpha_beta = [baseline_alpha_beta[0], candidate_alpha_beta[1]+1]
+            find_traffic_split("candidate")
+
+
+            new_candidate_traffic_percentage = self.find_traffic_split("candidate")
+        elif not self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+            # the baseline is the feasible version
+            # it is going to be explored, so the traffic split is calculated accordingly
+            new_candidate_traffic_percentage = 100.0 - self.find_traffic_split("baseline")
+        new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
+
+        self.response[request_parameters.LAST_STATE_STR] = {
+            request_parameters.BASELINE_STR: {
+                responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage,
+                "success_criterion_information": last_state[request_parameters.BASELINE_STR]["success_criterion_information"],
+                responses.ALPHA_BETA_STR: baseline_alpha_beta
+            },
+            request_parameters.CANDIDATE_STR: {
+                responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage,
+                "success_criterion_information": last_state[request_parameters.CANDIDATE_STR]["success_criterion_information"],
+                responses.ALPHA_BETA_STR: candidate_alpha_beta
+            },
+            "effective_iteration_count": last_state["effective_iteration_count"]
+        }
+
+        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
         # If first iteration then send 50/50 traffic with 0.1 alpha beta
         # Check if both versions satisfy all the constraints
         # If they do then find best reward
