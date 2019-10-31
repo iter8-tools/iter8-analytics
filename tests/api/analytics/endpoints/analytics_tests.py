@@ -550,6 +550,70 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             assert b'\'metric_sample_size_query_template\' is a required property' in resp.data
 
 
+    def test_baseline_failing_success_criteria(self):
+        """Tests the REST endpoint /analytics/canary/check_and_increment."""
+
+        endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_baseline_failing_response.json")))
+
+            ###################
+            # Test request when both candidate and baseline fail success criteria
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request when both candidate and baseline fail success criteria")
+
+            parameters = {
+                "baseline": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_service_namespace": "default",
+                        "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_service_namespace": "default",
+                        "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                    "success_criteria": [
+                        {
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "threshold",
+                            "value": 2,
+                            "sample_size": 0,
+                            "stop_on_failure": False,
+                            "confidence": 0
+                        }
+                    ]
+                },
+                "_last_state": {
+                    "baseline": {
+                        "traffic_percentage":98.0,
+                        "success_criterion_information":[[1,0.0]]
+                        },
+                    "candidate": {
+                        "traffic_percentage":2,
+                        "success_criterion_information":[[1,0.0]]
+                        }
+                    }
+            }
+
+            # Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+            assert 'The baseline version did not meet success criteria' in resp.get_json()["assessment"]["summary"]["conclusions"]
+
+
+
 
     def test_no_data_from_prometheus(self):
         """Tests the REST endpoint /analytics/canary/check_and_increment."""

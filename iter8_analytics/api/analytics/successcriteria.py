@@ -7,18 +7,18 @@ SUCCESS_STR = 'success'
 
 class StatisticalTests: # only provides class methods for statistical tests; cannot be instantiated
     @staticmethod
-    def simple_threshold(candidate_metric, criterion):
+    def simple_threshold(version_metric, criterion):
         #handle None response
         test_result = {
             SAMPLE_SIZE_SUFFICIENT_STR: True
         }
-        if candidate_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion.sample_size:
+        if version_metric[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] < criterion.sample_size:
             test_result[SAMPLE_SIZE_SUFFICIENT_STR] = False
             test_result[SUCCESS_STR] = False
         else:
-            if candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None:
+            if version_metric[responses.STATISTICS_STR][responses.VALUE_STR] == None:
                 test_result[SUCCESS_STR] = False
-            elif candidate_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= criterion.value:
+            elif version_metric[responses.STATISTICS_STR][responses.VALUE_STR] <= criterion.value:
                 test_result[SUCCESS_STR] = True
             else:
                 test_result[SUCCESS_STR] = False
@@ -77,7 +77,8 @@ class SuccessCriterion:
             request_parameters.METRIC_NAME_STR: self.criterion.metric_name,
             responses.CONCLUSIONS_STR: [conclusion_str],
             responses.SUCCESS_CRITERION_MET_STR: test_result[SUCCESS_STR],
-            responses.ABORT_EXPERIMENT_STR: self.criterion.stop_on_failure and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]
+            responses.ABORT_EXPERIMENT_STR: self.criterion.stop_on_failure and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR],
+            SAMPLE_SIZE_SUFFICIENT_STR: test_result[SAMPLE_SIZE_SUFFICIENT_STR]
         }
 
 class DeltaCriterion(SuccessCriterion):
@@ -93,11 +94,11 @@ class DeltaCriterion(SuccessCriterion):
 
 
 class ThresholdCriterion(SuccessCriterion):
-    def __init__(self, criterion, candidate_metrics):
+    def __init__(self, criterion, version_metrics):
         super().__init__(criterion)
-        self.candidate_metric = candidate_metrics
+        self.version_metric = version_metrics
 
     def test(self):
         # t_test, bernoulli_test are the other options beyond simple_threshold
-        test_result = StatisticalTests.simple_threshold(self.candidate_metric, self.criterion)
+        test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
         return self.post_process_test_result(test_result)
