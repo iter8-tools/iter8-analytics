@@ -197,7 +197,7 @@ class CheckAndIncrementResponse(Response):
                 self.experiment.traffic_control.max_traffic_percent)
         #else if candidate did not meet the success criteria
         else:
-            #if candidate did not meet the sample size standards and hence did not meet the success criteria
+            #if candidate meets the sample size standards and but did not meet the success criteria
             if self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR]["sample_size_sufficient"]:
                 #find out if baseline met the sample size and success criteria requirements
                 sample_size, success = self.has_baseline_met_all_criteria()
@@ -237,12 +237,24 @@ class EpsilonTGreedyResponse(Response):
             epsilon = 1/last_state["effective_iteration_count"]
             exploitation_rate = int((1 - epsilon + (epsilon / 2)) * 100)
             new_candidate_traffic_percentage = min(exploitation_rate, self.experiment.traffic_control.max_traffic_percent)
+        #else if candidate did not meet the success criteria
         elif not self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
-            #Here, the baseline is the best feasible version among the two and it will be exploited; candidate will be explored
-            last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
-            epsilon = 1/last_state["effective_iteration_count"]
-            exploration_rate = int((epsilon / 2) * 100)
-            new_candidate_traffic_percentage = min(exploration_rate, self.experiment.traffic_control.max_traffic_percent)
+            #if candidate did not meet the sample size standards and hence did not meet the success criteria
+            if not self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR]["sample_size_sufficient"]:
+                new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+            #if candidate meets the sample size standards and but did not meet the success criteria
+            else:
+                #find out if baseline met the sample size and success criteria requirements
+                sample_size, success = self.has_baseline_met_all_criteria()
+                #if baseline has met sample size requirements and did not meet the success criteria
+                if sample_size and not success:
+                    # log this scenario and inform the user
+                    self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append("The baseline version did not meet success criteria")
+                #Here, the baseline is the best feasible version among the two and it will be exploited; candidate will be explored
+                last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
+                epsilon = 1/last_state["effective_iteration_count"]
+                exploration_rate = int((epsilon / 2) * 100)
+                new_candidate_traffic_percentage = min(exploration_rate, self.experiment.traffic_control.max_traffic_percent)
         new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
 
         self.response[request_parameters.LAST_STATE_STR] = {
