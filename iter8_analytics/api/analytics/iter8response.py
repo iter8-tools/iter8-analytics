@@ -276,9 +276,38 @@ class PosteriorBayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
 
-    def find_traffic_split(self, version):
+    def sample_from_distribution(self, alpha_beta, min_max):
+        # return sampled (de-normalised) value
+        raise NotImplementedError()
+
+    def routing_pmf(self, version_satisfying_SC):
         # calculate traffic split using the compute_traffic_split function in the notebook
-        pass
+        raise NotImplementedError()
+        # version_counts = {"candidate": 0, "baseline": 0}
+        # for each trial:
+            # sample reward attribute
+            # for each SC
+                # for each version in version_counts.keys()
+                    # sample_from_distribution(alpha_beta, min_max)
+                    # check if success criteria is satisfied
+                    # in either case update reward
+            # get service with max reward
+            # update version_counts
+            # calculate traffic split
+
+
+
+
+    def update_beliefs(self, version):
+
+        # for each success criteria in self.response["_last_state"][version]["alpha_beta"]:
+        # also iterate through each success criteria value for this Iteration
+        # alpha = (sample_size for this SC) * ((mean_of_distr) - a_of_distribution)
+        # beta = (sample_size for this SC) * ((mean_of_distr) - b_of_distribution)
+        # update alpha and beta or return it
+        raise NotImplementedError()
+
+
 
     def append_traffic_decision(self):
         last_state = self.experiment.last_state.last_state
@@ -291,20 +320,18 @@ class PosteriorBayesianRoutingResponse(Response):
             new_candidate_traffic_percentage = 50
             last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
 
-        elif self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
+        # elif sample_size criteria is not met by candidate (####or baseline too?):
+            # stagnate traffic_split
+            # same as last state
+        # else:
             # both candidate and baseline could be feasible versions
-            # we will find the best reward to see which version should be explored, so the traffic split is calculated accordingly
-            candidate_alpha_beta = [candidate_alpha_beta[0]+1, candidate_alpha_beta[1]]
-            baseline_alpha_beta = [baseline_alpha_beta[0], candidate_alpha_beta[1]+1]
-            find_traffic_split("candidate")
+            # self.update_beliefs(candidate)
+            # self.update_beliefs(baseline)
+            # P = routing_pmf("candidate")
+            new_candidate_traffic_percentage = P
 
-
-            new_candidate_traffic_percentage = self.find_traffic_split("candidate")
-        elif not self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]:
-            # the baseline is the feasible version
-            # it is going to be explored, so the traffic split is calculated accordingly
-            new_candidate_traffic_percentage = 100.0 - self.find_traffic_split("baseline")
-        new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
+            #new_candidate_traffic_percentage = 100.0 - self.routing_pmf("baseline")
+        #new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
 
         self.response[request_parameters.LAST_STATE_STR] = {
             request_parameters.BASELINE_STR: {

@@ -45,8 +45,8 @@ class PosteriorBayesianRoutingLastState():
                 "success_criterion_information": candidate_success_criterion_information,
                 responses.ALPHA_BETA_STR: candidate_alpha_beta
             },
-            CHANGE_OBSERVED_STR: False,
-            "effective_iteration_count": effective_iteration_count
+            CHANGE_OBSERVED_STR: False
+            # "effective_iteration_count": effective_iteration_count
         }
 
 class ServicePayload():
