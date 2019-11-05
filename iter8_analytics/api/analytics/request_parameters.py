@@ -98,7 +98,7 @@ CANDIDATE_STR = 'candidate'
 BOTH_STR = 'both'
 SUCCESS_CRITERIA_STR = 'success_criteria'
 
-traffic_control_check_and_increment = api.model('traffic_control', {
+traffic_control_check_and_increment = api.model('traffic_control_check_and_increment', {
     WARMUP_REQUEST_COUNT_STR: fields.Integer(
         required=False, example=100, min=0, default=10,
         description='Minimum number of data points required for '
@@ -118,7 +118,7 @@ traffic_control_check_and_increment = api.model('traffic_control', {
         description='List of criteria for assessing the candidate version')
 })
 
-traffic_control_epsilon_t_greedy = api.model('traffic_control', {
+traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy', {
     WARMUP_REQUEST_COUNT_STR: fields.Integer(
         required=False, example=100, min=0, default=10,
         description='Minimum number of data points required for '

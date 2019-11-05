@@ -3,16 +3,19 @@ import iter8_analytics.api.analytics.responses as responses
 
 from datetime import datetime, timezone, timedelta
 CHANGE_OBSERVED_STR = "change_observed"
+SUCCESS_CRITERION_INFORMATION_STR="success_criterion_information"
+EFFECTIVE_ITERATION_COUNT_STR="effective_iteration_count"
+
 class CheckAndIncrementLastState():
     def __init__(self, baseline_traffic, candidate_traffic, baseline_success_criterion_information, candidate_success_criterion_information):
         self.last_state = {
             request_parameters.BASELINE_STR: {
                 responses.TRAFFIC_PERCENTAGE_STR: baseline_traffic,
-                "success_criterion_information": baseline_success_criterion_information
+                SUCCESS_CRITERION_INFORMATION_STR: baseline_success_criterion_information
             },
             request_parameters.CANDIDATE_STR: {
                 responses.TRAFFIC_PERCENTAGE_STR: candidate_traffic,
-                "success_criterion_information": candidate_success_criterion_information
+                SUCCESS_CRITERION_INFORMATION_STR: candidate_success_criterion_information
             },
             CHANGE_OBSERVED_STR: False
         }
@@ -22,14 +25,14 @@ class EpsilonTGreedyLastState():
         self.last_state = {
             request_parameters.BASELINE_STR: {
                 responses.TRAFFIC_PERCENTAGE_STR: baseline_traffic,
-                "success_criterion_information": baseline_success_criterion_information
+                SUCCESS_CRITERION_INFORMATION_STR: baseline_success_criterion_information
             },
             request_parameters.CANDIDATE_STR: {
                 responses.TRAFFIC_PERCENTAGE_STR: candidate_traffic,
-                "success_criterion_information": candidate_success_criterion_information
+                SUCCESS_CRITERION_INFORMATION_STR: candidate_success_criterion_information
             },
             CHANGE_OBSERVED_STR: False,
-            "effective_iteration_count": effective_iteration_count
+            EFFECTIVE_ITERATION_COUNT_STR: effective_iteration_count
         }
 
 class ServicePayload():
@@ -102,7 +105,7 @@ class EpsilonTGreedyExperiment():
             last_state = EpsilonTGreedyLastState(100, 0, [], [], 0)
             first_iteration = True
         else:
-            last_state = EpsilonTGreedyLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR]["effective_iteration_count"])
+            last_state = EpsilonTGreedyLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][EFFECTIVE_ITERATION_COUNT_STR])
             first_iteration = False
 
         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
