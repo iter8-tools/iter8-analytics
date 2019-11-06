@@ -9,7 +9,7 @@ clean-pyc:
 	  \( -name '__pycache__' -o -name '*.pyc' -o -name '*.pyo' -o -name '*~' \) \
 	-exec rm --force {} +
 
-# Deploy controller to the Kubernetes cluster configured in $KUBECONFIG or ~/.kube/config
+# Deploy analytics engine to the Kubernetes cluster configured in $KUBECONFIG or ~/.kube/config
 deploy: 
 	helm template install/kubernetes/helm/iter8-analytics \
 	  --name iter8-analytics \
