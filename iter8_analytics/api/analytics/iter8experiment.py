@@ -84,7 +84,7 @@ class CheckAndIncrementExperiment():
             last_state = CheckAndIncrementLastState(100, 0, [], [])
             first_iteration = True
         else:
-            last_state = CheckAndIncrementLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR]["success_criterion_information"])
+            last_state = CheckAndIncrementLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR])
             first_iteration = False
 
         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
@@ -105,7 +105,7 @@ class EpsilonTGreedyExperiment():
             last_state = EpsilonTGreedyLastState(100, 0, [], [], 0)
             first_iteration = True
         else:
-            last_state = EpsilonTGreedyLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR]["success_criterion_information"], payload[request_parameters.LAST_STATE_STR][EFFECTIVE_ITERATION_COUNT_STR])
+            last_state = EpsilonTGreedyLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][EFFECTIVE_ITERATION_COUNT_STR])
             first_iteration = False
 
         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
