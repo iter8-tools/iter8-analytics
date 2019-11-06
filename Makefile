@@ -37,3 +37,6 @@ build-default:
 	helm template install/kubernetes/helm/iter8-analytics \
    		--name iter8-analytics \
 	>> install/kubernetes/iter8-analytics.yaml
+
+test:
+	nosetests --exe --with-coverage --cover-package=iter8_analytics --cover-html --cover-html-dir=code_coverage
