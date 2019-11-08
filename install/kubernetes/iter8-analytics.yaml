@@ -54,7 +54,7 @@ spec:
     spec:
       containers:
         - name: iter8-analytics
-          image: "fabolive/iter8-analytics:0.1.0"
+          image: "iter8/iter8-analytics:stable"
           imagePullPolicy: Always
           env:
             - name: ITER8_ANALYTICS_SERVER_PORT
