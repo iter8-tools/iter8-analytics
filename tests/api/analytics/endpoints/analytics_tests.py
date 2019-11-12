@@ -589,7 +589,18 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "threshold",
                             "value": 2,
-                            "sample_size": 0,
+                            "sample_size": 2,
+                            "stop_on_failure": False,
+                            "confidence": 0
+                        },
+                        {
+                            "metric_name": "iter8_error_count",
+                            "metric_type": "Correctness",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "delta",
+                            "value": 0.1,
+                            "sample_size": 2,
                             "stop_on_failure": False,
                             "confidence": 0
                         }
