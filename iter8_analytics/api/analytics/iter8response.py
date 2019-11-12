@@ -157,7 +157,7 @@ class Response():
 
             # Assuming that in case of a delta test, the baseline passes the success criterion
             if criterion.type == request_parameters.DELTA_CRITERION_STR:
-                baseline_success.append(True)
+                baseline_successes.append(True)
             else:
                 # in case of threshold based test we test the baseline metric collected with the user criterion
                 resp = ThresholdCriterion(criterion, metric_results).test()
