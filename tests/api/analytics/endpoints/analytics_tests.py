@@ -601,7 +601,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.1,
                             "sample_size": 2,
-                            "stop_on_failure": False,
+                            "stop_on_failure": True,
                             "confidence": 0
                         }
                     ]
