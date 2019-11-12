@@ -589,11 +589,6 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "threshold",
                             "value": 2,
-<<<<<<< HEAD
-                            "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
-=======
                             "sample_size": 2,
                             "stop_on_failure": False,
                             "confidence": 0
@@ -608,7 +603,6 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "sample_size": 2,
                             "stop_on_failure": True,
                             "confidence": 0
->>>>>>> 7b7768a21bdf8bc11c18d7e8ffd32c52f66f4bbe
                         }
                     ]
                 },
