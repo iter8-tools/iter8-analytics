@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: fabolive/iter8-analytics
-  tag: 0.1.0
+  repository: iter8/iter8-analytics
+  tag: stable
   pullPolicy: Always
 
 namespace: iter8
