@@ -10,7 +10,7 @@ clean-pyc:
 	-exec rm -f {} +
 
 # Deploy analytics engine to the Kubernetes cluster configured in $KUBECONFIG or ~/.kube/config
-deploy: 
+deploy:
 	helm template install/kubernetes/helm/iter8-analytics \
 	  --name iter8-analytics \
 	  --set image.repository=`echo ${IMG} | cut -f1 -d':'` \
@@ -20,12 +20,12 @@ deploy:
 docker-run: docker-cleanup docker-build
 	docker run -d --name iter8-analytics \
 	  -p 5555:5555 \
-	  -e ITER8_ANALYTICS_METRICS_BACKEND_URL=$ITER8_ANALYTICS_METRICS_BACKEND_URL \
+	  -e ITER8_ANALYTICS_METRICS_BACKEND_URL=${ITER8_ANALYTICS_METRICS_BACKEND_URL} \
 	${IMG}
 
 docker-build: clean-pyc
 	docker build . -t ${IMG}
-	
+
 docker-push:
 	docker push ${IMG}
 
