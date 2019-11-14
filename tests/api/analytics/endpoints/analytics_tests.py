@@ -991,3 +991,66 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
             correct_response = {'baseline': {'traffic_percentage': 90.0, 'success_criterion_information': [[4, 4.0]]}, 'candidate': {'traffic_percentage': 10, 'success_criterion_information': [[5, 5.0]]}, 'effective_iteration_count': 3}
             self.assertEqual(correct_response, resp.get_json()["_last_state"])
+
+
+    ##All tests after this involve the /analytics/canary/posterior_bayesian_routing endpoint (until mentioned otherwise)
+    def test_payload_posterior_bayesian_routing(self):
+        """Tests the REST endpoint /analytics/canary/posterior_bayesian_routing."""
+
+        endpoint = f'http://localhost:5555/api/v1/analytics/canary/posterior_bayesian_routing'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+
+            ###################
+            # Test request with some required parameters
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with some required parameters")
+
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "end_time": "2019-05-01T19:30:02.389Z",
+                "tags": {
+                    "destination_service_name": "reviews-v2"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "end_time": "2019-05-01T19:30:02.389Z",
+                "tags": {
+                    "destination_service_name": "reviews-v2"
+                    }
+                },
+                "traffic_control": {
+                "warmup_request_count": 100,
+                "posterior_sample_size": 100,
+                "max_traffic_percent": 50,
+                "no_of_trials": 50,
+                "success_criteria": [
+                {
+                    "metric_name": "iter8_error_count",
+                    "metric_type": "Correctness",
+                    "metric_nature": "Cumulative",
+                    "min, max": {
+                        "min": 0,
+                        "max": 0
+                        },
+                    "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                    "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                    "type": "delta",
+                    "value": 0.02,
+                    "sample_size": 0,
+                    "stop_on_failure": False,
+                    "confidence": 0
+                    }
+                    ]
+                },
+                "_last_state": {}
+                }
+
+            # Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
