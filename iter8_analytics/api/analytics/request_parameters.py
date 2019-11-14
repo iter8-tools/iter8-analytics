@@ -45,7 +45,7 @@ CRITERION_CONFIDENCE_STR = 'confidence'
 CRITERION_STOP_ON_FAILURE_STR = 'stop_on_failure'
 
 
-success_criterion = api.model('success_criterion', {
+success_criterion_default = api.model('success_criterion_default', {
     METRIC_NAME_STR: fields.String(
         required=True,
         description='Name of the metric to which the criterion applies',
@@ -55,6 +55,73 @@ success_criterion = api.model('success_criterion', {
         description='Metric type. Options: "Performance": Metrics which '
         'measure the performance of a microservice; '
         '"Correctness": Metrics which measure the correctness of a microservice'),
+    METRIC_QUERY_TEMPLATE_STR: fields.String(
+        required=True,
+        description='Prometheus Query of the metric to which the criterion applies',
+        example='sum(increase(istio_requests_total{response_code=~"5..",'
+        'reporter="source"}[$interval]$offset_str)) by ($entity_labels)'),
+    METRIC_SAMPLE_SIZE_QUERY_TEMPLATE: fields.String(
+        required=True,
+        description='Sample Size Query for the metric to which the criterion applies',
+        example='sum(increase(istio_requests_total{reporter="source"}'
+        '[$interval]$offset_str)) by ($entity_labels)'),
+    CRITERION_TYPE_STR: fields.String(
+        required=True, enum=[DELTA_CRITERION_STR, THRESHOLD_CRITERION_STR],
+        description='Criterion type. Options: "delta": compares the candidate '
+        'against the baseline version with respect to the metric; '
+        '"threshold": checks the candidate with respect to the metric'),
+    CRITERION_VALUE_STR: fields.Float(
+        required=True, description='Value to check',
+        example=0.02),
+    CRITERION_SAMPLE_SIZE_STR: fields.Integer(
+        required=False,
+        description='Minimum number of data points required to make a '
+        'decision based on this criterion; if not specified, there is '
+        'no requirement on the sample size'),
+    CRITERION_STOP_ON_FAILURE_STR: fields.Boolean(
+        required=False, default=False,
+        description='Indicates whether or not the experiment must finish if '
+        'this criterion is not satisfied; defaults to false'),
+    CRITERION_CONFIDENCE_STR: fields.Float(
+        required=False,
+        description='Indicates that this criterion is based on statistical '
+        'confidence; for instance, one can specify a 98% confidence that '
+        'the criterion is satisfied; if not specified, there is no confidence '
+        'requirement')
+})
+METRIC_NATURE_STR='metric_nature'
+CUMULATIVE_METRIC_TYPE_STR = 'Cumulative'
+MEANABLE_METRIC_TYPE_STR = 'Meanable'
+MIN_STR = "min"
+MAX_STR = "max"
+MIN_MAX_STR = "min, max"
+
+min_max = api.model('min_max', {
+    MIN_STR: fields.Float(
+        required=True,
+        description='Minimum value of the metric'),
+    MAX_STR: fields.Float(
+        required=True,
+        description='Maximum Value of the metric')
+        })
+success_criterion_pbr = api.model('success_criterion_pbr', {
+    METRIC_NAME_STR: fields.String(
+        required=True,
+        description='Name of the metric to which the criterion applies',
+        example='iter8_error_count'),
+    METRIC_TYPE_STR: fields.String(
+        required=True, enum=[CORRECTNESS_METRIC_TYPE_STR, PERFORMANCE_METRIC_TYPE_STR],
+        description='Metric type. Options: "Performance": Metrics which '
+        'measure the performance of a microservice; '
+        '"Correctness": Metrics which measure the correctness of a microservice'),
+    METRIC_NATURE_STR: fields.String(
+        required=True, enum=[CUMULATIVE_METRIC_TYPE_STR, MEANABLE_METRIC_TYPE_STR],
+        description='Metric type. Options: "Cumulative": Metrics which '
+        'are additive in nature'
+        '"Meanable": Metrics which compute averages'),
+    MIN_MAX_STR: fields.Nested(
+        min_max, required=False,
+        description='Minimum and Maximum value of the metric'),
     METRIC_QUERY_TEMPLATE_STR: fields.String(
         required=True,
         description='Prometheus Query of the metric to which the criterion applies',
@@ -113,7 +180,7 @@ traffic_control_check_and_increment = api.model('traffic_control_check_and_incre
         'traffic received by the candidate version each time it passes the '
         'success criteria; defaults to 1 percent point'),
     SUCCESS_CRITERIA_STR: fields.List(
-        fields.Nested(success_criterion),
+        fields.Nested(success_criterion_default),
         required=True,
         description='List of criteria for assessing the candidate version')
 })
@@ -128,11 +195,13 @@ traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy',
         description='Maximum percentage of traffic that the candidate version '
         'will receive during the experiment; defaults to 50%'),
     SUCCESS_CRITERIA_STR: fields.List(
-        fields.Nested(success_criterion),
+        fields.Nested(success_criterion_default),
         required=True,
         description='List of criteria for assessing the candidate version')
 })
 POSTERIOR_SAMPLE_SIZE_STR="posterior_sample_size"
+NO_OF_TRIALS_STR="no_of_trials"
+
 traffic_control_posterior_bayesian_routing = api.model('traffic_control', {
     WARMUP_REQUEST_COUNT_STR: fields.Integer(
         required=False, example=100, min=0, default=10,
@@ -145,8 +214,11 @@ traffic_control_posterior_bayesian_routing = api.model('traffic_control', {
         required=False, example=50.0, min=0.0, default=50.0,
         description='Maximum percentage of traffic that the candidate version '
         'will receive during the experiment; defaults to 50%'),
+    NO_OF_TRIALS_STR: fields.Float(
+        required=True, example=50.0, min=1.0, default=10.0,
+        description='Number of values sampled per iteration from each distribution'),
     SUCCESS_CRITERIA_STR: fields.List(
-        fields.Nested(success_criterion),
+        fields.Nested(success_criterion_pbr),
         required=True,
         description='List of criteria for assessing the candidate version')
 })
