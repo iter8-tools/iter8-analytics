@@ -310,6 +310,7 @@ class PosteriorBayesianRoutingResponse(Response):
 
 
     def append_traffic_decision(self):
+        raise NotImplementedError()
         last_state = self.experiment.last_state.last_state
         baseline_alpha_beta = self.experiment.last_state.last_state[request_parameters.BASELINE_STR][responses.ALPHA_BETA_STR]
         candidate_alpha_beta = self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][responses.ALPHA_BETA_STR]
