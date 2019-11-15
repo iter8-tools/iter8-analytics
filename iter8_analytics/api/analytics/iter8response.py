@@ -270,3 +270,89 @@ class EpsilonTGreedyResponse(Response):
         }
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
+
+
+class PosteriorBayesianRoutingResponse(Response):
+     def __init__(self, experiment, prom_url):
+         super().__init__(experiment, prom_url)
+
+     def sample_from_distribution(self, alpha_beta, min_max):
+         # return sampled (de-normalised) value
+         raise NotImplementedError()
+
+     def routing_pmf(self, version_satisfying_SC):
+         # calculate traffic split using the compute_traffic_split function in the notebook
+         raise NotImplementedError()
+         # version_counts = {"candidate": 0, "baseline": 0}
+         # for each trial:
+             # sample reward attribute
+             # for each SC
+                 # for each version in version_counts.keys()
+                     # sample_from_distribution(alpha_beta, min_max)
+                     # check if success criteria is satisfied
+                     # in either case update reward
+             # get service with max reward
+             # update version_counts
+             # calculate traffic split
+
+
+
+
+     def update_beliefs(self, version):
+
+         # for each success criteria in self.response["_last_state"][version]["alpha_beta"]:
+         # also iterate through each success criteria value for this Iteration
+         # alpha = (sample_size for this SC) * ((mean_of_distr) - a_of_distribution)
+         # beta = (sample_size for this SC) * ((mean_of_distr) - b_of_distribution)
+         # update alpha and beta or return it
+         raise NotImplementedError()
+
+
+
+     def append_traffic_decision(self):
+         raise NotImplementedError()
+         last_state = self.experiment.last_state.last_state
+         baseline_alpha_beta = self.experiment.last_state.last_state[request_parameters.BASELINE_STR][responses.ALPHA_BETA_STR]
+         candidate_alpha_beta = self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][responses.ALPHA_BETA_STR]
+         # If there was no change observed in this iteration then do not increment traffic percentage
+         if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
+              new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+         elif self.experiment.first_iteration:
+             new_candidate_traffic_percentage = 50
+             last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
+
+         # elif sample_size criteria is not met by candidate (####or baseline too?):
+             # stagnate traffic_split
+             # same as last state
+         # else:
+             # both candidate and baseline could be feasible versions
+             # self.update_beliefs(candidate)
+             # self.update_beliefs(baseline)
+             # P = routing_pmf("candidate")
+             new_candidate_traffic_percentage = P
+
+             #new_candidate_traffic_percentage = 100.0 - self.routing_pmf("baseline")
+         #new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
+
+         self.response[request_parameters.LAST_STATE_STR] = {
+             request_parameters.BASELINE_STR: {
+                 responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage,
+                 "success_criterion_information": last_state[request_parameters.BASELINE_STR]["success_criterion_information"],
+                 responses.ALPHA_BETA_STR: baseline_alpha_beta
+             },
+             request_parameters.CANDIDATE_STR: {
+                 responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage,
+                 "success_criterion_information": last_state[request_parameters.CANDIDATE_STR]["success_criterion_information"],
+                 responses.ALPHA_BETA_STR: candidate_alpha_beta
+             },
+             "effective_iteration_count": last_state["effective_iteration_count"]
+         }
+
+         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
+         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
+         # If first iteration then send 50/50 traffic with 0.1 alpha beta
+         # Check if both versions satisfy all the constraints
+         # If they do then find best reward
+         # For the version with the best reward do everything under compute_traffic_split
+         # 100-that for the other service
+         # return with an updated alpha, beta value and traffic split

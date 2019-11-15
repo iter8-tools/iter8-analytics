@@ -35,6 +35,23 @@ class EpsilonTGreedyLastState():
             EFFECTIVE_ITERATION_COUNT_STR: effective_iteration_count
         }
 
+class PosteriorBayesianRoutingLastState():
+     def __init__(self, baseline_traffic, candidate_traffic, baseline_success_criterion_information, candidate_success_criterion_information, baseline_alpha_beta, candidate_alpha_beta, effective_iteration_count):
+         self.last_state = {
+             request_parameters.BASELINE_STR: {
+                 responses.TRAFFIC_PERCENTAGE_STR: baseline_traffic,
+                 "success_criterion_information": baseline_success_criterion_information,
+                 responses.ALPHA_BETA_STR: baseline_alpha_beta
+             },
+             request_parameters.CANDIDATE_STR: {
+                 responses.TRAFFIC_PERCENTAGE_STR: candidate_traffic,
+                 "success_criterion_information": candidate_success_criterion_information,
+                 responses.ALPHA_BETA_STR: candidate_alpha_beta
+             },
+             CHANGE_OBSERVED_STR: False
+             # EFFECTIVE_ITERATION_COUNT_STR: effective_iteration_count
+         }
+
 class ServicePayload():
     def __init__(self, service_payload):
         self.start_time = service_payload[request_parameters.START_TIME_PARAM_STR]
@@ -118,3 +135,24 @@ class EpsilonTGreedyExperiment():
         self.baseline = baseline_payload
         self.candidate = candidate_payload
         self.traffic_control = traffic_control
+
+class PosteriorBayesianRoutingExperiment():
+     def __init__(self, payload):
+         self.experiment = {}
+         if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
+             last_state = PosteriorBayesianRoutingLastState(100, 0, [], [], [0.1,0.1], [0.1,0.1], 0)
+             first_iteration = True
+         else:
+             last_state = PosteriorBayesianRoutingLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.ALPHA_BETA_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.ALPHA_BETA_STR], payload[request_parameters.LAST_STATE_STR][EFFECTIVE_ITERATION_COUNT_STR])
+             first_iteration = False
+
+         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
+         candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
+
+         traffic_control = TrafficControl(payload[request_parameters.TRAFFIC_CONTROL_STR])
+
+         self.last_state = last_state
+         self.first_iteration = first_iteration
+         self.baseline = baseline_payload
+         self.candidate = candidate_payload
+         self.traffic_control = traffic_control
