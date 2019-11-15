@@ -204,7 +204,7 @@ traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy',
 POSTERIOR_SAMPLE_SIZE_STR="posterior_sample_size"
 NO_OF_TRIALS_STR="no_of_trials"
 
-traffic_control_posterior_bayesian_routing = api.model('traffic_control', {
+traffic_control_posterior_bayesian_routing = api.model('traffic_control_pbr', {
     WARMUP_REQUEST_COUNT_STR: fields.Integer(
         required=False, example=100, min=0, default=10,
         description='Minimum number of data points required for '
