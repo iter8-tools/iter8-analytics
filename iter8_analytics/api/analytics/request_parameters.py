@@ -40,7 +40,6 @@ DELTA_CRITERION_STR = 'delta'
 THRESHOLD_CRITERION_STR = 'threshold'
 CRITERION_SAMPLE_SIZE_STR = 'sample_size'
 CRITERION_VALUE_STR = 'value'
-CRITERION_CONFIDENCE_STR = 'confidence'
 CRITERION_STOP_ON_FAILURE_STR = 'stop_on_failure'
 
 
@@ -84,18 +83,13 @@ success_criterion_default = api.model('success_criterion_default', {
     CRITERION_STOP_ON_FAILURE_STR: fields.Boolean(
         required=False, default=False,
         description='Indicates whether or not the experiment must finish if '
-        'this criterion is not satisfied; defaults to false'),
-    CRITERION_CONFIDENCE_STR: fields.Float(
-        required=False,
-        description='Indicates that this criterion is based on statistical '
-        'confidence; for instance, one can specify a 98% confidence that '
-        'the criterion is satisfied; if not specified, there is no confidence '
-        'requirement')
+        'this criterion is not satisfied; defaults to false')
 })
 
 MIN_STR = "min"
 MAX_STR = "max"
 MIN_MAX_STR = "min, max"
+CRITERION_CONFIDENCE_STR = "criterion_confidence"
 
 min_max = api.model('min_max', {
     MIN_STR: fields.Float(
@@ -140,24 +134,16 @@ success_criterion_pbr = api.model('success_criterion_pbr', {
     CRITERION_VALUE_STR: fields.Float(
         required=True, description='Value to check',
         example=0.02),
-    CRITERION_SAMPLE_SIZE_STR: fields.Integer(
-        required=False,
-        description='Minimum number of data points required to make a '
-        'decision based on this criterion; if not specified, there is '
-        'no requirement on the sample size'),
+    CRITERION_CONFIDENCE_STR: fields.Float(
+        required=False, default=0.95,
+        description='Posterior probability that this '
+        'success criteria is met'),
     CRITERION_STOP_ON_FAILURE_STR: fields.Boolean(
         required=False, default=False,
         description='Indicates whether or not the experiment must finish if '
-        'this criterion is not satisfied; defaults to false'),
-    CRITERION_CONFIDENCE_STR: fields.Float(
-        required=False,
-        description='Indicates that this criterion is based on statistical '
-        'confidence; for instance, one can specify a 98% confidence that '
-        'the criterion is satisfied; if not specified, there is no confidence '
-        'requirement')
+        'this criterion is not satisfied; defaults to false')
 })
 
-WARMUP_REQUEST_COUNT_STR = 'warmup_request_count'
 MAX_TRAFFIC_PERCENT_STR = 'max_traffic_percent'
 STEP_SIZE_STR = 'step_size'
 BASELINE_STR = 'baseline'
@@ -166,10 +152,6 @@ BOTH_STR = 'both'
 SUCCESS_CRITERIA_STR = 'success_criteria'
 
 traffic_control_check_and_increment = api.model('traffic_control_check_and_increment', {
-    WARMUP_REQUEST_COUNT_STR: fields.Integer(
-        required=False, example=100, min=0, default=10,
-        description='Minimum number of data points required for '
-        'the canary analysis; defaults to 10'),
     MAX_TRAFFIC_PERCENT_STR: fields.Float(
         required=False, example=50.0, min=0.0, default=50.0,
         description='Maximum percentage of traffic that the candidate version '
@@ -186,10 +168,6 @@ traffic_control_check_and_increment = api.model('traffic_control_check_and_incre
 })
 
 traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy', {
-    WARMUP_REQUEST_COUNT_STR: fields.Integer(
-        required=False, example=100, min=0, default=10,
-        description='Minimum number of data points required for '
-        'the canary analysis; defaults to 10'),
     MAX_TRAFFIC_PERCENT_STR: fields.Float(
         required=False, example=50.0, min=0.0, default=50.0,
         description='Maximum percentage of traffic that the candidate version '
@@ -201,24 +179,13 @@ traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy',
 })
 
 
-POSTERIOR_SAMPLE_SIZE_STR="posterior_sample_size"
 NO_OF_TRIALS_STR="no_of_trials"
-
-traffic_control_posterior_bayesian_routing = api.model('traffic_control_pbr', {
-    WARMUP_REQUEST_COUNT_STR: fields.Integer(
-        required=False, example=100, min=0, default=10,
-        description='Minimum number of data points required for '
-        'the canary analysis; defaults to 10'),
-    POSTERIOR_SAMPLE_SIZE_STR: fields.Integer(
-        required=False, example=100, min=10, default=1000,
-        description='Required for the traffic splitting function in the PBR algorithm'),
+#pbr = Posterior Bayesian Routing
+traffic_control_pbr = api.model('traffic_control_pbr', {
     MAX_TRAFFIC_PERCENT_STR: fields.Float(
         required=False, example=50.0, min=0.0, default=50.0,
         description='Maximum percentage of traffic that the candidate version '
         'will receive during the experiment; defaults to 50%'),
-    NO_OF_TRIALS_STR: fields.Float(
-        required=True, example=50.0, min=1.0, default=10.0,
-        description='Number of values sampled per iteration from each distribution'),
     SUCCESS_CRITERIA_STR: fields.List(
         fields.Nested(success_criterion_pbr),
         required=True,
@@ -280,7 +247,7 @@ posterior_bayesian_routing_parameters = api.model('posterior_bayesian_routing_pa
          'retrieving and processing data pertaining to the candidate '
          'version'),
      TRAFFIC_CONTROL_STR: fields.Nested(
-         traffic_control_posterior_bayesian_routing, required=True,
+         traffic_control_pbr, required=True,
          description='Parameters controlling the behavior of the analytics'),
      LAST_STATE_STR: fields.Raw(
          required=True,

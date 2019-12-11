@@ -93,7 +93,6 @@ class TrafficControl():
             self.success_criteria.append(SuccessCriterion(each_criteria))
         self.step_size = 2 if request_parameters.STEP_SIZE_STR not in traffic_control else traffic_control[request_parameters.STEP_SIZE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else traffic_control[request_parameters.MAX_TRAFFIC_PERCENT_STR]
-        self.warmup_request_count = 0 if request_parameters.WARMUP_REQUEST_COUNT_STR not in traffic_control else traffic_control[request_parameters.WARMUP_REQUEST_COUNT_STR]
 
 
 class CheckAndIncrementExperiment():
