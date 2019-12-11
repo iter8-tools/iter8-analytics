@@ -89,7 +89,7 @@ success_criterion_default = api.model('success_criterion_default', {
 MIN_STR = "min"
 MAX_STR = "max"
 MIN_MAX_STR = "min, max"
-CRITERION_CONFIDENCE_STR = "criterion_confidence"
+
 
 min_max = api.model('min_max', {
     MIN_STR: fields.Float(
@@ -134,10 +134,6 @@ success_criterion_pbr = api.model('success_criterion_pbr', {
     CRITERION_VALUE_STR: fields.Float(
         required=True, description='Value to check',
         example=0.02),
-    CRITERION_CONFIDENCE_STR: fields.Float(
-        required=False, default=0.95,
-        description='Posterior probability that this '
-        'success criteria is met'),
     CRITERION_STOP_ON_FAILURE_STR: fields.Boolean(
         required=False, default=False,
         description='Indicates whether or not the experiment must finish if '
@@ -180,12 +176,17 @@ traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy',
 
 
 NO_OF_TRIALS_STR="no_of_trials"
+CONFIDENCE_STR = "confidence"
 #pbr = Posterior Bayesian Routing
 traffic_control_pbr = api.model('traffic_control_pbr', {
     MAX_TRAFFIC_PERCENT_STR: fields.Float(
         required=False, example=50.0, min=0.0, default=50.0,
         description='Maximum percentage of traffic that the candidate version '
         'will receive during the experiment; defaults to 50%'),
+    CONFIDENCE_STR: fields.Float(
+        required=False, default=0.95,
+        description='Posterior probability that all '
+        'success criteria is met'),
     SUCCESS_CRITERIA_STR: fields.List(
         fields.Nested(success_criterion_pbr),
         required=True,
