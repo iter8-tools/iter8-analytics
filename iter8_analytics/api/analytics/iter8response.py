@@ -272,22 +272,24 @@ class EpsilonTGreedyResponse(Response):
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
 
-
-class PosteriorBayesianRoutingResponse(Response):
+class BayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
 
+    @classmethod
     def beta_sample(self, alpha_beta, min_max):
         # return sampled (de-normalised) value from Beta Distribution
         # x = sampled value from beta distribution
         # return min + (max-min)x
         raise NotImplementedError()
 
-    def gaussian_sample(self, gamme_sigma):
+    @classmethod
+    def gaussian_sample(self, gamma_sigma):
         # return sampled value from Gaussian Distribution
         # x = sampled value from distribution
         # return x
         raise NotImplementedError()
+
 
     def update_beliefs(self, version):
         """Update belief distribution for each metric
@@ -390,3 +392,10 @@ class PosteriorBayesianRoutingResponse(Response):
         # For the version with the best reward do everything under compute_traffic_split
         # 100-that for the other service
         # return with an updated alpha, beta value and traffic split
+
+
+
+
+class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
+    def __init__(self, experiment, prom_url):
+        super().__init__(experiment, prom_url)
