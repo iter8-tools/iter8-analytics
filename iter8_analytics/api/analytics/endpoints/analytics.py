@@ -113,8 +113,8 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
             log.info("Extracted payload")
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = PosteriorBayesianRoutingExperiment(payload)
-            log.info("Fixed experiment")
-            self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
+            # log.info("Fixed experiment")
+            # self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
             # log.info("Created response object")
             # self.response_object.compute_test_results_and_summary()
         #
@@ -123,4 +123,5 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
         except Exception as e:
             flask_restplus.errors.abort(code=400, message=str(e))
         # return self.response_object.jsonify()
-        return self.response_object.jsonify()
+        # return self.response_object.jsonify()
+        return {}

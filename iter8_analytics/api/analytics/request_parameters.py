@@ -76,7 +76,7 @@ success_criterion_default = api.model('success_criterion_default', {
         required=True, description='Value to check',
         example=0.02),
     CRITERION_SAMPLE_SIZE_STR: fields.Integer(
-        required=False,
+        required=False, default=10,
         description='Minimum number of data points required to make a '
         'decision based on this criterion; if not specified, there is '
         'no requirement on the sample size'),

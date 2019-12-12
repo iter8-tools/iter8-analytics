@@ -83,8 +83,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -129,8 +128,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -189,8 +187,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -263,8 +260,8 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
+
                         }
                     ]
                 },
@@ -309,8 +306,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                             "type": "delta",
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -357,8 +353,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "normal",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -404,8 +399,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -452,8 +446,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -497,8 +490,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -544,8 +536,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -590,8 +581,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 18,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -635,8 +625,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.5,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -688,8 +677,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 2,
                             "sample_size": 2,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         },
                         {
                             "metric_name": "iter8_error_rate",
@@ -700,8 +688,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.1,
                             "sample_size": 2,
-                            "stop_on_failure": True,
-                            "confidence": 0
+                            "stop_on_failure": True
                         }
                     ]
                 },
@@ -766,8 +753,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -813,8 +799,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -868,8 +853,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -916,8 +900,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -984,8 +967,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "delta",
                             "value": 0.02,
                             "sample_size": 0,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -1054,8 +1036,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 2,
                             "sample_size": 1,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -1116,8 +1097,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                             "type": "threshold",
                             "value": 2,
                             "sample_size": 10,
-                            "stop_on_failure": False,
-                            "confidence": 0
+                            "stop_on_failure": False
                         }
                     ]
                 },
@@ -1176,27 +1156,21 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                      }
                  },
                  "traffic_control": {
-                 "warmup_request_count": 100,
-                 "posterior_sample_size": 100,
-                 "max_traffic_percent": 50,
-                 "no_of_trials": 50,
-                 "success_criteria": [
-                 {
-                     "metric_name": "iter8_error_count",
-                     "is_counter": True,
-                     "absent_value": "0",
-                     "min, max": {
-                         "min": 0,
-                         "max": 0
+                    "confidence": 0.9,
+                    "success_criteria": [
+                    {
+                        "metric_name": "iter8_error_count",
+                        "is_counter": True,
+                        "min, max": {
+                            "min": 0,
+                            "max": 0
                          },
-                     "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
-                     "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
-                     "type": "delta",
-                     "value": 0.02,
-                     "sample_size": 0,
-                     "stop_on_failure": False,
-                     "confidence": 0
-                     }
+                         "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                         "type": "delta",
+                         "value": 0.02,
+                         "stop_on_failure": False
+                         }
                      ]
                  },
                  "_last_state": {}
