@@ -55,6 +55,8 @@ class Response():
                 criterion, self.experiment.baseline))
             self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR].append(self.get_results(
                 criterion, self.experiment.candidate))
+            # instead of using i we could use a unique success criterion ID
+            # created by the controller to compare success criterion between two iterations
             self.change_observed(request_parameters.BASELINE_STR, i)
             self.change_observed(request_parameters.CANDIDATE_STR, i)
             i = i + 1
@@ -81,11 +83,13 @@ class Response():
     def change_observed(self, service_version, success_criterion_number):
         """
         Checks if any change was observed between the metrics collected in the previous iteration and the current iteration
+
         (i.e. between last state and current response)
             Arguments:
                 `service_version`: Str; Baseline or canary
                 `success_criterion_number`: int; Denotes the number of succes criteria the function is observing changes in
         """
+        # Check and Increment and Epsilon t greedy require this method. PBR and OBR do not require the information captured here
         #if condition when there is no last state information- assumes that change was observed in this case
         #The next line checks if there was any last state information for 'success_criterion_number' success criteria, if not it appends current metric values to current iteration's last state
         if len(self.experiment.last_state.last_state[service_version]["success_criterion_information"]) == success_criterion_number:
@@ -276,19 +280,23 @@ class BayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
 
-    @classmethod
-    def beta_sample(self, alpha_beta, min_max):
-        # return sampled (de-normalised) value from Beta Distribution
-        # x = sampled value from beta distribution
-        # return min + (max-min)x
+    def append_success_criteria(self, criterion):
         raise NotImplementedError()
 
-    @classmethod
-    def gaussian_sample(self, gamma_sigma):
-        # return sampled value from Gaussian Distribution
-        # x = sampled value from distribution
-        # return x
+    def append_assessment_summary(self):
         raise NotImplementedError()
+
+    def has_baseline_met_all_criteria(self):
+        """
+        This function is not used in Bayesian Routing Algorithms.
+        It should not be called
+        """
+        raise NotImplementedError()
+
+
+
+
+
 
 
     def update_beliefs(self, version):
@@ -393,9 +401,39 @@ class BayesianRoutingResponse(Response):
         # 100-that for the other service
         # return with an updated alpha, beta value and traffic split
 
-
-
-
 class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
+
+    @classmethod
+    def beta_sample(self, alpha_beta, min_max):
+        # return sampled (de-normalised) value from Beta Distribution
+        # x = sampled value from beta distribution
+        # return min + (max-min)x
+        raise NotImplementedError()
+
+    @classmethod
+    def gaussian_sample(self, gamma_sigma):
+        # return sampled value from Gaussian Distribution
+        # x = sampled value from distribution
+        # return x
+        raise NotImplementedError()
+
+
+class OptimisticBayesianRoutingResponse(BayesianRoutingResponse):
+    def __init__(self, experiment, prom_url):
+        super().__init__(experiment, prom_url)
+
+    @classmethod
+    def beta_sample(self, alpha_beta, min_max):
+        # return sampled (de-normalised) value from Beta Distribution
+        # x = sampled value from beta distribution
+        # return min + (max-min)x
+        raise NotImplementedError()
+
+    @classmethod
+    def gaussian_sample(self, gamma_sigma):
+        # return sampled value from Gaussian Distribution
+        # x = sampled value from distribution
+        # return x
+        raise NotImplementedError()
