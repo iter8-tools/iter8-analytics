@@ -10,6 +10,7 @@ import flask_restplus
 from flask import request
 from datetime import datetime, timezone, timedelta
 import dateutil.parser as parser
+import numpy as np
 
 import copy
 import json
@@ -293,16 +294,10 @@ class BayesianRoutingResponse(Response):
         """
         raise NotImplementedError()
 
-
-
-
-
-
-
     def update_beliefs(self, version):
         """Update belief distribution for each metric
-        Use Beta Distribution if user provided min, max values for a metric
-        Else use a Gaussian Distribution"""
+        Use beta distribution if user provided min, max values for a metric.
+        Else use a normal distribution"""
         # for each success criteria in self.response["_last_state"][version]["alpha_beta"]:
         # also iterate through each success criteria value for this Iteration
         # if min_max is given:
@@ -327,9 +322,9 @@ class BayesianRoutingResponse(Response):
                 # for each Success Criteria
                     # if not cumulative metric:
                         # if min_max are given:
-                            # X = sample from Beta distribution
+                            # X = sample from beta distribution
                         # else: (min max is not given)
-                            # X = sample from Gaussian Distribution
+                            # X = sample from normal distribution
                     # else: (metric is cumulative)
                         # X = value observed in the current iteration
 
@@ -406,18 +401,15 @@ class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
         super().__init__(experiment, prom_url)
 
     @classmethod
-    def beta_sample(self, alpha_beta, min_max):
-        # return sampled (de-normalised) value from Beta Distribution
-        # x = sampled value from beta distribution
-        # return min + (max-min)x
-        raise NotImplementedError()
+    def beta_sample(cls, alpha, beta, min_val, max_val):
+        """return a value between min and max based on beta sample"""
+        x = np.random.beta(a = alpha, b = beta)
+        return min_val + (max_val - min_val)*x
 
     @classmethod
-    def gaussian_sample(self, gamma_sigma):
-        # return sampled value from Gaussian Distribution
-        # x = sampled value from distribution
-        # return x
-        raise NotImplementedError()
+    def normal_sample(cls, gamma, sigma):
+        """return a value based on normal sample"""
+        return np.random.normal(loc = gamma, scale = sigma)
 
 
 class OptimisticBayesianRoutingResponse(BayesianRoutingResponse):
@@ -425,15 +417,17 @@ class OptimisticBayesianRoutingResponse(BayesianRoutingResponse):
         super().__init__(experiment, prom_url)
 
     @classmethod
-    def beta_sample(self, alpha_beta, min_max):
-        # return sampled (de-normalised) value from Beta Distribution
-        # x = sampled value from beta distribution
-        # return min + (max-min)x
-        raise NotImplementedError()
+    def beta_sample(cls, alpha, beta, min_val, max_val, is_reward = False):
+        """return a value between min and max based on beta sample"""
+        x = np.random.beta(a = alpha, b = beta)
+        y = alpha / (alpha + beta)
+        x = max(x, y) if is_reward else min(x, y)
+        return min_val + (max_val - min_val)*x
 
     @classmethod
-    def gaussian_sample(self, gamma_sigma):
-        # return sampled value from Gaussian Distribution
-        # x = sampled value from distribution
-        # return x
-        raise NotImplementedError()
+    def normal_sample(cls, gamma, sigma, is_reward = False):
+        """return a value based on normal sample"""
+        x = np.random.normal(loc = gamma, scale = sigma)
+        y = gamma
+        x = max(x, y) if is_reward else min(x, y)
+        return x

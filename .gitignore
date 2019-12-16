@@ -112,3 +112,6 @@ code_coverage/
 tests/api/analytics/endpoints/.DS_Store
 tests/data/.DS_Store
 tests/.DS_Store
+
+# Virtual environment
+.venv
