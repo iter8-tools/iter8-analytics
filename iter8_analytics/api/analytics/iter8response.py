@@ -299,14 +299,14 @@ class BayesianRoutingResponse(Response):
         Update beta distribution if user provided min, max values for a metric.
         Else update a normal distribution"""
         alpha = beta = gamma = sigma = None
-        Z = metric_response[respon.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[respon.STATISTICS_STR][responses.VALUE_STR]
-        W = metric_response[respon.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
+        Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
+        W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
         if min_val and max_val:
             alpha = 1 + (Z - (min_val*W))/(max_val - min_val)
             beta = 1 + ((max_val*W) - Z)/(max_val - min_val)
         else:
             if metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] > 0:
-                gamma = metric_response[respon.STATISTICS_STR][responses.VALUE_STR]
+                gamma = metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
             else:
                 gamma = 0
             sigma = np.sqrt(1/(W+1))
