@@ -294,21 +294,24 @@ class BayesianRoutingResponse(Response):
         """
         raise NotImplementedError()
 
-    def update_beliefs(self, version):
+    def update_beliefs(self, metric_response, min_val = None, max_val = None):
         """Update belief distribution for each metric
-        Use beta distribution if user provided min, max values for a metric.
-        Else use a normal distribution"""
-        # for each success criteria in self.response["_last_state"][version]["alpha_beta"]:
-        # also iterate through each success criteria value for this Iteration
-        # if min_max is given:
-            # alpha = (sample_size for this SC) * (mean_of_distr - a_of_distribution)
-            # beta = (sample_size for this SC) * (b_of_distribution - mean_of_distr)
-        # else: (when user did not provide min and max values for the metric)
-            # if sample_size is greater than 0:
-                # gamma = mean of distribution
-            # sigma = variance of the distribution
-        # update alpha, beta, gamma and sigma values in last state/self.experiment
-        raise NotImplementedError()
+        Update beta distribution if user provided min, max values for a metric.
+        Else update a normal distribution"""
+        alpha = beta = gamma = sigma = None
+        Z = metric_response[respon.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[respon.STATISTICS_STR][responses.VALUE_STR]
+        W = metric_response[respon.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
+        if min_val and max_val:
+            alpha = 1 + (Z - (min_val*W))/(max_val - min_val)
+            beta = 1 + ((max_val*W) - Z)/(max_val - min_val)
+        else:
+            if metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] > 0:
+                gamma = metric_response[respon.STATISTICS_STR][responses.VALUE_STR]
+            else:
+                gamma = 0
+            sigma = np.sqrt(1/(W+1))
+        return alpha, beta, gamma, sigma
+
 
     def routing_pmf(self):
         """Calculates the traffic split for each version
@@ -417,17 +420,16 @@ class OptimisticBayesianRoutingResponse(BayesianRoutingResponse):
         super().__init__(experiment, prom_url)
 
     @classmethod
-    def beta_sample(cls, alpha, beta, min_val, max_val, is_reward = False):
+    def beta_sample(cls, alpha, beta, min_val, max_val):
         """return a value between min and max based on beta sample"""
         x = np.random.beta(a = alpha, b = beta)
         y = alpha / (alpha + beta)
-        x = max(x, y) if is_reward else min(x, y)
+        x = min(x, y)
         return min_val + (max_val - min_val)*x
 
     @classmethod
-    def normal_sample(cls, gamma, sigma, is_reward = False):
+    def normal_sample(cls, gamma, sigma):
         """return a value based on normal sample"""
         x = np.random.normal(loc = gamma, scale = sigma)
         y = gamma
-        x = max(x, y) if is_reward else min(x, y)
-        return x
+        return min(x, y)
