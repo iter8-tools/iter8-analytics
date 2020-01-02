@@ -309,7 +309,7 @@ class BayesianRoutingResponse(Response):
     def update_beliefs(self, metric_response, min_max = None):
         """Update belief distribution for each metric
         Update beta distribution if user provided min, max values for a metric.
-        Else update a normal distribution"""
+        Else update a normal distribution. Return the tuple (alpha, beta, gamma, sigma) -- two of these entries will be None."""
         alpha = beta = gamma = sigma = None
         Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
         W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
@@ -323,13 +323,13 @@ class BayesianRoutingResponse(Response):
             else:
                 gamma = 0
             sigma = np.sqrt(1/(W+1))
-        return alpha, beta, gamma, sigma
+        return (alpha, beta, gamma, sigma)
 
 
     def routing_pmf(self):
         """Calculates the traffic split for each version
         by counting the number of times a service version satisfies all success criteria
-        out of n trials"""
+        out of n trials. Returns an object of the form... {"candidate": x, "baseline": 100 - x}"""
         # success_count = {"candidate": 0, "baseline": 0}
         # for each trial:
             # for each version:
@@ -374,10 +374,8 @@ class BayesianRoutingResponse(Response):
         for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
             if not criterion.is_counter:
                 self.candidate_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.candidate_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
-
-
         
-
+        routing_pmf = self.routing_pmf() # we got back the traffic split        
 
         self.response[request_parameters.LAST_STATE_STR] = {
             request_parameters.BASELINE_STR: {
