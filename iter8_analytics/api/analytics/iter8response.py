@@ -374,30 +374,11 @@ class BayesianRoutingResponse(Response):
         for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
             if not criterion.is_counter:
                 self.candidate_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.candidate_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
-        
-        routing_pmf = self.routing_pmf() # we got back the traffic split        
 
-        self.response[request_parameters.LAST_STATE_STR] = {
-            request_parameters.BASELINE_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: new_baseline_traffic_percentage,
-                "success_criterion_information": last_state[request_parameters.BASELINE_STR]["success_criterion_information"],
-                responses.ALPHA_BETA_STR: baseline_alpha_beta
-            },
-            request_parameters.CANDIDATE_STR: {
-                responses.TRAFFIC_PERCENTAGE_STR: new_candidate_traffic_percentage,
-                "success_criterion_information": last_state[request_parameters.CANDIDATE_STR]["success_criterion_information"],
-                responses.ALPHA_BETA_STR: candidate_alpha_beta
-            },
-            "effective_iteration_count": last_state["effective_iteration_count"]
-        }
-        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_baseline_traffic_percentage
-        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = new_candidate_traffic_percentage
-        # If first iteration then send 50/50 traffic with 0.1 alpha beta
-        # Check if both versions satisfy all the constraints
-        # If they do then find best reward
-        # For the version with the best reward do everything under compute_traffic_split
-        # 100-that for the other service
-        # return with an updated alpha, beta value and traffic split
+        routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
+
+        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf["baseline"]
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf["candidate"]
 
 class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
     def __init__(self, experiment, prom_url):
