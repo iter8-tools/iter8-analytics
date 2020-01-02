@@ -280,6 +280,7 @@ class EpsilonTGreedyResponse(Response):
 class BayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
+        self.max_trials = 1000 # =this should be higher, say 10000
         self.baseline_beliefs = {}
         self.candidate_beliefs = {}
         for criterion in self.experiment.traffic_control.success_criteria:
@@ -330,11 +331,20 @@ class BayesianRoutingResponse(Response):
         """Calculates the traffic split for each version
         by counting the number of times a service version satisfies all success criteria
         out of n trials. Returns an object of the form... {"candidate": x, "baseline": 100 - x}"""
-        # success_count = {"candidate": 0, "baseline": 0}
-        # for each trial:
-            # for each version:
-                # satisfied = True
-                # sample beta distribution for reward attribute
+        success_count = {
+            request_parameters.BASELINE_STR: 0, 
+            request_parameters.CANDIDATE_STR: 0
+        }
+        for t in np.range(self.max_trials):
+            for version in [request_parameters.BASELINE_STR, request_parameters.CANDIDATE_STR]:
+                successful = True
+
+                num_reqs = self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][responses.SAMPLE_SIZE_STR] if version == request_parameters.BASELINE_STR else self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][responses.SAMPLE_SIZE_STR]
+                alpha = (num_reqs + 2)/3 if version == request_parameters.BASELINE_STR else (num_reqs + 2)*2/3
+                beta = (num_reqs + 2) - alpha 
+                # above maintains the invariant that alpha + beta = num_reqs for both versions at all times
+                reward = np.random.beta(a = alpha, b = beta)
+
                 # for each Success Criteria
                     # if not cumulative metric:
                         # if min_max are given:
@@ -357,6 +367,7 @@ class BayesianRoutingResponse(Response):
                     # reward is updated accordingly
                 # else (version did not satisfy one of the SC)
                     # reward = 0
+
             # if maximum(reward for each version) is 0:
                 # reward of baseline = 0.001 (Baseline gets a minimum reward)
             # V_star = version with max reward
