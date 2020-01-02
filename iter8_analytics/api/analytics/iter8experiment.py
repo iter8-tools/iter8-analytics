@@ -74,6 +74,7 @@ class SuccessCriterionPBR:
             "metric_name": "iter8_latency",
             "is_counter": False,
             "absent_value": "None",
+            "min_max": {"min": 0, "max": 1},
             "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
             "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
             "type": "delta",

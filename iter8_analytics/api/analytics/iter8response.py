@@ -280,13 +280,18 @@ class EpsilonTGreedyResponse(Response):
 class BayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
-        self.beliefs = {}
-        # for each metric, which is not a counter do...
-            # self.beliefs[metric_name] = {
-                # "min_val": None,
-                # "max_val": None,
-                # "params": {} # if the above remain none, they we will have normal params; else we will have beta params.
-            # }
+        self.baseline_beliefs = {}
+        self.candidate_beliefs = {}
+        for criterion in self.experiment.traffic_control.success_criteria:
+            if not criterion.is_counter:
+                self.baseline_beliefs[criterion.metric_name] = {
+                request_parameters.MIN_MAX_STR: criterion.min_max if request_parameters.MIN_MAX_STR in criterion else None,
+                "params": None
+                }
+                self.candidate_beliefs[criterion.metric_name] = {
+                request_parameters.MIN_MAX_STR: criterion.min_max if request_parameters.MIN_MAX_STR in criterion else None,
+                "params": None
+                }
 
     def append_success_criteria(self, criterion):
         raise NotImplementedError()
@@ -301,7 +306,7 @@ class BayesianRoutingResponse(Response):
         """
         raise NotImplementedError()
 
-    def update_beliefs(self, metric_response, min_val = None, max_val = None):
+    def update_beliefs(self, metric_response, min_max = None):
         """Update belief distribution for each metric
         Update beta distribution if user provided min, max values for a metric.
         Else update a normal distribution"""
@@ -309,12 +314,12 @@ class BayesianRoutingResponse(Response):
         Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
         W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
         # what happens if the above value is none... ?
-        if min_val and max_val:
-            alpha = 1 + (Z - (min_val*W))/(max_val - min_val)
-            beta = 1 + ((max_val*W) - Z)/(max_val - min_val)
+        if min_max:
+            alpha = 1 + (Z - (min_max[request_parameters.MIN_STR]*W))/(min_max[request_parameters.MAX_STR] - min_max[request_parameters.MIN_STR])
+            beta = 1 + ((min_max[request_parameters.MAX_STR]*W) - Z)/(min_max[request_parameters.MAX_STR] - min_max[request_parameters.MIN_STR])
         else:
             if metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] > 0:
-                gamma = metric_response[responses.STATISTICS_STR][responses.VALUE_STR] 
+                gamma = metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
             else:
                 gamma = 0
             sigma = np.sqrt(1/(W+1))
@@ -363,6 +368,16 @@ class BayesianRoutingResponse(Response):
         """Will serve as a version of the meta algorithm """
         raise NotImplementedError()
         # Update belief for baseline and candidate version, for every metric which is not a counter.
+        for criterion in self.response[request_parameters.BASELINE_STR][responses.METRICS_STR]:
+            if not criterion.is_counter:
+                self.baseline_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.baseline_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
+        for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
+            if not criterion.is_counter:
+                self.candidate_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.candidate_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
+
+
+        
+
 
         self.response[request_parameters.LAST_STATE_STR] = {
             request_parameters.BASELINE_STR: {
