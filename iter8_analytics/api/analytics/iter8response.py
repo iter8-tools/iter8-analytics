@@ -232,7 +232,7 @@ class EpsilonTGreedyResponse(Response):
         super().__init__(experiment, prom_url)
 
     def append_traffic_decision(self):
-        last_state = self.experiment.last_state.last_state
+        last_state = self.experiment.last_state.last_state # to be cleaned up
         # If there was no change observed in this iteration then do not increment traffic percentage
         if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
             new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
@@ -280,6 +280,13 @@ class EpsilonTGreedyResponse(Response):
 class BayesianRoutingResponse(Response):
     def __init__(self, experiment, prom_url):
         super().__init__(experiment, prom_url)
+        self.beliefs = {}
+        # for each metric, which is not a counter do...
+            # self.beliefs[metric_name] = {
+                # "min_val": None,
+                # "max_val": None,
+                # "params": {} # if the above remain none, they we will have normal params; else we will have beta params.
+            # }
 
     def append_success_criteria(self, criterion):
         raise NotImplementedError()
@@ -301,12 +308,13 @@ class BayesianRoutingResponse(Response):
         alpha = beta = gamma = sigma = None
         Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
         W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
+        # what happens if the above value is none... ?
         if min_val and max_val:
             alpha = 1 + (Z - (min_val*W))/(max_val - min_val)
             beta = 1 + ((max_val*W) - Z)/(max_val - min_val)
         else:
             if metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] > 0:
-                gamma = metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
+                gamma = metric_response[responses.STATISTICS_STR][responses.VALUE_STR] 
             else:
                 gamma = 0
             sigma = np.sqrt(1/(W+1))
@@ -354,28 +362,7 @@ class BayesianRoutingResponse(Response):
     def append_traffic_decision(self):
         """Will serve as a version of the meta algorithm """
         raise NotImplementedError()
-        last_state = self.experiment.last_state.last_state
-        baseline_alpha_beta = self.experiment.last_state.last_state[request_parameters.BASELINE_STR][responses.ALPHA_BETA_STR]
-        candidate_alpha_beta = self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][responses.ALPHA_BETA_STR]
-        # If there was no change observed in this iteration then do not increment traffic percentage
-        if not self.experiment.last_state.last_state[iter8experiment.CHANGE_OBSERVED_STR]:
-             new_candidate_traffic_percentage = last_state[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
-        elif self.experiment.first_iteration:
-            new_candidate_traffic_percentage = 50
-            last_state["effective_iteration_count"] = last_state["effective_iteration_count"] + 1
-
-        # elif sample_size criteria is not met by candidate (####or baseline too?):
-            # stagnate traffic_split
-            # same as last state
-        # else:
-            # both candidate and baseline could be feasible versions
-            # self.update_beliefs(candidate)
-            # self.update_beliefs(baseline)
-            # P = routing_pmf("candidate")
-            new_candidate_traffic_percentage = P
-
-            #new_candidate_traffic_percentage = 100.0 - self.routing_pmf("baseline")
-        #new_baseline_traffic_percentage = 100.0 - new_candidate_traffic_percentage
+        # Update belief for baseline and candidate version, for every metric which is not a counter.
 
         self.response[request_parameters.LAST_STATE_STR] = {
             request_parameters.BASELINE_STR: {
