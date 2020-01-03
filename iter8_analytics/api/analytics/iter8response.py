@@ -338,6 +338,7 @@ class BayesianRoutingResponse(Response):
             request_parameters.CANDIDATE_STR: 0
         }
         for t in np.range(self.max_trials):
+            reward = {}
             for version in [request_parameters.BASELINE_STR, request_parameters.CANDIDATE_STR]:
                 successful = True
 
@@ -345,7 +346,6 @@ class BayesianRoutingResponse(Response):
                 alpha = (num_reqs + 2)/3 if version == request_parameters.BASELINE_STR else (num_reqs + 2)*2/3
                 beta = (num_reqs + 2) - alpha
                 # above maintains the invariant that alpha + beta = num_reqs for both versions at all times
-                reward = {}
                 reward[version] = np.random.beta(a = alpha, b = beta)
 
                 for criterion in self.experiment.traffic_control.success_criteria:
