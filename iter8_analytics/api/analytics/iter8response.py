@@ -11,6 +11,7 @@ from flask import request
 from datetime import datetime, timezone, timedelta
 import dateutil.parser as parser
 import numpy as np
+from collections import namedtuple
 
 import copy
 import json
@@ -312,6 +313,7 @@ class BayesianRoutingResponse(Response):
         Update beta distribution if user provided min, max values for a metric.
         Else update a normal distribution. Return the tuple (alpha, beta, gamma, sigma) -- two of these entries will be None."""
         alpha = beta = gamma = sigma = None
+        params = namedtuple('params', 'alpha beta gamma sigma')
         Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
         W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
         # what happens if the above value is none... ?
@@ -324,7 +326,7 @@ class BayesianRoutingResponse(Response):
             else:
                 gamma = 0
             sigma = np.sqrt(1/(W+1))
-        return (alpha, beta, gamma, sigma)
+        return params(alpha, beta, gamma, sigma)
 
 
     def routing_pmf(self):
@@ -332,7 +334,7 @@ class BayesianRoutingResponse(Response):
         by counting the number of times a service version satisfies all success criteria
         out of n trials. Returns an object of the form... {"candidate": x, "baseline": 100 - x}"""
         success_count = {
-            request_parameters.BASELINE_STR: 0, 
+            request_parameters.BASELINE_STR: 0,
             request_parameters.CANDIDATE_STR: 0
         }
         for t in np.range(self.max_trials):
@@ -341,39 +343,44 @@ class BayesianRoutingResponse(Response):
 
                 num_reqs = self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][responses.SAMPLE_SIZE_STR] if version == request_parameters.BASELINE_STR else self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][responses.SAMPLE_SIZE_STR]
                 alpha = (num_reqs + 2)/3 if version == request_parameters.BASELINE_STR else (num_reqs + 2)*2/3
-                beta = (num_reqs + 2) - alpha 
+                beta = (num_reqs + 2) - alpha
                 # above maintains the invariant that alpha + beta = num_reqs for both versions at all times
-                reward = np.random.beta(a = alpha, b = beta)
+                reward = {}
+                reward[version] = np.random.beta(a = alpha, b = beta)
 
-                # for each Success Criteria
-                    # if not cumulative metric:
-                        # if min_max are given:
-                            # X = sample from beta distribution
-                        # else: (min max is not given)
-                            # X = sample from normal distribution
-                    # else: (metric is cumulative)
-                        # X = value observed in the current iteration
+                for criterion in self.experiment.traffic_control.success_criteria:
+                    i = 0 # to keep track of the criterion number we are measuring
+                    if not criterion.is_counter: #the metric is not cumulative
+                        beliefs = self.baseline_beliefs if version == request_parameters.BASELINE_STR else self.candidate_beliefs
+                        if beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR]: #if min max values are defined for the metric
+                            X = self.beta_sample(beliefs[criterion.metric_name]["params"].alpha, beliefs[criterion.metric_name]["params"].beta, beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR][request_parameters.MIN_STR], beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR][request_parameters.MAX_STR])
+                        else: # if min max values are not defined for the metric
+                            X = self.normal_sample(beliefs[criterion.metric_name]["params"].gamma, beliefs[criterion.metric_name]["params"].sigma)
+                    else: #metric is cumulative
+                        X = self.response[version][responses.METRICS_STR][i][responses.STATISTICS_STR][responses.VALUE_STR]
+                    if criterion.type == request_parameters.THRESHOLD_CRITERION_STR: #feasibility constraint is Threshold
+                        if X > criterion.value:
+                            successful = False
+                            break
+                    else: #feasibility constraint is Delta
+                        if not version == request_parameters.BASELINE_STR:
+                            #if delta criterion is not satisfied:
+                            if X > (criterion.value + 1) * self.responses[request_parameters.BASELINE_STR][responses.METRICS_STR][i][responses.STATISTICS_STR][responses.VALUE_STR]:
+                                successful = False
+                                break
+                    i+=1
+                if not successful:
+                    reward[version] = 0 #when the version did not meet all success criteria
+            if max(reward.values()) == 0: #when neither of the versions have met the success criteria
+                reward[request_parameters.BASELINE_STR] = 0.0001 #baseline gets minimum reward
+            v_star = request_parameters.BASELINE_STR if reward[request_parameters.BASELINE_STR] > reward[request_parameters.CANDIDATE_STR] else request_parameters.CANDIDATE_STR # V_star = version with max reward
+            success_count[v_star]+=1
+        new_baseline_traffic_percentage = (success_count[request_parameters.BASELINE_STR]/self.max_trails)*100
+        return {
+            request_parameters.BASELINE_STR: new_baseline_traffic_percentage,
+            request_parameters.CANDIDATE_STR: 100-new_baseline_traffic_percentage
+        }
 
-                    # if threshold criterion is used:
-                        # if threshold is not satisfied
-                            # satisfied = False
-                            # break
-                        # else: (delta criterion is used)
-                            # if version is not baseline:
-                                # if observed value does not satisfy delta criterion
-                                    # satisfied = False
-                                    # break
-                # if satisfied is true:
-                    # reward is updated accordingly
-                # else (version did not satisfy one of the SC)
-                    # reward = 0
-
-            # if maximum(reward for each version) is 0:
-                # reward of baseline = 0.001 (Baseline gets a minimum reward)
-            # V_star = version with max reward
-            # success_count[V_star]+=1
-        # update traffic split according to the count values
-        raise NotImplementedError()
 
     def append_traffic_decision(self):
         """Will serve as a version of the meta algorithm """
@@ -388,8 +395,8 @@ class BayesianRoutingResponse(Response):
 
         routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
 
-        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf["baseline"]
-        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf["candidate"]
+        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.BASELINE_STR]
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.CANDIDATE_STR]
 
 class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
     def __init__(self, experiment, prom_url):
