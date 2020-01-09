@@ -295,10 +295,80 @@ class BayesianRoutingResponse(Response):
                 "params": None
                 }
 
+
+    def append_metrics_and_success_criteria(self):
+        """Overriding Base class method.
+        Appends the response object with results from Prometheus for the current iteration"""
+        for criterion in self.experiment.traffic_control.success_criteria:
+            self.response[request_parameters.BASELINE_STR][responses.METRICS_STR].append(self.get_results(
+                criterion, self.experiment.baseline))
+            self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR].append(self.get_results(
+                criterion, self.experiment.candidate))
+            log.info(f"Appended metric: {criterion.metric_name}")
+            self.append_success_criteria(criterion)
+
+
     def append_success_criteria(self, criterion):
-        raise NotImplementedError()
+        """Overriding Base Class method.
+        Appends the response object with success/failure
+        of the results from the current iteration"""
+        if criterion.type == request_parameters.DELTA_CRITERION_STR:
+            self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(DeltaCriterion(
+                criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
+        elif criterion.type == request_parameters.THRESHOLD_CRITERION_STR:
+            self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(
+                ThresholdCriterion(criterion, self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
+        else:
+            raise ValueError("Criterion type can either be Threshold or Delta")
+        log.info("Appended Success Criteria")
+
 
     def append_assessment_summary(self):
+        """Overriding Base Class method.
+        Updates response object with overrall assessment summary for the current iteration"""
+        self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR] = all(
+            criterion[responses.SUCCESS_CRITERION_MET_STR] for criterion in self.response[responses.ASSESSMENT_STR][request_parameters.SUCCESS_CRITERIA_STR])
+        self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ABORT_EXPERIMENT_STR] = any(
+            criterion[responses.ABORT_EXPERIMENT_STR] for criterion in self.response[responses.ASSESSMENT_STR][request_parameters.SUCCESS_CRITERIA_STR])
+
+        self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR] = []
+        if ((datetime.now(timezone.utc) - parser.parse(self.experiment.baseline.end_time)).total_seconds() >= 1800) or ((datetime.now(timezone.utc) - parser.parse(self.experiment.candidate.end_time)).total_seconds() >= 10800):
+            self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append("The experiment end time is more than 30 mins ago")
+
+        success_criteria_met_str = "not" if not(self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]) else ""
+        if self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ABORT_EXPERIMENT_STR]:
+            self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"The experiment needs to be aborted")
+        self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"All success criteria were {success_criteria_met_str} met")
+
+
+    def append_traffic_decision(self):
+        """Will serve as a version of the meta algorithm """
+        raise NotImplementedError()
+        # Update belief for baseline and candidate version, for every metric which is not a counter.
+        for criterion in self.response[request_parameters.BASELINE_STR][responses.METRICS_STR]:
+            if not criterion.is_counter:
+                self.baseline_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.baseline_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
+        for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
+            if not criterion.is_counter:
+                self.candidate_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.candidate_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
+
+        routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
+
+        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.BASELINE_STR]
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.CANDIDATE_STR]
+
+        #Append confidence string to the assessment summary
+        confidence_str = "not " if self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] < self.experiment.traffic_control.confidence*100 else ""
+        confidence_str = "Required confidence of " + str(self.experiment.traffic_control.confidence) + " was "+ confidence_str + "reached"
+        self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(confidence_str)
+
+
+
+    def change_observed(self, service_version, success_criterion_number):
+        """
+        This function is not used in Bayesian Routing Algorithms.
+        It should not be called
+        """
         raise NotImplementedError()
 
     def has_baseline_met_all_criteria(self):
@@ -380,23 +450,6 @@ class BayesianRoutingResponse(Response):
             request_parameters.BASELINE_STR: new_baseline_traffic_percentage,
             request_parameters.CANDIDATE_STR: 100-new_baseline_traffic_percentage
         }
-
-
-    def append_traffic_decision(self):
-        """Will serve as a version of the meta algorithm """
-        raise NotImplementedError()
-        # Update belief for baseline and candidate version, for every metric which is not a counter.
-        for criterion in self.response[request_parameters.BASELINE_STR][responses.METRICS_STR]:
-            if not criterion.is_counter:
-                self.baseline_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.baseline_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
-        for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
-            if not criterion.is_counter:
-                self.candidate_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.candidate_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
-
-        routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
-
-        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.BASELINE_STR]
-        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.CANDIDATE_STR]
 
 class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
     def __init__(self, experiment, prom_url):

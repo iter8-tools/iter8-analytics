@@ -92,6 +92,7 @@ class SuccessCriterionPBR:
         self.type = criterion[request_parameters.CRITERION_TYPE_STR]
         self.value = criterion[request_parameters.CRITERION_VALUE_STR]
         self.stop_on_failure = False if request_parameters.CRITERION_STOP_ON_FAILURE_STR not in criterion else criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR]
+        self.sample_size = 0 #defaults to 0 for code reusability
 
 
 class TrafficControlDefault():
