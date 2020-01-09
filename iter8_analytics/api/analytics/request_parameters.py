@@ -99,7 +99,7 @@ min_max = api.model('min_max', {
         required=True,
         description='Maximum Value of the metric')
         })
-success_criterion_pbr = api.model('success_criterion_pbr', {
+success_criterion_br = api.model('success_criterion_br', {
     METRIC_NAME_STR: fields.String(
         required=True,
         description='Name of the metric to which the criterion applies',
@@ -177,8 +177,8 @@ traffic_control_epsilon_t_greedy = api.model('traffic_control_epsilon_t_greedy',
 
 NO_OF_TRIALS_STR="no_of_trials"
 CONFIDENCE_STR = "confidence"
-#pbr = Posterior Bayesian Routing
-traffic_control_pbr = api.model('traffic_control_pbr', {
+#br = Bayesian Routing
+traffic_control_br = api.model('traffic_control_br', {
     MAX_TRAFFIC_PERCENT_STR: fields.Float(
         required=False, example=50.0, min=0.0, default=50.0,
         description='Maximum percentage of traffic that the candidate version '
@@ -188,7 +188,7 @@ traffic_control_pbr = api.model('traffic_control_pbr', {
         description='Posterior probability that all '
         'success criteria is met'),
     SUCCESS_CRITERIA_STR: fields.List(
-        fields.Nested(success_criterion_pbr),
+        fields.Nested(success_criterion_br),
         required=True,
         description='List of criteria for assessing the candidate version')})
 
@@ -236,7 +236,7 @@ epsilon_t_greedy_parameters = api.model('epsilon_t_greedy_parameters', {
 })
 
 
-posterior_bayesian_routing_parameters = api.model('posterior_bayesian_routing_parameters', {
+bayesian_routing_parameters = api.model('bayesian_routing_parameters', {
      BASELINE_STR: fields.Nested(
          version_definition, required=True,
          description='Specifies a time interval and key-value pairs for '
@@ -248,9 +248,6 @@ posterior_bayesian_routing_parameters = api.model('posterior_bayesian_routing_pa
          'retrieving and processing data pertaining to the candidate '
          'version'),
      TRAFFIC_CONTROL_STR: fields.Nested(
-         traffic_control_pbr, required=True,
-         description='Parameters controlling the behavior of the analytics'),
-     LAST_STATE_STR: fields.Raw(
-         required=True,
-         description='State returned by the server on the previous call')
+         traffic_control_br, required=True,
+         description='Parameters controlling the behavior of the analytics')
  })

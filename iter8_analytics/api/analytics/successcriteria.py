@@ -129,3 +129,8 @@ class ThresholdCriterion(SuccessCriterion):
         # t_test, bernoulli_test are the other options beyond simple_threshold
         test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
         return self.post_process_test_result(test_result)
+
+    def test_bayesian(self):
+        # t_delta, bernoulli_delta are the other options beyond simple_delta
+        test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
+        return self.post_process_test_result_bayesian(test_result)

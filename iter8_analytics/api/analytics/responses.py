@@ -195,3 +195,26 @@ default_response = api.model('default_response', {
         description='State returned by the server, to be passed on the '
         'next call')
 })
+
+#br = Bayesian Routing
+br_response = api.model('default_response', {
+    METRIC_BACKEND_URL_STR: fields.String(
+        required=True,
+        example='http://localhost:9090',
+        description='URL to query the time-series database'),
+    request_parameters.BASELINE_STR: fields.Nested(
+        version_measurements,
+        required=True,
+        description='Measurements and traffic recommendation for the '
+        'baseline version'),
+    request_parameters.CANDIDATE_STR: fields.Nested(
+        version_measurements,
+        required=True,
+        description='Measurements and traffic recommendation for the '
+        'candidate version'),
+    ASSESSMENT_STR: fields.Nested(
+        assessment,
+        required=True,
+        description='Summary of the candidate assessment based on success '
+        'criteria')
+})

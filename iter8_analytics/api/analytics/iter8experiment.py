@@ -67,7 +67,7 @@ class SuccessCriterionDefault:
         self.sample_size = 10 if request_parameters.CRITERION_SAMPLE_SIZE_STR not in criterion else criterion[request_parameters.CRITERION_SAMPLE_SIZE_STR]
         self.stop_on_failure = False if request_parameters.CRITERION_STOP_ON_FAILURE_STR not in criterion else criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR]
 
-class SuccessCriterionPBR:
+class SuccessCriterionBR:
     def __init__(self, criterion):
         """
         criterion:  {
@@ -86,7 +86,7 @@ class SuccessCriterionPBR:
         self.metric_name = criterion[request_parameters.METRIC_NAME_STR]
         self.is_counter = criterion[request_parameters.IS_COUNTER_STR]
         self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in criterion else criterion[request_parameters.ABSENT_VALUE_STR]
-        self.min_max = request_parameters.MIN_MAX_STR
+        self.min_max = None if request_parameters.MIN_MAX_STR not in criterion else criterion[request_parameters.MIN_MAX_STR]
         self.metric_query_template = criterion[request_parameters.METRIC_QUERY_TEMPLATE_STR]
         self.metric_sample_size_query_template = criterion[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
         self.type = criterion[request_parameters.CRITERION_TYPE_STR]
@@ -103,12 +103,12 @@ class TrafficControlDefault():
         self.step_size = 2 if request_parameters.STEP_SIZE_STR not in traffic_control else traffic_control[request_parameters.STEP_SIZE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else traffic_control[request_parameters.MAX_TRAFFIC_PERCENT_STR]
 
-class TrafficControlPBR():
+class TrafficControlBR():
     def __init__(self, traffic_control):
         self.success_criteria = []
         for each_criteria in traffic_control[request_parameters.SUCCESS_CRITERIA_STR]:
-            self.success_criteria.append(SuccessCriterionPBR(each_criteria))
-        self.confidence = traffic_control[request_parameters.CONFIDENCE_STR]
+            self.success_criteria.append(SuccessCriterionBR(each_criteria))
+        self.confidence = 0.95 if request_parameters.CONFIDENCE_STR not in traffic_control else traffic_control[request_parameters.CONFIDENCE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else [request_parameters.MAX_TRAFFIC_PERCENT_STR]
 
 class CheckAndIncrementExperiment():
@@ -160,7 +160,7 @@ class PosteriorBayesianRoutingExperiment():
          baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
          candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
 
-         traffic_control = TrafficControlPBR(payload[request_parameters.TRAFFIC_CONTROL_STR])
+         traffic_control = TrafficControlBR(payload[request_parameters.TRAFFIC_CONTROL_STR])
 
          self.first_iteration = True
          self.baseline = baseline_payload

@@ -24,7 +24,7 @@ class Response():
     def __init__(self, experiment, prom_url):
         """Create response object corresponding to payload. This has everything and more."""
         self.experiment = experiment
-        log.info(f"First Iteration: {experiment.first_iteration}")
+
         self.response = {
             responses.METRIC_BACKEND_URL_STR: prom_url,
             request_parameters.CANDIDATE_STR: {
@@ -287,11 +287,11 @@ class BayesianRoutingResponse(Response):
         for criterion in self.experiment.traffic_control.success_criteria:
             if not criterion.is_counter:
                 self.baseline_beliefs[criterion.metric_name] = {
-                request_parameters.MIN_MAX_STR: criterion.min_max if request_parameters.MIN_MAX_STR in criterion else None,
+                request_parameters.MIN_MAX_STR: criterion.min_max,
                 "params": None
                 }
                 self.candidate_beliefs[criterion.metric_name] = {
-                request_parameters.MIN_MAX_STR: criterion.min_max if request_parameters.MIN_MAX_STR in criterion else None,
+                request_parameters.MIN_MAX_STR: criterion.min_max,
                 "params": None
                 }
 
@@ -343,14 +343,13 @@ class BayesianRoutingResponse(Response):
 
     def append_traffic_decision(self):
         """Will serve as a version of the meta algorithm """
-        raise NotImplementedError()
         # Update belief for baseline and candidate version, for every metric which is not a counter.
         for criterion in self.response[request_parameters.BASELINE_STR][responses.METRICS_STR]:
-            if not criterion.is_counter:
-                self.baseline_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.baseline_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
+            if not criterion[request_parameters.IS_COUNTER_STR]:
+                self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
         for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
-            if not criterion.is_counter:
-                self.candidate_beliefs[criterion.metric_name]["params"] = update_beliefs(criterion, self.candidate_beliefs[criterion.metric_name][request_parameters.MIN_MAX_STR])
+            if not criterion[request_parameters.IS_COUNTER_STR]:
+                self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
 
         routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
 
@@ -361,22 +360,6 @@ class BayesianRoutingResponse(Response):
         confidence_str = "not " if self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] < self.experiment.traffic_control.confidence*100 else ""
         confidence_str = "Required confidence of " + str(self.experiment.traffic_control.confidence) + " was "+ confidence_str + "reached"
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(confidence_str)
-
-
-
-    def change_observed(self, service_version, success_criterion_number):
-        """
-        This function is not used in Bayesian Routing Algorithms.
-        It should not be called
-        """
-        raise NotImplementedError()
-
-    def has_baseline_met_all_criteria(self):
-        """
-        This function is not used in Bayesian Routing Algorithms.
-        It should not be called
-        """
-        raise NotImplementedError()
 
     def update_beliefs(self, metric_response, min_max = None):
         """Update belief distribution for each metric
@@ -407,17 +390,17 @@ class BayesianRoutingResponse(Response):
             request_parameters.BASELINE_STR: 0,
             request_parameters.CANDIDATE_STR: 0
         }
-        for t in np.range(self.max_trials):
+        for t in range(self.max_trials):
             reward = {}
             for version in [request_parameters.BASELINE_STR, request_parameters.CANDIDATE_STR]:
                 successful = True
 
-                num_reqs = self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][responses.SAMPLE_SIZE_STR] if version == request_parameters.BASELINE_STR else self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][responses.SAMPLE_SIZE_STR]
+                num_reqs = self.response[version][responses.METRICS_STR][0][responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
                 alpha = (num_reqs + 2)/3 if version == request_parameters.BASELINE_STR else (num_reqs + 2)*2/3
                 beta = (num_reqs + 2) - alpha
                 # above maintains the invariant that alpha + beta = num_reqs for both versions at all times
                 reward[version] = np.random.beta(a = alpha, b = beta)
-
+                #log.info("Reached here 3")
                 for criterion in self.experiment.traffic_control.success_criteria:
                     i = 0 # to keep track of the criterion number we are measuring
                     if not criterion.is_counter: #the metric is not cumulative
@@ -445,11 +428,25 @@ class BayesianRoutingResponse(Response):
                 reward[request_parameters.BASELINE_STR] = 0.0001 #baseline gets minimum reward
             v_star = request_parameters.BASELINE_STR if reward[request_parameters.BASELINE_STR] > reward[request_parameters.CANDIDATE_STR] else request_parameters.CANDIDATE_STR # V_star = version with max reward
             success_count[v_star]+=1
-        new_baseline_traffic_percentage = (success_count[request_parameters.BASELINE_STR]/self.max_trails)*100
+        new_baseline_traffic_percentage = (success_count[request_parameters.BASELINE_STR]/self.max_trials)*100
         return {
             request_parameters.BASELINE_STR: new_baseline_traffic_percentage,
             request_parameters.CANDIDATE_STR: 100-new_baseline_traffic_percentage
         }
+
+    def change_observed(self, service_version, success_criterion_number):
+        """
+        This function is not used in Bayesian Routing Algorithms.
+        It should not be called
+        """
+        raise NotImplementedError()
+
+    def has_baseline_met_all_criteria(self):
+        """
+        This function is not used in Bayesian Routing Algorithms.
+        It should not be called
+        """
+        raise NotImplementedError()
 
 class PosteriorBayesianRoutingResponse(BayesianRoutingResponse):
     def __init__(self, experiment, prom_url):

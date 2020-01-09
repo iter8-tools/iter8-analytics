@@ -1124,58 +1124,66 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             correct_response = {'baseline': {'traffic_percentage': 90.0, 'success_criterion_information': [[4, 4.0]]}, 'candidate': {'traffic_percentage': 10, 'success_criterion_information': [[5, 5.0]]}, 'effective_iteration_count': 3}
             self.assertEqual(correct_response, resp.get_json()["_last_state"])
 
-
+    #All tests after this involve the /analytics/canary/posterior_bayesian_routing endpoint
     def test_payload_posterior_bayesian_routing(self):
-         """Tests the REST endpoint /analytics/canary/posterior_bayesian_routing."""
+        """Tests the REST endpoint /analytics/canary/posterior_bayesian_routing."""
 
-         endpoint = f'http://localhost:5555/api/v1/analytics/canary/posterior_bayesian_routing'
+        endpoint = f'http://localhost:5555/api/v1/analytics/canary/posterior_bayesian_routing'
 
-         with requests_mock.mock() as m:
-             m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
 
-             ###################
-             # Test request with some required parameters
-             ###################
-             log.info("\n\n\n")
-             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-             log.info("Test request with some required parameters")
+            ###################
+            # Test request with some required parameters
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with some required parameters")
 
-             parameters = {
-                 "baseline": {
-                 "start_time": "2019-05-01T19:00:02.389Z",
-                 "end_time": "2019-05-01T19:30:02.389Z",
-                 "tags": {
-                     "destination_service_name": "reviews-v2"
-                     }
-                 },
-                 "candidate": {
-                 "start_time": "2019-05-01T19:00:02.389Z",
-                 "end_time": "2019-05-01T19:30:02.389Z",
-                 "tags": {
-                     "destination_service_name": "reviews-v2"
-                     }
-                 },
-                 "traffic_control": {
-                    "confidence": 0.9,
-                    "success_criteria": [
-                    {
-                        "metric_name": "iter8_error_count",
-                        "is_counter": True,
-                        "min, max": {
-                            "min": 0,
-                            "max": 0
-                         },
-                         "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
-                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
-                         "type": "delta",
-                         "value": 0.02,
-                         "stop_on_failure": False
-                         }
-                     ]
-                 },
-                 "_last_state": {}
-                 }
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_service_name": "reviews-v2",
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_service_name": "reviews-v2",
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.9,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "0",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 0.02,
+                        "stop_on_failure": False
+                        }
+                    ]
+                }
+                }
 
-             # Call the REST API via the test client
-             resp = self.flask_test.post(endpoint, json=parameters)
-             self.assertEqual(resp.status_code, 200, resp.data)
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            log.info(f"{resp.data}")
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+            ##################
+            # Test request to see if min max is not provided, if confidence is not provided
+            # Test to see if required=False parameters are not provided
+            # check if default sample size of 0 is filled for BR
+            #
+            ###################

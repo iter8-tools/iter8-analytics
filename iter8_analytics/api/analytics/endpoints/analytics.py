@@ -98,9 +98,9 @@ class CanaryEpsilonTGreedy(flask_restplus.Resource):
 @analytics_namespace.route('/canary/posterior_bayesian_routing')
 class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
-    @api.expect(request_parameters.posterior_bayesian_routing_parameters,
+    @api.expect(request_parameters.bayesian_routing_parameters,
                 validate=True)
-    @api.marshal_with(responses.default_response)
+    @api.marshal_with(responses.br_response)
     def post(self):
         """Assess the candidate version and recommend traffic-control actions."""
         log.info('Started processing request to assess the candidate using the '
@@ -113,15 +113,12 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
             log.info("Extracted payload")
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = PosteriorBayesianRoutingExperiment(payload)
-            # log.info("Fixed experiment")
-            # self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
-            # log.info("Created response object")
-            # self.response_object.compute_test_results_and_summary()
-        #
-        #     DataCapture.fill_value("service_response", self.response_object.response)
-        #     DataCapture.save_data()
+            log.info("Fixed experiment")
+            self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
+            log.info("Created response object")
+            self.response_object.compute_test_results_and_summary()
+            DataCapture.fill_value("service_response", self.response_object.response)
+            DataCapture.save_data()
         except Exception as e:
             flask_restplus.errors.abort(code=400, message=str(e))
-        # return self.response_object.jsonify()
-        # return self.response_object.jsonify()
-        return {}
+        return self.response_object.jsonify()
