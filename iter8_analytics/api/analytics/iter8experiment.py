@@ -153,7 +153,7 @@ class EpsilonTGreedyExperiment():
         self.candidate = candidate_payload
         self.traffic_control = traffic_control
 
-class PosteriorBayesianRoutingExperiment():
+class BayesianRoutingExperiment():
      def __init__(self, payload):
          self.experiment = {}
 
