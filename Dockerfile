@@ -1,6 +1,6 @@
 FROM python:3.7.3-alpine3.9
 
-RUN apk update && apk upgrade
+RUN apk update && apk upgrade && apk add build-base
 
 COPY iter8_analytics /python_code/src/iter8_analytics
 ENV PYTHONPATH=/python_code/src
