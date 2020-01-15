@@ -30,7 +30,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         "query_name": "value",
         "query_template": "query_template",
         "is_counter": True,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "entity_tags": "entity_tags"
         }
         prometheus_object = PrometheusQuery("http://localhost:9090", query_spec)

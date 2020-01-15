@@ -29,7 +29,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         criterion = SC({
                         "metric_name": "iter8_error_rate",
                         "is_counter": False,
-                        "absent_value": "0",
+                        "absent_value": "0.0",
                         "type": "threshold",
                         "value": 0.02,
                         "stop_on_failure": True,
@@ -49,7 +49,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         criterion = SC({
                         "metric_name": "iter8_error_rate",
                         "is_counter": False,
-                        "absent_value": "0",
+                        "absent_value": "0.0",
                         "type": "threshold",
                         "value": 0.02,
                         "stop_on_failure": True,
@@ -70,7 +70,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         criterion = SC({
         "metric_name": "iter8_error_count",
         "is_counter": True,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "metric_query_template": "query_template",
         "metric_sample_size_query_template": "query_template",
         "type": "threshold",
@@ -103,7 +103,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         baseline_metrics = {
         "metric_name": "iter8_error_rate",
         "is_counter": False,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "statistics": {'sample_size': 30, 'value': 12}
         }
         criterion.metric_name = "iter8_error_rate"
@@ -132,7 +132,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         criterion = SC({
         "metric_name": "iter8_error_rate",
         "is_counter": False,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "metric_query_template": "query_template",
         "metric_sample_size_query_template": "query_template",
         "type": "threshold",
@@ -143,7 +143,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         candidate_metrics = {
         "metric_name": "iter8_error_rate",
         "is_counter": False,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "statistics": {'sample_size': 10, 'value': 12}
         }
 
@@ -154,7 +154,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         baseline_metrics = {
         "metric_name": "iter8_error_rate",
         "is_counter": False,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "statistics": {'sample_size': 12, 'value': 13}
         }
 
@@ -167,7 +167,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         criterion = SC({
         "metric_name": "iter8_error_count",
         "is_counter": True,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "metric_query_template": "query_template",
         "metric_sample_size_query_template": "query_template",
         "type": "threshold",
@@ -178,7 +178,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         candidate_metrics = {
         "metric_name": "iter8_error_count",
         "is_counter": True,
-        "absent_value": "0",
+        "absent_value": "0.0",
         "statistics": {'sample_size': 12, 'value': 13}
         }
 

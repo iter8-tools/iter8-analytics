@@ -53,7 +53,7 @@ class SuccessCriterion:
         criterion:  {
                         "metric_name": "iter8_error_count",
                         "is_counter": True,
-                        "absent_value": "0",
+                        "absent_value": "0.0",
                         "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                         "type": "delta",
@@ -74,7 +74,7 @@ class SuccessCriterion:
         baseline_str = "of the baseline" if self.criterion.type == "delta" else ""
         result_str = f"{self.criterion.metric_name} of the candidate {is_or_is_not} within {delta_or_threshold} {self.criterion.value} {baseline_str}. "
         conclusion_str = ["Insufficient sample size. " if not test_result[SAMPLE_SIZE_SUFFICIENT_STR] else result_str]
-        counter_exceeded = True if (self.criterion.is_counter and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]) else False
+        counter_exceeded = True if (self.criterion.is_counter and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and (self.criterion.type== "threshold") and not test_result[SUCCESS_STR]) else False
         if counter_exceeded:
             conclusion_str.append("Counter Metric exceeded threshold value. Aborting experiment.")
 
