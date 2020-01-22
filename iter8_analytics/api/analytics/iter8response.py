@@ -16,6 +16,7 @@ from collections import namedtuple
 import copy
 import json
 import os
+import sys
 import logging
 log = logging.getLogger(__name__)
 
@@ -367,7 +368,12 @@ class BayesianRoutingResponse(Response):
         Else update a normal distribution. Return the tuple (alpha, beta, gamma, sigma) -- two of these entries will be None."""
         alpha = beta = gamma = sigma = None
         params = namedtuple('params', 'alpha beta gamma sigma')
-        Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
+        Z = 0.0
+        try:
+            Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
+        except:
+            log.warning("ERROR: %s", sys.exc_info()[0])
+        log.info(Z)
         W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
         # what happens if the above value is none... ?
         if min_max:
