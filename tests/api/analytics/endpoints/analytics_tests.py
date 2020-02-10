@@ -1381,7 +1381,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
 
 
     #All tests after this involve the /analytics/canary/optimistic_bayesian_routing endpoint
-    def test_payload_optimistic_bayesian_routing(self):
+    def test_payload_posterior_optimistic_bayesian_routing(self):
         """Tests the REST endpoint /analytics/canary/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/optimistic_bayesian_routing'
@@ -1517,7 +1517,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
 
-    def test_payload_bayesian_routing_high_sample_size(self):
+    def test_payload_optimistic_bayesian_routing_high_sample_size(self):
         """Tests the REST endpoint /analytics/canary/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/optimistic_bayesian_routing'

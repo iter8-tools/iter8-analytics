@@ -126,7 +126,7 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
 
 @analytics_namespace.route('/canary/optimistic_bayesian_routing')
-class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
+class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
                 validate=True)

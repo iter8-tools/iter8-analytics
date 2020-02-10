@@ -424,7 +424,7 @@ class BayesianRoutingResponse(Response):
                     else: #feasibility constraint is Delta
                         if not version == request_parameters.BASELINE_STR:
                             #if delta criterion is not satisfied:
-                            if X > (criterion.value + 1) * self.responses[request_parameters.BASELINE_STR][responses.METRICS_STR][i][responses.STATISTICS_STR][responses.VALUE_STR]:
+                            if X > (criterion.value + 1) * self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][i][responses.STATISTICS_STR][responses.VALUE_STR]:
                                 successful = False
                                 break
                     i+=1
