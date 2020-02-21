@@ -196,6 +196,27 @@ traffic_control_br = api.model('traffic_control_br', {
 TRAFFIC_CONTROL_STR = 'traffic_control'
 
 LAST_STATE_STR = '_last_state'
+OBJECTIVE_STR = "objective"
+
+objective = api.model('objective', {
+    METRIC_NAME_STR: fields.String(
+        required=True,
+        description='Name of the metric to which is used to calculate the objective value',
+        example='iter8_error_count'),
+    IS_COUNTER_STR: fields.Boolean(
+        required=True, description='Describles the type of metric. '
+        'Options: "True": Metrics which are cumulative in nature '
+        'and represent monotonically increasing values ; '
+        '"False": Metrics which are not cumulative'),
+    ABSENT_VALUE_STR: fields.String(
+        required=False, example="2.0", default="0.0",
+        description='Describes what value should be returned '
+        'if Prometheus did not find any data corresponding to the metric'),
+    METRIC_QUERY_TEMPLATE_STR: fields.String(
+        required=True,
+        description='Prometheus Query of the metric to which the criterion applies',
+        example='sum(increase(istio_requests_total{response_code=~"5..",'
+        'reporter="source"}[$interval]$offset_str)) by ($entity_labels)')})
 
 check_and_increment_parameters = api.model('check_and_increment_parameters', {
     BASELINE_STR: fields.Nested(
@@ -250,4 +271,47 @@ bayesian_routing_parameters = api.model('bayesian_routing_parameters', {
      TRAFFIC_CONTROL_STR: fields.Nested(
          traffic_control_br, required=True,
          description='Parameters controlling the behavior of the analytics')
+ })
+
+
+epsilon_t_greedy_ab_parameters = api.model('epsilon_t_greedy_parameters', {
+    BASELINE_STR: fields.Nested(
+        version_definition, required=True,
+        description='Specifies a time interval and key-value pairs for '
+        'retrieving and processing data pertaining to the baseline '
+        'version'),
+    CANDIDATE_STR: fields.Nested(
+        version_definition, required=True,
+        description='Specifies a time interval and key-value pairs for '
+        'retrieving and processing data pertaining to the candidate '
+        'version'),
+    TRAFFIC_CONTROL_STR: fields.Nested(
+        traffic_control_epsilon_t_greedy, required=True,
+        description='Parameters controlling the behavior of the analytics'),
+    OBJECTIVE_STR: fields.Nested(
+        objective, required=True,
+        description='Objective attribute to minimize in the A/B test'),
+    LAST_STATE_STR: fields.Raw(
+        required=True,
+        description='State returned by the server on the previous call')
+})
+
+
+bayesian_routing_ab_parameters = api.model('bayesian_routing_parameters', {
+     BASELINE_STR: fields.Nested(
+         version_definition, required=True,
+         description='Specifies a time interval and key-value pairs for '
+         'retrieving and processing data pertaining to the baseline '
+         'version'),
+     CANDIDATE_STR: fields.Nested(
+         version_definition, required=True,
+         description='Specifies a time interval and key-value pairs for '
+         'retrieving and processing data pertaining to the candidate '
+         'version'),
+     TRAFFIC_CONTROL_STR: fields.Nested(
+         traffic_control_br, required=True,
+         description='Parameters controlling the behavior of the analytics'),
+     OBJECTIVE_STR: fields.Nested(
+        objective, required=True,
+        description='Objective attribute to minimize in the A/B test')
  })

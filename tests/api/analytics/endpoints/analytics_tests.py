@@ -42,7 +42,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
         log.info('Completed initialization for all analytics REST API tests.')
 
     ##All tests after this involve the /analytics/canary/check_and_increment endpoint (until mentioned otherwise)
-    def test_payload_check_and_increment(self):
+    def test_payload_canary_check_and_increment(self):
         """Tests the REST endpoint /analytics/canary/check_and_increment."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/check_and_increment'
@@ -812,7 +812,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
     #All tests after this involve the /analytics/canary/epsilon_t_greedy endpoint
-    def test_payload_epsilon_t_greedy(self):
+    def test_payload_canary_epsilon_t_greedy(self):
         """Tests the REST endpoint /analytics/canary/epsilon_t_greedy."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/epsilon_t_greedy'
@@ -1125,7 +1125,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(correct_response, resp.get_json()["_last_state"])
 
     #All tests after this involve the /analytics/canary/posterior_bayesian_routing endpoint
-    def test_payload_posterior_bayesian_routing(self):
+    def test_payload_canary_posterior_bayesian_routing(self):
         """Tests the REST endpoint /analytics/canary/posterior_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/posterior_bayesian_routing'
@@ -1261,7 +1261,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
 
-    def test_payload_bayesian_routing_high_sample_size(self):
+    def test_payload_canary_bayesian_routing_high_sample_size(self):
         """Tests the REST endpoint /analytics/canary/posterior_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/posterior_bayesian_routing'
@@ -1381,7 +1381,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
 
 
     #All tests after this involve the /analytics/canary/optimistic_bayesian_routing endpoint
-    def test_payload_posterior_optimistic_bayesian_routing(self):
+    def test_payload_canary_optimistic_bayesian_routing(self):
         """Tests the REST endpoint /analytics/canary/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/optimistic_bayesian_routing'
@@ -1517,7 +1517,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
 
-    def test_payload_optimistic_bayesian_routing_high_sample_size(self):
+    def test_payload_canary_optimistic_bayesian_routing_high_sample_size(self):
         """Tests the REST endpoint /analytics/canary/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/analytics/canary/optimistic_bayesian_routing'
@@ -1633,3 +1633,183 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
             correct_response = ["All success criteria were  met", "Required confidence of 0.5 was reached"]
             self.assertEqual(correct_response, resp.get_json()["assessment"]["summary"]["conclusions"])
+
+    #All tests after this involve the /analytics/ab/epsilon_t_greedy endpoint
+    def test_payload_ab_epsilon_t_greedy(self):
+        """Tests the REST endpoint /analytics/ab/epsilon_t_greedy."""
+
+        endpoint = f'http://localhost:5555/api/v1/analytics/ab/epsilon_t_greedy'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+
+            ###################
+            # Test request with some required parameters
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with some required parameters")
+
+            parameters = {
+                "baseline": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_service_namespace": "default",
+                        "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                    "start_time": "2019-04-24T19:40:32.017Z",
+                    "tags": {
+                        "destination_service_namespace": "default",
+                        "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                    "success_criteria": [
+                        {
+                            "metric_name": "iter8_error_rate",
+                            "is_counter": False,
+                            "absent_value": "0.0",
+                            "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "metric_sample_size_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
+                            "type": "delta",
+                            "value": 0.02,
+                            "sample_size": 0,
+                            "stop_on_failure": False
+                        }
+                    ]
+                },
+                "objective": {
+                    "metric_name": "iter8_error_rate",
+                    "is_counter": False,
+                    "absent_value": "0.0",
+                    "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+                },
+                "_last_state": {}
+            }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+    #All tests after this involve the /analytics/ab/posterior_bayesian_routing endpoint
+    def test_payload_ab_posterior_bayesian_routing(self):
+        """Tests the REST endpoint /analytics/ab/posterior_bayesian_routing."""
+
+        endpoint = f'http://localhost:5555/api/v1/analytics/ab/posterior_bayesian_routing'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+
+            ###################
+            # Test request with some required parameters
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with some required parameters")
+
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.9,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "0",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 0.02,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "objective": {
+                    "metric_name": "iter8_error_rate",
+                    "is_counter": False,
+                    "absent_value": "0.0",
+                    "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+                }
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+
+    #All tests after this involve the /analytics/ab/optimistic_bayesian_routing endpoint
+    def test_payload_ab_optimistic_bayesian_routing(self):
+        """Tests the REST endpoint /analytics/ab/optimistic_bayesian_routing."""
+
+        endpoint = f'http://localhost:5555/api/v1/analytics/ab/optimistic_bayesian_routing'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+
+            ###################
+            # Test request with some required parameters
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with some required parameters")
+
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.9,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "0",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 0.02,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "objective": {
+                    "metric_name": "iter8_error_rate",
+                    "is_counter": False,
+                    "absent_value": "0.0",
+                    "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+                }
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
