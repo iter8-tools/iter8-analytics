@@ -184,7 +184,7 @@ class ABEpsilonTGreedy(flask_restplus.Resource):
         return self.response_object.jsonify()
 
 
-@analytics_namespace.route('/canary/posterior_bayesian_routing')
+@analytics_namespace.route('/ab/posterior_bayesian_routing')
 class ABPosteriorBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
@@ -214,7 +214,7 @@ class ABPosteriorBayesianRouting(flask_restplus.Resource):
 
 
 
-@analytics_namespace.route('/canary/optimistic_bayesian_routing')
+@analytics_namespace.route('/ab/optimistic_bayesian_routing')
 class ABOptimisticBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
