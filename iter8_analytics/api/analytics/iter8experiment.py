@@ -111,6 +111,13 @@ class TrafficControlBR():
         self.confidence = 0.95 if request_parameters.CONFIDENCE_STR not in traffic_control else traffic_control[request_parameters.CONFIDENCE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else [request_parameters.MAX_TRAFFIC_PERCENT_STR]
 
+class Objective():
+    def __init__(self, objective):
+        self.metric_name = objective[request_parameters.METRIC_NAME_STR]
+        self.is_counter = objective[request_parameters.IS_COUNTER_STR]
+        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in objective else objective[request_parameters.ABSENT_VALUE_STR]
+        self.metric_query_template = objective[request_parameters.METRIC_QUERY_TEMPLATE_STR]
+
 class CheckAndIncrementExperiment():
     def __init__(self, payload):
         self.experiment = {}
@@ -166,3 +173,43 @@ class BayesianRoutingExperiment():
          self.baseline = baseline_payload
          self.candidate = candidate_payload
          self.traffic_control = traffic_control
+
+
+class EpsilonTGreedyABExperiment():
+    def __init__(self, payload):
+        self.experiment = {}
+        if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
+            last_state = EpsilonTGreedyLastState(100, 0, [], [], 0)
+            first_iteration = True
+        else:
+            last_state = EpsilonTGreedyLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][EFFECTIVE_ITERATION_COUNT_STR])
+            first_iteration = False
+
+        baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
+        candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
+
+        traffic_control = TrafficControlDefault(payload[request_parameters.TRAFFIC_CONTROL_STR])
+        objective = Objective(payload[request_parameters.OBJECTIVE_STR])
+
+        self.last_state = last_state
+        self.first_iteration = first_iteration
+        self.baseline = baseline_payload
+        self.candidate = candidate_payload
+        self.objective = objective
+        self.traffic_control = traffic_control
+
+class BayesianRoutingABExperiment():
+     def __init__(self, payload):
+         self.experiment = {}
+
+         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
+         candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
+
+         traffic_control = TrafficControlBR(payload[request_parameters.TRAFFIC_CONTROL_STR])
+         objective = Objective(payload[request_parameters.OBJECTIVE_STR])
+
+         self.first_iteration = True
+         self.baseline = baseline_payload
+         self.candidate = candidate_payload
+         self.traffic_control = traffic_control
+         self.objective = objective
