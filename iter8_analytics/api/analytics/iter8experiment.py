@@ -111,12 +111,13 @@ class TrafficControlBR():
         self.confidence = 0.95 if request_parameters.CONFIDENCE_STR not in traffic_control else traffic_control[request_parameters.CONFIDENCE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else [request_parameters.MAX_TRAFFIC_PERCENT_STR]
 
-class Objective():
-    def __init__(self, objective):
-        self.metric_name = objective[request_parameters.METRIC_NAME_STR]
-        self.is_counter = objective[request_parameters.IS_COUNTER_STR]
-        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in objective else objective[request_parameters.ABSENT_VALUE_STR]
-        self.metric_query_template = objective[request_parameters.METRIC_QUERY_TEMPLATE_STR]
+class Reward():
+    def __init__(self, reward):
+        self.metric_name = reward[request_parameters.METRIC_NAME_STR]
+        self.is_counter = reward[request_parameters.IS_COUNTER_STR]
+        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in reward else reward[request_parameters.ABSENT_VALUE_STR]
+        self.metric_query_template = reward[request_parameters.METRIC_QUERY_TEMPLATE_STR]
+        self.metric_sample_size_query_template = reward[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
 
 class CheckAndIncrementExperiment():
     def __init__(self, payload):
@@ -189,13 +190,13 @@ class EpsilonTGreedyABExperiment():
         candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
 
         traffic_control = TrafficControlDefault(payload[request_parameters.TRAFFIC_CONTROL_STR])
-        objective = Objective(payload[request_parameters.OBJECTIVE_STR])
+        reward = Reward(payload[request_parameters.REWARD_STR])
 
         self.last_state = last_state
         self.first_iteration = first_iteration
         self.baseline = baseline_payload
         self.candidate = candidate_payload
-        self.objective = objective
+        self.reward = reward
         self.traffic_control = traffic_control
 
 class BayesianRoutingABExperiment():
@@ -206,10 +207,10 @@ class BayesianRoutingABExperiment():
          candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
 
          traffic_control = TrafficControlBR(payload[request_parameters.TRAFFIC_CONTROL_STR])
-         objective = Objective(payload[request_parameters.OBJECTIVE_STR])
+         reward = Reward(payload[request_parameters.REWARD_STR])
 
          self.first_iteration = True
          self.baseline = baseline_payload
          self.candidate = candidate_payload
          self.traffic_control = traffic_control
-         self.objective = objective
+         self.reward = reward

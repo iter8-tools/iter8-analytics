@@ -7,7 +7,7 @@ import iter8_analytics.api.analytics.responses as responses
 from iter8_analytics.api.restplus import api
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 from iter8_analytics.api.analytics.iter8response import CheckAndIncrementResponse, EpsilonTGreedyResponse, PosteriorBayesianRoutingResponse, OptimisticBayesianRoutingResponse
-from iter8_analytics.api.analytics.iter8experiment import CheckAndIncrementExperiment, EpsilonTGreedyExperiment, BayesianRoutingExperiment
+from iter8_analytics.api.analytics.iter8experiment import CheckAndIncrementExperiment, EpsilonTGreedyExperiment, BayesianRoutingExperiment, EpsilonTGreedyABExperiment, BayesianRoutingABExperiment
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
@@ -171,10 +171,10 @@ class ABEpsilonTGreedy(flask_restplus.Resource):
             payload = request.get_json()
             log.info("Extracted payload")
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = EpsilonTGreedyExperiment(payload)
+            self.experiment = EpsilonTGreedyABExperiment(payload)
             log.info("Fixed experiment")
-        #     self.response_object = EpsilonTGreedyResponse(self.experiment, prom_url)
-        #     log.info("Created response object")
+            self.response_object = EpsilonTGreedyResponse(self.experiment, prom_url)
+            log.info("Created response object")
         #     self.response_object.compute_test_results_and_summary()
         #
         #     DataCapture.fill_value("service_response", self.response_object.response)
@@ -202,10 +202,10 @@ class ABPosteriorBayesianRouting(flask_restplus.Resource):
             payload = request.get_json()
             log.info("Extracted payload")
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = BayesianRoutingExperiment(payload)
+            self.experiment = BayesianRoutingABExperiment(payload)
             log.info("Fixed experiment")
-        #     self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
-        #     log.info("Created response object")
+            self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
+            log.info("Created response object")
         #     self.response_object.compute_test_results_and_summary()
         #     DataCapture.fill_value("service_response", self.response_object.response)
         #     DataCapture.save_data()
@@ -233,10 +233,10 @@ class ABOptimisticBayesianRouting(flask_restplus.Resource):
             payload = request.get_json()
             log.info("Extracted payload")
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = BayesianRoutingExperiment(payload)
+            self.experiment = BayesianRoutingABExperiment(payload)
             log.info("Fixed experiment")
-        #     self.response_object = OptimisticBayesianRoutingResponse(self.experiment, prom_url)
-        #     log.info("Created response object")
+            self.response_object = OptimisticBayesianRoutingResponse(self.experiment, prom_url)
+            log.info("Created response object")
         #     self.response_object.compute_test_results_and_summary()
         #     DataCapture.fill_value("service_response", self.response_object.response)
         #     DataCapture.save_data()
