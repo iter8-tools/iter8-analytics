@@ -86,22 +86,22 @@ class SuccessCriterion:
             SAMPLE_SIZE_SUFFICIENT_STR: test_result[SAMPLE_SIZE_SUFFICIENT_STR]
         }
 
-    def post_process_test_result_bayesian(self, test_result):
-        is_or_is_not = "is" if test_result[SUCCESS_STR] else "is not"
-        delta_or_threshold = "delta" if self.criterion.type == "delta" else "threshold"
-        baseline_str = "of the baseline" if self.criterion.type == "delta" else ""
-        result_str = f"{self.criterion.metric_name} of the candidate {is_or_is_not} within {delta_or_threshold} {self.criterion.value} {baseline_str}. "
-        conclusion_str = [result_str]
-        counter_exceeded = True if (self.criterion.is_counter and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]) else False
-        if counter_exceeded:
-            conclusion_str.append("Counter Metric exceeded threshold value. Aborting experiment.")
-
-        return {
-            request_parameters.METRIC_NAME_STR: self.criterion.metric_name,
-            responses.CONCLUSIONS_STR: conclusion_str,
-            responses.SUCCESS_CRITERION_MET_STR: test_result[SUCCESS_STR],
-            responses.ABORT_EXPERIMENT_STR: (self.criterion.stop_on_failure and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]) or (counter_exceeded),
-        }
+    # def post_process_test_result_bayesian(self, test_result):
+    #     is_or_is_not = "is" if test_result[SUCCESS_STR] else "is not"
+    #     delta_or_threshold = "delta" if self.criterion.type == "delta" else "threshold"
+    #     baseline_str = "of the baseline" if self.criterion.type == "delta" else ""
+    #     result_str = f"{self.criterion.metric_name} of the candidate {is_or_is_not} within {delta_or_threshold} {self.criterion.value} {baseline_str}. "
+    #     conclusion_str = [result_str]
+    #     counter_exceeded = True if (self.criterion.is_counter and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]) else False
+    #     if counter_exceeded:
+    #         conclusion_str.append("Counter Metric exceeded threshold value. Aborting experiment.")
+    #
+    #     return {
+    #         request_parameters.METRIC_NAME_STR: self.criterion.metric_name,
+    #         responses.CONCLUSIONS_STR: conclusion_str,
+    #         responses.SUCCESS_CRITERION_MET_STR: test_result[SUCCESS_STR],
+    #         responses.ABORT_EXPERIMENT_STR: (self.criterion.stop_on_failure and test_result[SAMPLE_SIZE_SUFFICIENT_STR] and not test_result[SUCCESS_STR]) or (counter_exceeded),
+    #     }
 
 class DeltaCriterion(SuccessCriterion):
     def __init__(self, criterion, baseline_metrics, candidate_metrics):
@@ -130,7 +130,7 @@ class ThresholdCriterion(SuccessCriterion):
         test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
         return self.post_process_test_result(test_result)
 
-    def test_bayesian(self):
-        # t_delta, bernoulli_delta are the other options beyond simple_delta
-        test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
-        return self.post_process_test_result_bayesian(test_result)
+    # def test_bayesian(self):
+    #     # t_delta, bernoulli_delta are the other options beyond simple_delta
+    #     test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
+    #     return self.post_process_test_result_bayesian(test_result)

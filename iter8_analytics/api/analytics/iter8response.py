@@ -145,8 +145,6 @@ class Response():
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR]["sample_size_sufficient"] = all(
             criterion["sample_size_sufficient"] for criterion in self.response[responses.ASSESSMENT_STR][request_parameters.SUCCESS_CRITERIA_STR])
 
-        #log.info(f'CANDIDATE SAMPLE SIZE SUFFICIENT: {self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR]["sample_size_sufficient"]}')
-
 
     def has_baseline_met_all_criteria(self):
         """
@@ -297,31 +295,19 @@ class BayesianRoutingResponse(Response):
                 }
 
 
-    def append_metrics_and_success_criteria(self):
-        """Overriding Base class method.
-        Appends the response object with results from Prometheus for the current iteration"""
-        for criterion in self.experiment.traffic_control.success_criteria:
-            self.response[request_parameters.BASELINE_STR][responses.METRICS_STR].append(self.get_results(
-                criterion, self.experiment.baseline))
-            self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR].append(self.get_results(
-                criterion, self.experiment.candidate))
-            log.info(f"Appended metric: {criterion.metric_name}")
-            self.append_success_criteria(criterion)
-
-
-    def append_success_criteria(self, criterion):
-        """Overriding Base Class method.
-        Appends the response object with success/failure
-        of the results from the current iteration"""
-        if criterion.type == request_parameters.DELTA_CRITERION_STR:
-            self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(DeltaCriterion(
-                criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
-        elif criterion.type == request_parameters.THRESHOLD_CRITERION_STR:
-            self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(
-                ThresholdCriterion(criterion, self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
-        else:
-            raise ValueError("Criterion type can either be Threshold or Delta")
-        log.info("Appended Success Criteria")
+    # def append_success_criteria(self, criterion):
+    #     """Overriding Base Class method.
+    #     Appends the response object with success/failure
+    #     of the results from the current iteration"""
+    #     if criterion.type == request_parameters.DELTA_CRITERION_STR:
+    #         self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(DeltaCriterion(
+    #             criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
+    #     elif criterion.type == request_parameters.THRESHOLD_CRITERION_STR:
+    #         self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(
+    #             ThresholdCriterion(criterion, self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
+    #     else:
+    #         raise ValueError("Criterion type can either be Threshold or Delta")
+    #     log.info("Appended Success Criteria")
 
 
     def append_assessment_summary(self):
@@ -443,9 +429,9 @@ class BayesianRoutingResponse(Response):
     def change_observed(self, service_version, success_criterion_number):
         """
         This function is not used in Bayesian Routing Algorithms.
-        It should not be called
         """
-        raise NotImplementedError()
+        pass
+
 
     def has_baseline_met_all_criteria(self):
         """
