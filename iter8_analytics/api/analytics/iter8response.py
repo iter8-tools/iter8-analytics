@@ -295,21 +295,6 @@ class BayesianRoutingResponse(Response):
                 }
 
 
-    # def append_success_criteria(self, criterion):
-    #     """Overriding Base Class method.
-    #     Appends the response object with success/failure
-    #     of the results from the current iteration"""
-    #     if criterion.type == request_parameters.DELTA_CRITERION_STR:
-    #         self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(DeltaCriterion(
-    #             criterion, self.response[request_parameters.BASELINE_STR][responses.METRICS_STR][-1], self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
-    #     elif criterion.type == request_parameters.THRESHOLD_CRITERION_STR:
-    #         self.response[responses.ASSESSMENT_STR][responses.SUCCESS_CRITERIA_STR].append(
-    #             ThresholdCriterion(criterion, self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR][-1]).test_bayesian())
-    #     else:
-    #         raise ValueError("Criterion type can either be Threshold or Delta")
-    #     log.info("Appended Success Criteria")
-
-
     def append_assessment_summary(self):
         """Overriding Base Class method.
         Updates response object with overrall assessment summary for the current iteration"""
