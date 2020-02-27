@@ -39,7 +39,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                     })
         sc = SuccessCriterion(criterion)
 
-        tr = sc.post_process_test_result({
+        tr = sc.update_response_with_test_result_and_conclusion({
             "sample_size_sufficient": False,
             "success": False
         })
@@ -59,7 +59,7 @@ class TestAnalyticsAPI(unittest.TestCase):
                     })
         sc = SuccessCriterion(criterion)
 
-        tr = sc.post_process_test_result({
+        tr = sc.update_response_with_test_result_and_conclusion({
             "sample_size_sufficient": True,
             "success": False
         })

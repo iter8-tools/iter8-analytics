@@ -68,7 +68,7 @@ class SuccessCriterion:
     def test(self):
         raise NotImplementedError()
 
-    def post_process_test_result(self, test_result):
+    def update_response_with_test_result_and_conclusion(self, test_result):
         is_or_is_not = "is" if test_result[SUCCESS_STR] else "is not"
         delta_or_threshold = "delta" if self.criterion.type == "delta" else "threshold"
         baseline_str = "of the baseline" if self.criterion.type == "delta" else ""
@@ -104,7 +104,7 @@ class DeltaCriterion(SuccessCriterion):
     def test(self):
         # t_delta, bernoulli_delta are the other options beyond simple_delta
         test_result = StatisticalTests.simple_delta(self.baseline_metric, self.candidate_metric, self.criterion)
-        return self.post_process_test_result(test_result)
+        return self.update_response_with_test_result_and_conclusion(test_result)
 
 
 class ThresholdCriterion(SuccessCriterion):
@@ -115,4 +115,4 @@ class ThresholdCriterion(SuccessCriterion):
     def test(self):
         # t_test, bernoulli_test are the other options beyond simple_threshold
         test_result = StatisticalTests.simple_threshold(self.version_metric, self.criterion)
-        return self.post_process_test_result(test_result)
+        return self.update_response_with_test_result_and_conclusion(test_result)
