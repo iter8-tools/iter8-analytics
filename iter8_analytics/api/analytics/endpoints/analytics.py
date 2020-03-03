@@ -134,7 +134,7 @@ class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
     def post(self):
         """Assess the candidate version and recommend traffic-control actions."""
         log.info('Started processing request to assess the candidate using the '
-                 '"posterior_bayesian_routing" strategy')
+                 '"optimistic_bayesian_routing" strategy')
         log.info(f"Data Capture Mode: {DataCapture.data_capture_mode}")
         ######################
 
