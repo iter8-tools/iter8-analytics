@@ -7,7 +7,7 @@ from iter8_analytics.api.restplus import api
 
 ####
 # Schema of the request body with the parameters for
-# POST /analytics/canary/check_and_increment
+# POST /analytics/experiment/check_and_increment
 ####
 START_TIME_PARAM_STR = 'start_time'
 END_TIME_PARAM_STR = 'end_time'

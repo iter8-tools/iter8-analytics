@@ -34,7 +34,7 @@ analytics_namespace = api.namespace(
 # REST API
 #################
 
-@analytics_namespace.route('/canary/check_and_increment')
+@analytics_namespace.route('/experiment/check_and_increment')
 class CanaryCheckAndIncrement(flask_restplus.Resource):
 
     @api.expect(request_parameters.check_and_increment_parameters,
@@ -65,7 +65,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
 
 
 
-@analytics_namespace.route('/canary/epsilon_t_greedy')
+@analytics_namespace.route('/experiment/epsilon_t_greedy')
 class CanaryEpsilonTGreedy(flask_restplus.Resource):
 
     @api.expect(request_parameters.epsilon_t_greedy_parameters,
@@ -95,7 +95,7 @@ class CanaryEpsilonTGreedy(flask_restplus.Resource):
         return self.response_object.jsonify()
 
 
-@analytics_namespace.route('/canary/posterior_bayesian_routing')
+@analytics_namespace.route('/experiment/posterior_bayesian_routing')
 class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
@@ -125,7 +125,7 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
 
 
-@analytics_namespace.route('/canary/optimistic_bayesian_routing')
+@analytics_namespace.route('/experiment/optimistic_bayesian_routing')
 class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
