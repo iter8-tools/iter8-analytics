@@ -34,6 +34,29 @@ analytics_namespace = api.namespace(
 # REST API
 #################
 
+@analytics_namespace.route('/experiment/algorithms')
+class CanaryCheckAndIncrement(flask_restplus.Resource):
+    def get(self):
+        """Return list of available algorithms and the corresponding endpoint"""
+        log.info('Started processing request return the list of algorithms and endpoint '
+                 'available for experimentation')
+        return {
+        "check_and_increment": {
+            "endpoint": "/analytics/experiment/check_and_increment"
+            },
+        "epsilon_t_greedy": {
+            "endpoint": "/analytics/experiment/epsilon_t_greedy"
+            },
+        "posterior_bayesian_routing": {
+            "endpoint": "/analytics/experiment/posterior_bayesian_routing"
+            },
+        "optimistic_bayesian_routing": {
+            "endpoint": "/analytics/experiment/optimistic_bayesian_routing"
+            },
+        }
+
+
+
 @analytics_namespace.route('/canary/check_and_increment')
 class CanaryCheckAndIncrement(flask_restplus.Resource):
 
