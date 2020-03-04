@@ -8,7 +8,7 @@ import iter8_analytics.api.analytics.request_parameters as request_parameters
 
 ####
 # Schema of the response produced by
-# POST /analytics/experiment/check_and_increment
+# POST /analytics/canary/check_and_increment
 ####
 
 SAMPLE_SIZE_STR = 'sample_size'

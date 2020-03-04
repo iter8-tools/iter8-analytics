@@ -8,6 +8,8 @@ from iter8_analytics.api.restplus import api
 from iter8_analytics.api.health.endpoints.health import health_namespace
 from iter8_analytics.api.analytics.endpoints.analytics \
     import analytics_namespace
+from iter8_analytics.api.analytics.endpoints.analytics \
+    import experiment_namespace
 import iter8_analytics.constants as constants
 
 #  Create a Flask application
@@ -83,6 +85,7 @@ def initialize(flask_app):
     api.init_app(blueprint)
     api.add_namespace(health_namespace)
     api.add_namespace(analytics_namespace)
+    api.add_namespace(experiment_namespace)
     flask_app.register_blueprint(blueprint)
     config_env()
 
