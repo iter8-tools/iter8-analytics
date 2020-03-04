@@ -35,6 +35,13 @@ class EpsilonTGreedyLastState():
             EFFECTIVE_ITERATION_COUNT_STR: effective_iteration_count
         }
 
+FIRST_ITERATION_STR = "first_iteration"
+class BayesianRoutingLastState():
+    def __init__(self, first_iteration):
+        self.last_state = {
+            FIRST_ITERATION_STR: first_iteration
+        }
+
 
 class ServicePayload():
     def __init__(self, service_payload):
@@ -123,60 +130,62 @@ class Reward():
         self.metric_sample_size_query_template = reward[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
         self.min_max = None if request_parameters.MIN_MAX_STR not in reward else reward[request_parameters.MIN_MAX_STR]
 
-
-class CheckAndIncrementExperiment():
+class Experiment():
     def __init__(self, payload):
         self.experiment = {}
+        baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
+        candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
+        self.experiment_type = "a/b" if request_parameters.REWARD_STR in payload[request_parameters.TRAFFIC_CONTROL_STR] else "canary"
+        self.baseline = baseline_payload
+        self.candidate = candidate_payload
+        self.set_traffic_control_and_last_state(payload)
+
+    def set_traffic_control_and_last_state(self):
+        raise NotImplementedError()
+
+class CheckAndIncrementExperiment(Experiment):
+    def __init__(self, payload):
+        super().__init__(payload)
+
+    def set_traffic_control_and_last_state(self, payload):
         if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
             last_state = CheckAndIncrementLastState(100, 0, [], [])
             first_iteration = True
         else:
             last_state = CheckAndIncrementLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR])
             first_iteration = False
-
-        baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
-        candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
-
         traffic_control = TrafficControlDefault(payload[request_parameters.TRAFFIC_CONTROL_STR])
-        self.experiment_type = "a/b" if request_parameters.REWARD_STR in payload[request_parameters.TRAFFIC_CONTROL_STR] else "canary"
         self.last_state = last_state
         self.first_iteration = first_iteration
-        self.baseline = baseline_payload
-        self.candidate = candidate_payload
         self.traffic_control = traffic_control
 
-class EpsilonTGreedyExperiment():
+class EpsilonTGreedyExperiment(Experiment):
     def __init__(self, payload):
-        self.experiment = {}
+        super().__init__(payload)
+
+    def set_traffic_control_and_last_state(self, payload):
         if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
             last_state = EpsilonTGreedyLastState(100, 0, [], [], 0)
             first_iteration = True
         else:
             last_state = EpsilonTGreedyLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][EFFECTIVE_ITERATION_COUNT_STR])
             first_iteration = False
-
-        baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
-        candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
-
         traffic_control = TrafficControlDefault(payload[request_parameters.TRAFFIC_CONTROL_STR])
-
-        self.experiment_type = "a/b" if request_parameters.REWARD_STR in payload[request_parameters.TRAFFIC_CONTROL_STR] else "canary"
         self.last_state = last_state
         self.first_iteration = first_iteration
-        self.baseline = baseline_payload
-        self.candidate = candidate_payload
         self.traffic_control = traffic_control
 
-class BayesianRoutingExperiment():
+class BayesianRoutingExperiment(Experiment):
      def __init__(self, payload):
-         self.experiment = {}
+         super().__init__(payload)
 
-         baseline_payload = ServicePayload(payload[request_parameters.BASELINE_STR])
-         candidate_payload = ServicePayload(payload[request_parameters.CANDIDATE_STR])
-
+     def set_traffic_control_and_last_state(self, payload):
          traffic_control = TrafficControlBR(payload[request_parameters.TRAFFIC_CONTROL_STR])
-         self.experiment_type = "a/b" if request_parameters.REWARD_STR in payload[request_parameters.TRAFFIC_CONTROL_STR] else "canary"
-         self.first_iteration = True
-         self.baseline = baseline_payload
-         self.candidate = candidate_payload
+         if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
+             last_state = BayesianRoutingLastState(True)
+             first_iteration = True
+         else:
+             last_state = BayesianRoutingLastState(False)
+             first_iteration = False
          self.traffic_control = traffic_control
+         self.last_state = last_state

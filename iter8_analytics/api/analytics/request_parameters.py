@@ -288,5 +288,8 @@ bayesian_routing_parameters = api.model('bayesian_routing_parameters', {
          'version'),
      TRAFFIC_CONTROL_STR: fields.Nested(
          traffic_control_br, required=True,
-         description='Parameters controlling the behavior of the analytics')
+         description='Parameters controlling the behavior of the analytics'),
+     LAST_STATE_STR: fields.Raw(
+         required=True,
+         description='State returned by the server on the previous call')
  })
