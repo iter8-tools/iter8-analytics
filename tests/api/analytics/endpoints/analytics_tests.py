@@ -3048,6 +3048,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "stop_on_failure": False
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3087,6 +3090,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "value": 0.02
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3128,6 +3134,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "stop_on_failure": True
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3184,6 +3193,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "stop_on_failure": False
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3246,6 +3258,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                          "stop_on_failure": False
                          }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3304,6 +3319,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "stop_on_failure": False
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3343,6 +3361,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "value": 0.02
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3384,6 +3405,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "stop_on_failure": True
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3440,6 +3464,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "stop_on_failure": False
                         }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3502,6 +3529,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                          "stop_on_failure": False
                          }
                     ]
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3685,6 +3715,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)"
                     }
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
@@ -3747,6 +3780,9 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "metric_query_template": "sum(increase(istio_requests_total{source_workload_namespace!='knative-serving',response_code=~'5..',reporter='source'}[$interval]$offset_str)) by ($entity_labels)",
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)"
                     }
+                },
+                "_last_state": {
+                    "first_iteration": False
                 }
                 }
 
