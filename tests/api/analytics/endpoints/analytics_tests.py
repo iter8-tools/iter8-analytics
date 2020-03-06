@@ -2059,7 +2059,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 #############################################################
 
     ##All tests after this involve the /experiment/check_and_increment endpoint (until mentioned otherwise)
-    def test_payload_canary_check_and_increment(self):
+    def test_payload_experiment_canary_check_and_increment(self):
         """Tests the REST endpoint /experiment/check_and_increment."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/check_and_increment'
@@ -2117,7 +2117,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with no change observed wrt sample size or metric parameters")
 
             parameters = {
                 "baseline": {
@@ -2386,7 +2386,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             assert b'\'normal\' is not one of [\'delta\', \'threshold\']' in resp.data
 
             ##################
-            # Test request with metric type missing in payload
+            # Test request with is_counter missing in payload
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
@@ -2571,7 +2571,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with metric_sample_size_query_template missing in payload")
+            log.info("Test request threshold crossing in a counter metric")
 
             parameters = {
                 "baseline": {
@@ -2615,7 +2615,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with metric_sample_size_query_template missing in payload")
+            log.info("Test request delta criterion with counter metric")
 
             parameters = {
                 "baseline": {
@@ -2653,7 +2653,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             assert b'Delta criterion cannot be used with counter metric.' in resp.data
 
 
-    def test_baseline_failing_success_criteria(self):
+    def test_experiment_baseline_failing_success_criteria(self):
         """Tests the REST endpoint /experiment/check_and_increment."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/check_and_increment'
@@ -2729,7 +2729,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 
 
 
-    def test_no_data_from_prometheus(self):
+    def test_experiment_no_data_from_prometheus(self):
         """Tests the REST endpoint /experiment/check_and_increment."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/check_and_increment'
@@ -2829,7 +2829,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
     #All tests after this involve the /experiment/epsilon_t_greedy endpoint
-    def test_payload_canary_epsilon_t_greedy(self):
+    def test_experiment_payload_canary_epsilon_t_greedy(self):
         """Tests the REST endpoint /experiment/epsilon_t_greedy."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/epsilon_t_greedy'
@@ -2886,7 +2886,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with pre filled last state in payload on iteration 4")
 
             parameters = {
                 "baseline": {
@@ -2956,7 +2956,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with pre filled last state in payload on iteration 5- when no change is observed")
 
             parameters = {
                 "baseline": {
@@ -3012,7 +3012,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(resp.get_json()["_last_state"], correct_response)
 
     # Test request when candidate fails success criteria
-    def test_candidate_failing_success_criteria(self):
+    def test_experiment_candidate_failing_success_criteria(self):
         """Tests the REST endpoint /experiment/epsilon_t_greedy."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/epsilon_t_greedy'
@@ -3086,7 +3086,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request when both candidate and baseline fail success criteria")
+            log.info("Test request when candidate fails success criteria because sample size requirements are not met")
 
             parameters = {
                 "baseline": {
@@ -3142,7 +3142,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(correct_response, resp.get_json()["_last_state"])
 
     #All tests after this involve the /experiment/posterior_bayesian_routing endpoint
-    def test_payload_canary_posterior_bayesian_routing(self):
+    def test_experiment_payload_canary_posterior_bayesian_routing(self):
         """Tests the REST endpoint /experiment/posterior_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/posterior_bayesian_routing'
@@ -3203,7 +3203,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request to check for default parameters")
 
             parameters = {
                 "baseline": {
@@ -3243,7 +3243,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request to with stop on failure=True")
 
             parameters = {
                 "baseline": {
@@ -3284,7 +3284,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
 
-    def test_payload_canary_bayesian_routing_high_sample_size(self):
+    def test_experiment_payload_canary_bayesian_routing_high_sample_size(self):
         """Tests the REST endpoint /experiment/posterior_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/posterior_bayesian_routing'
@@ -3297,7 +3297,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with high sample size for high confidence results")
 
             parameters = {
                 "baseline": {
@@ -3347,7 +3347,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with high sample size for high confidence results + multiple metrics")
 
             parameters = {
                 "baseline": {
@@ -3408,7 +3408,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 
 
     #All tests after this involve the /experiment/optimistic_bayesian_routing endpoint
-    def test_payload_canary_optimistic_bayesian_routing(self):
+    def test_experiment_payload_canary_optimistic_bayesian_routing(self):
         """Tests the REST endpoint /experiment/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/optimistic_bayesian_routing'
@@ -3469,7 +3469,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request to check for default parameters")
 
             parameters = {
                 "baseline": {
@@ -3509,7 +3509,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request to with stop on failure=True")
 
             parameters = {
                 "baseline": {
@@ -3550,7 +3550,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
 
-    def test_payload_canary_optimistic_bayesian_routing_high_sample_size(self):
+    def test_experiment_payload_canary_optimistic_bayesian_routing_high_sample_size(self):
         """Tests the REST endpoint /experiment/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/optimistic_bayesian_routing'
@@ -3563,7 +3563,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with high sample size for high confidence results")
 
             parameters = {
                 "baseline": {
@@ -3613,7 +3613,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             ###################
             log.info("\n\n\n")
             log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test request with some required parameters")
+            log.info("Test request with high sample size for high confidence results + multiple metrics")
 
             parameters = {
                 "baseline": {
@@ -3671,9 +3671,171 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             correct_response = ["All success criteria were  met", "Required confidence of 0.5 was reached"]
             self.assertEqual(correct_response, resp.get_json()["assessment"]["summary"]["conclusions"])
 
+    def test_experiment_no_data_canary_optimistic_bayesian_routing_high_sample_size(self):
+        """Tests the REST endpoint /experiment/optimistic_bayesian_routing."""
+
+        endpoint = f'http://localhost:5555/api/v1/experiment/optimistic_bayesian_routing'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_no_data_response.json")))
+
+            ###################
+            # Test request with no data for obr (first iteration)
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with no data for obr (first iteration)")
+
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.5,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "0",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 200000,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "_last_state": {}
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+            ###################
+            # Test request with no data for obr (not first iteration + min-max available)
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with no data for obr (not first iteration + min-max available)")
+
+            params = namedtuple('params', 'alpha beta gamma sigma')
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.5,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "None",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 200000,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "_last_state": {
+                    "baseline": {
+                        "success_criterion_belief": [params(1, 1, None, None)],
+                        "reward_belief": params(None, None, None, None)
+                    },
+                    "candidate": {
+                        "success_criterion_belief": [params(1, 1, None, None)],
+                        "reward_belief": params(None, None, None, None)
+                    }
+                }
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+            ###################
+            # Test request with no data for obr (not first iteration + min-max not available)
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with no data for obr (not first iteration + min-max not available)")
+
+            params = namedtuple('params', 'alpha beta gamma sigma')
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.5,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "None",
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 200000,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "_last_state": {
+                    "baseline": {
+                        "success_criterion_belief": [params(None, None, 0, 1)],
+                        "reward_belief": params(None, None, None, None)
+                    },
+                    "candidate": {
+                        "success_criterion_belief": [params(None, None, 0, 1)],
+                        "reward_belief": params(None, None, None, None)
+                    }
+                }
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
     ##All tests after this involve the /experiment/check_and_increment endpoint for A/B experiments
-    def test_payload_ab_check_and_increment(self):
-        """Tests the REST endpoint /analytics/ab/check_and_increment."""
+    def test_experiment_payload_ab_check_and_increment(self):
+        """Tests the REST endpoint /experiment/check_and_increment."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/check_and_increment'
 
@@ -3732,8 +3894,8 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
     #All tests after this involve the /experiment/epsilon_t_greedy endpoint for A/B experiments
-    def test_payload_ab_epsilon_t_greedy(self):
-        """Tests the REST endpoint /analytics/ab/epsilon_t_greedy."""
+    def test_experiment_payload_ab_epsilon_t_greedy(self):
+        """Tests the REST endpoint /experiment/epsilon_t_greedy."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/epsilon_t_greedy'
 
@@ -3792,8 +3954,8 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
 
     #All tests after this involve the /experiment/posterior_bayesian_routing endpoint for A/B experiments
-    def test_payload_ab_posterior_bayesian_routing(self):
-        """Tests the REST endpoint /analytics/ab/posterior_bayesian_routing."""
+    def test_experiment_payload_ab_posterior_bayesian_routing(self):
+        """Tests the REST endpoint /experiment/posterior_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/posterior_bayesian_routing'
 
@@ -3856,8 +4018,8 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 
 
     #All tests after this involve the /experiment/optimistic_bayesian_routing endpoint for A/B experiments
-    def test_payload_ab_optimistic_bayesian_routing(self):
-        """Tests the REST endpoint /analytics/ab/optimistic_bayesian_routing."""
+    def test_experimentp_ayload_ab_optimistic_bayesian_routing(self):
+        """Tests the REST endpoint /experiment/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/optimistic_bayesian_routing'
 
