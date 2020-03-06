@@ -216,5 +216,9 @@ br_response = api.model('default_response', {
         assessment,
         required=True,
         description='Summary of the candidate assessment based on success '
-        'criteria')
+        'criteria'),
+    request_parameters.LAST_STATE_STR: fields.Raw(
+        required=True,
+        description='State returned by the server, to be passed on the '
+        'next call')
 })

@@ -1172,9 +1172,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1214,9 +1212,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1258,9 +1254,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1317,9 +1311,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1382,9 +1374,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                          }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1443,9 +1433,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1485,9 +1473,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1529,9 +1515,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1588,9 +1572,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1653,9 +1635,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                          }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1839,9 +1819,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)"
                     }
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1904,9 +1882,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)"
                     }
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
