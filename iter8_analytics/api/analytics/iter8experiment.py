@@ -195,7 +195,8 @@ class BayesianRoutingExperiment(Experiment):
              last_state = BayesianRoutingLastState([], [], params(None, None, None, None), params(None, None, None, None))
              first_iteration = True
          else:
-             last_state = BayesianRoutingLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_INFORMATION_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_INFORMATION_STR], params(None, None, None, None), params(None, None, None, None))
+             last_state = BayesianRoutingLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_BELIEF_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_BELIEF_STR], params(None, None, None, None), params(None, None, None, None))
              first_iteration = False
          self.traffic_control = traffic_control
          self.last_state = last_state
+         self.first_iteration = first_iteration

@@ -60,7 +60,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
             self.response_object = CheckAndIncrementResponse(self.experiment, prom_url)
             log.info("Created response object")
             self.response_object.compute_test_results_and_summary()
-
+            
             DataCapture.fill_value("service_response", self.response_object.response)
             DataCapture.save_data()
         except Exception as e:
