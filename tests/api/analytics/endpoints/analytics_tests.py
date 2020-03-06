@@ -3026,7 +3026,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3068,7 +3067,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3112,7 +3110,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3171,7 +3168,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3236,7 +3232,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3297,7 +3292,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3339,7 +3333,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3383,7 +3376,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3442,7 +3434,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3507,7 +3498,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     ]
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3693,7 +3683,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     }
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 
@@ -3758,7 +3747,6 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                     }
                 },
                 "_last_state": {
-                    "first_iteration": False
                 }
                 }
 

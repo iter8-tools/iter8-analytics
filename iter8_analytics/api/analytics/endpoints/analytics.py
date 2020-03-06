@@ -29,12 +29,16 @@ DataCapture.data_capture_mode = os.getenv(constants.ITER8_DATA_CAPTURE_MODE_ENV)
 analytics_namespace = api.namespace(
     'analytics',
     description='Operations to support canary releases and A/B tests')
+experiment_namespace = api.namespace(
+    'experiment',
+    description='Operations to support canary releases and A/B tests')
 
 #################
 # REST API
 #################
 
 @analytics_namespace.route('/canary/check_and_increment')
+@experiment_namespace.route('/check_and_increment')
 class CanaryCheckAndIncrement(flask_restplus.Resource):
 
     @api.expect(request_parameters.check_and_increment_parameters,
@@ -66,138 +70,6 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
 
 
 @analytics_namespace.route('/canary/epsilon_t_greedy')
-class CanaryEpsilonTGreedy(flask_restplus.Resource):
-
-    @api.expect(request_parameters.epsilon_t_greedy_parameters,
-                validate=True)
-    @api.marshal_with(responses.default_response)
-    def post(self):
-        """Assess the candidate version and recommend traffic-control actions."""
-        log.info('Started processing request to assess the candidate using the '
-                 '"epsilon_t_greedy" strategy')
-        log.info(f"Data Capture Mode: {DataCapture.data_capture_mode}")
-        ######################
-
-        try:
-            payload = request.get_json()
-            log.info("Extracted payload")
-            DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = EpsilonTGreedyExperiment(payload)
-            log.info("Fixed experiment")
-            self.response_object = EpsilonTGreedyResponse(self.experiment, prom_url)
-            log.info("Created response object")
-            self.response_object.compute_test_results_and_summary()
-
-            DataCapture.fill_value("service_response", self.response_object.response)
-            DataCapture.save_data()
-        except Exception as e:
-            flask_restplus.errors.abort(code=400, message=str(e))
-        return self.response_object.jsonify()
-
-
-@analytics_namespace.route('/canary/posterior_bayesian_routing')
-class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
-
-    @api.expect(request_parameters.bayesian_routing_parameters,
-                validate=True)
-    @api.marshal_with(responses.br_response)
-    def post(self):
-        """Assess the candidate version and recommend traffic-control actions."""
-        log.info('Started processing request to assess the candidate using the '
-                 '"posterior_bayesian_routing" strategy')
-        log.info(f"Data Capture Mode: {DataCapture.data_capture_mode}")
-        ######################
-
-        try:
-            payload = request.get_json()
-            log.info("Extracted payload")
-            DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = BayesianRoutingExperiment(payload)
-            log.info("Fixed experiment")
-            self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url)
-            log.info("Created response object")
-            self.response_object.compute_test_results_and_summary()
-            DataCapture.fill_value("service_response", self.response_object.response)
-            DataCapture.save_data()
-        except Exception as e:
-            flask_restplus.errors.abort(code=400, message=str(e))
-        return self.response_object.jsonify()
-
-
-
-@analytics_namespace.route('/canary/optimistic_bayesian_routing')
-class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
-
-    @api.expect(request_parameters.bayesian_routing_parameters,
-                validate=True)
-    @api.marshal_with(responses.br_response)
-    def post(self):
-        """Assess the candidate version and recommend traffic-control actions."""
-        log.info('Started processing request to assess the candidate using the '
-                 '"optimistic_bayesian_routing" strategy')
-        log.info(f"Data Capture Mode: {DataCapture.data_capture_mode}")
-        ######################
-
-        try:
-            payload = request.get_json()
-            log.info("Extracted payload")
-            DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = BayesianRoutingExperiment(payload)
-            log.info("Fixed experiment")
-            self.response_object = OptimisticBayesianRoutingResponse(self.experiment, prom_url)
-            log.info("Created response object")
-            self.response_object.compute_test_results_and_summary()
-            DataCapture.fill_value("service_response", self.response_object.response)
-            DataCapture.save_data()
-        except Exception as e:
-            flask_restplus.errors.abort(code=400, message=str(e))
-        return self.response_object.jsonify()
-
-
-
-#############
-##Temporary fix to support both sets of endpoints.
-##The above endpoints will be deleted after controller fix
-#############
-
-experiment_namespace = api.namespace(
-    'experiment',
-    description='Operations to support canary releases and A/B tests')
-
-#################
-# REST API
-#################
-
-@experiment_namespace.route('/check_and_increment')
-class CanaryCheckAndIncrement(flask_restplus.Resource):
-    @api.expect(request_parameters.check_and_increment_parameters,
-                validate=True)
-    @api.marshal_with(responses.default_response)
-    def post(self):
-        """Assess the candidate version and recommend traffic-control actions."""
-        log.info('Started processing request to assess the candidate using the '
-                 '"check_and_increment" strategy')
-        log.info(f"Data Capture Mode: {DataCapture.data_capture_mode}")
-        ######################
-
-        try:
-            payload = request.get_json()
-            log.info("Extracted payload")
-            DataCapture.fill_value("request_payload", copy.deepcopy(payload))
-            self.experiment = CheckAndIncrementExperiment(payload)
-            log.info("Fixed experiment")
-            self.response_object = CheckAndIncrementResponse(self.experiment, prom_url)
-            log.info("Created response object")
-            self.response_object.compute_test_results_and_summary()
-
-            DataCapture.fill_value("service_response", self.response_object.response)
-            DataCapture.save_data()
-        except Exception as e:
-            flask_restplus.errors.abort(code=400, message=str(e))
-        return self.response_object.jsonify()
-
-
-
 @experiment_namespace.route('/epsilon_t_greedy')
 class CanaryEpsilonTGreedy(flask_restplus.Resource):
 
@@ -228,6 +100,7 @@ class CanaryEpsilonTGreedy(flask_restplus.Resource):
         return self.response_object.jsonify()
 
 
+@analytics_namespace.route('/canary/posterior_bayesian_routing')
 @experiment_namespace.route('/posterior_bayesian_routing')
 class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
@@ -258,6 +131,7 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
 
 
+@analytics_namespace.route('/canary/optimistic_bayesian_routing')
 @experiment_namespace.route('/optimistic_bayesian_routing')
 class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
 
