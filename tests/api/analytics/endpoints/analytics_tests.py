@@ -12,6 +12,7 @@ from iter8_analytics.api.analytics import request_parameters as request_paramete
 import iter8_analytics.constants as constants
 from iter8_analytics.api.analytics.successcriteria import StatisticalTests, SuccessCriterion
 import dateutil.parser as parser
+from collections import namedtuple
 
 import logging
 import os
@@ -1172,9 +1173,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1214,9 +1213,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1258,9 +1255,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1317,9 +1312,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1382,9 +1375,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                          }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1443,9 +1434,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1485,9 +1474,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1529,9 +1516,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1588,9 +1573,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1653,9 +1636,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                          }
                     ]
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1663,6 +1644,169 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
             self.assertEqual(resp.status_code, 200, resp.data)
             correct_response = ["All success criteria were  met", "Required confidence of 0.5 was reached"]
             self.assertEqual(correct_response, resp.get_json()["assessment"]["summary"]["conclusions"])
+
+    def test_no_data_canary_optimistic_bayesian_routing_high_sample_size(self):
+        """Tests the REST endpoint /analytics/canary/optimistic_bayesian_routing."""
+
+        endpoint = f'http://localhost:5555/api/v1/analytics/canary/optimistic_bayesian_routing'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_no_data_response.json")))
+
+            ###################
+            # Test request with no data for obr (first iteration)
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with some required parameters")
+
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.5,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "0",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 200000,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "_last_state": {}
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+            ###################
+            # Test request with no data for obr (not first iteration + min-max available)
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with no data for obr (not first iteration + min-max available)")
+
+            params = namedtuple('params', 'alpha beta gamma sigma')
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.5,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "None",
+                       "min_max": {
+                           "min": 0,
+                           "max": 1
+                        },
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 200000,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "_last_state": {
+                    "baseline": {
+                        "success_criterion_belief": [params(1, 1, None, None)],
+                        "reward_belief": params(None, None, None, None)
+                    },
+                    "candidate": {
+                        "success_criterion_belief": [params(1, 1, None, None)],
+                        "reward_belief": params(None, None, None, None)
+                    }
+                }
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
+            ###################
+            # Test request with no data for obr (not first iteration + min-max not available)
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test request with no data for obr (not first iteration + min-max not available)")
+
+            params = namedtuple('params', 'alpha beta gamma sigma')
+            parameters = {
+                "baseline": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v1"
+                    }
+                },
+                "candidate": {
+                "start_time": "2019-05-01T19:00:02.389Z",
+                "tags": {
+                    "destination_workload": "reviews-v3"
+                    }
+                },
+                "traffic_control": {
+                   "confidence": 0.5,
+                   "success_criteria": [
+                   {
+                       "metric_name": "iter8_error_rate",
+                       "is_counter": False,
+                       "absent_value": "None",
+                        "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+                        "type": "threshold",
+                        "value": 200000,
+                        "stop_on_failure": False
+                        }
+                    ]
+                },
+                "_last_state": {
+                    "baseline": {
+                        "success_criterion_belief": [params(None, None, 0, 1)],
+                        "reward_belief": params(None, None, None, None)
+                    },
+                    "candidate": {
+                        "success_criterion_belief": [params(None, None, 0, 1)],
+                        "reward_belief": params(None, None, None, None)
+                    }
+                }
+                }
+
+            #Call the REST API via the test client
+            resp = self.flask_test.post(endpoint, json=parameters)
+            self.assertEqual(resp.status_code, 200, resp.data)
+
 
     ##All tests after this involve the /analytics/canary/check_and_increment endpoint for A/B experiments
     def test_payload_ab_check_and_increment(self):
@@ -1839,9 +1983,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)"
                     }
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client
@@ -1904,9 +2046,7 @@ class TestAnalyticsCheckAndIncrementAPI(unittest.TestCase):
                         "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)"
                     }
                 },
-                "_last_state": {
-                    "first_iteration": False
-                }
+                "_last_state": {}
                 }
 
             #Call the REST API via the test client

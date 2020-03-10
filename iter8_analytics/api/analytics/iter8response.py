@@ -5,6 +5,7 @@ from iter8_analytics.metrics_backend.iter8metric import Iter8MetricFactory
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 from iter8_analytics.api.analytics.successcriteria import DeltaCriterion, ThresholdCriterion
 from iter8_analytics.api.analytics import iter8experiment
+from iter8_analytics.api.analytics.iter8experiment import BayesianRoutingLastState
 import iter8_analytics.constants as constants
 import flask_restplus
 from flask import request
@@ -47,9 +48,9 @@ class Response():
         self.append_metrics_and_success_criteria()
         log.info("Appended metrics and success criteria")
         self.append_assessment_summary()
-        log.info("Append assessment summary")
+        log.info("Appended assessment summary")
         self.append_traffic_decision()
-        log.info("Append traffic decision")
+        log.info("Appended traffic decision")
 
     def append_metrics_and_success_criteria(self):
         i = 0
@@ -180,7 +181,6 @@ class Response():
             i+=1
         sample_size = all(baseline_sample_sizes)
         success = all(baseline_successes)
-        #log.info(f"BASELINE SAMPLE SIZE SUFFICIENT: {sample} SUCCESS CRITERIA: {success}")
         return sample_size, success
 
     def append_traffic_decision(self):
@@ -301,19 +301,48 @@ class BayesianRoutingResponse(Response):
             self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"The experiment needs to be aborted")
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(f"All success criteria were {success_criteria_met_str} met")
 
-
     def append_traffic_decision(self):
         """Will serve as a version of the meta algorithm """
         # Update belief for baseline and candidate version, for every metric which is not a counter.
+        params = namedtuple('params', 'alpha beta gamma sigma')
+        self.response[request_parameters.LAST_STATE_STR] = BayesianRoutingLastState([],[], params(None, None, None, None), params(None, None, None, None)).last_state
+        i = 0
         for criterion in self.response[request_parameters.BASELINE_STR][responses.METRICS_STR]:
             if not criterion[request_parameters.IS_COUNTER_STR]:
-                self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
+                try:
+                    self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
+                except Exception as e:
+                    if self.experiment.first_iteration and criterion.min_max:
+                        self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(1, 1, None, None)
+                    elif self.experiment.first_iteration and not criterion.min_max:
+                        self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(None, None, 0, 1)
+                    else:
+                        log.error("Prometheus query did not find usable metric value. Using previous iteration metric details")
+                        last_state_beliefs = params(self.experiment.last_state.last_state[request_parameters.BASELINE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][0], self.experiment.last_state.last_state[request_parameters.BASELINE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][1], self.experiment.last_state.last_state[request_parameters.BASELINE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][2], self.experiment.last_state.last_state[request_parameters.BASELINE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][3])
+                        self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = last_state_beliefs
+                self.response[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR].append(self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"])
+            else:
+                self.response[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR].append(params(None, None, None, None))
+            i+=1
+        i = 0
         for criterion in self.response[request_parameters.CANDIDATE_STR][responses.METRICS_STR]:
             if not criterion[request_parameters.IS_COUNTER_STR]:
-                self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
-
+                try:
+                    self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
+                except Exception as e:
+                    if self.experiment.first_iteration and criterion.min_max:
+                        self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(1, 1, None, None)
+                    elif self.experiment.first_iteration and not criterion.min_max:
+                        self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(None, None, 0, 1)
+                    else:
+                        log.error("Prometheus query did not find usable metric value. Using previous iteration metric details")
+                        last_state_beliefs = params(self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][0], self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][1], self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][2], self.experiment.last_state.last_state[request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR][i][3])
+                        self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = last_state_beliefs
+                self.response[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR].append(self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"])
+            else:
+                self.response[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR].append(params(None, None, None, None))
+            i+=1
         routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
-
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.BASELINE_STR]
         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.CANDIDATE_STR]
 
@@ -322,18 +351,18 @@ class BayesianRoutingResponse(Response):
         confidence_str = "Required confidence of " + str(self.experiment.traffic_control.confidence) + " was "+ confidence_str + "reached"
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(confidence_str)
 
+
     def update_beliefs(self, metric_response, min_max = None):
         """Update belief distribution for each metric
         Update beta distribution if user provided min, max values for a metric.
         Else update a normal distribution. Return the tuple (alpha, beta, gamma, sigma) -- two of these entries will be None."""
         alpha = beta = gamma = sigma = None
         params = namedtuple('params', 'alpha beta gamma sigma')
-        Z = 0.0
         try:
             Z = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR] * metric_response[responses.STATISTICS_STR][responses.VALUE_STR]
-        except:
-            log.warning("ERROR: %s", sys.exc_info()[0])
-        log.info(Z)
+        except Exception as e:
+            log.warning("WARNING: Prometheus query did not find usable metric value")
+            raise e
         W = metric_response[responses.STATISTICS_STR][responses.SAMPLE_SIZE_STR]
         # what happens if the above value is none... ?
         if min_max:
@@ -366,7 +395,6 @@ class BayesianRoutingResponse(Response):
                 beta = (num_reqs + 2) - alpha
                 # above maintains the invariant that alpha + beta = num_reqs for both versions at all times
                 reward[version] = np.random.beta(a = alpha, b = beta)
-                #log.info("Reached here 3")
                 for criterion in self.experiment.traffic_control.success_criteria:
                     i = 0 # to keep track of the criterion number we are measuring
                     if not criterion.is_counter: #the metric is not cumulative

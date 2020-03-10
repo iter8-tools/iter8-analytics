@@ -88,7 +88,7 @@ success_criterion_default = api.model('success_criterion_default', {
 
 MIN_STR = "min"
 MAX_STR = "max"
-MIN_MAX_STR = "min, max"
+MIN_MAX_STR = "min_max"
 
 
 min_max = api.model('min_max', {

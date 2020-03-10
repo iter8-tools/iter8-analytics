@@ -1,6 +1,6 @@
 import iter8_analytics.api.analytics.request_parameters as request_parameters
 import iter8_analytics.api.analytics.responses as responses
-
+from collections import namedtuple
 from datetime import datetime, timezone, timedelta
 CHANGE_OBSERVED_STR = "change_observed"
 SUCCESS_CRITERION_INFORMATION_STR="success_criterion_information"
@@ -36,10 +36,19 @@ class EpsilonTGreedyLastState():
         }
 
 FIRST_ITERATION_STR = "first_iteration"
+SUCCESS_CRITERION_BELIEF_STR = "success_criterion_belief"
+REWARD_BELIEF_STR = "reward_belief"
 class BayesianRoutingLastState():
-    def __init__(self, first_iteration):
+    def __init__(self, baseline_criterion_beliefs, candidate_criterion_beliefs, baseline_reward_beliefs, candidate_reward_beliefs):
         self.last_state = {
-            FIRST_ITERATION_STR: first_iteration
+            request_parameters.BASELINE_STR: {
+             SUCCESS_CRITERION_BELIEF_STR: baseline_criterion_beliefs,
+             REWARD_BELIEF_STR: baseline_reward_beliefs
+             },
+            request_parameters.CANDIDATE_STR: {
+                SUCCESS_CRITERION_BELIEF_STR: candidate_criterion_beliefs,
+                REWARD_BELIEF_STR: candidate_reward_beliefs
+            }
         }
 
 
@@ -181,11 +190,13 @@ class BayesianRoutingExperiment(Experiment):
 
      def set_traffic_control_and_last_state(self, payload):
          traffic_control = TrafficControlBR(payload[request_parameters.TRAFFIC_CONTROL_STR])
+         params = namedtuple('params', 'alpha beta gamma sigma')
          if not payload[request_parameters.LAST_STATE_STR]:  # if it is empty
-             last_state = BayesianRoutingLastState(True)
+             last_state = BayesianRoutingLastState([], [], params(None, None, None, None), params(None, None, None, None))
              first_iteration = True
          else:
-             last_state = BayesianRoutingLastState(False)
+             last_state = BayesianRoutingLastState(payload[request_parameters.LAST_STATE_STR][request_parameters.BASELINE_STR][SUCCESS_CRITERION_BELIEF_STR], payload[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][SUCCESS_CRITERION_BELIEF_STR], params(None, None, None, None), params(None, None, None, None))
              first_iteration = False
          self.traffic_control = traffic_control
          self.last_state = last_state
+         self.first_iteration = first_iteration
