@@ -9,8 +9,7 @@ install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
 env:
-  - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
-  - CHANGE_MINIKUBE_NONE_USER=true
+  - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090" CHANGE_MINIKUBE_NONE_USER=true
 
 before_script:
   - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.16.7/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
