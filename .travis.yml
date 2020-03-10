@@ -7,9 +7,12 @@ install:
   - pip install -r test-requirements.txt
 env:
   - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
-# command to run tests
+
+before_script:
+  - git clone https://github.com/iter8-tools/e2e-tests.git
 
 script:
+  - ls -l
   - make test
 
 after_success:
