@@ -9,22 +9,23 @@ install:
   - pip install -r requirements.txt
   - pip install -r test-requirements.txt
 
-env:
-  - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090" CHANGE_MINIKUBE_NONE_USER=true
-
-before_script:
-  - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.15.10/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-  - curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
-  - sudo minikube start --vm-driver=none --kubernetes-version=v1.15.10
-  - sudo minikube update-context
-  - kubectl get nodes
-  - git clone https://github.com/iter8-tools/e2e-tests.git
-  - chmod +x e2e-tests/e2etests.sh
-
-script:
-  - ls -l
-  - make test
-  - e2e-tests/e2etests.sh
+jobs:
+  stage: "Unit tests"
+    env:
+      - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
+    script:
+      - make test # Run unit tests
+  stage: "End-to-end tests"
+    env:
+      global:
+        - CHANGE_MINIKUBE_NONE_USER=true
+      jobs:
+        - KUBE_VERSION=1.16.0 ISTIO=1.4.3 ISTIO=1.4.6
+        - KUBE_VERSION=1.15.10 ISTIO=1.4.3 ISTIO=1.4.6
+    script:
+      - git clone https://github.com/iter8-tools/e2e-tests.git
+      - e2e-tests/set-minikube.sh
+      - e2e-tests/e2etests.sh # Run end-to-end tests
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
