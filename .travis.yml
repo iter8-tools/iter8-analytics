@@ -2,55 +2,48 @@ dist: xenial   # required for Python >= 3.7
 
 sudo: required
 
-language: python
-python:
-  - "3.7"
-install:
-  - pip install -r requirements.txt
-  - pip install -r test-requirements.txt
-
 stages:
-  - unit_tests
-  - e2e_tests
+  - "unit tests"
+  - "end-to-end tests"
 
 jobs:
   include:
-    - stage: unit_tests
-      name: "Unit tests"
+    - stage: "unit tests"
+      language: python
+      python:
+        - "3.7"
+      install:
+        - pip install -r requirements.txt
+        - pip install -r test-requirements.txt
       env:
         - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
       script:
         - make test # Run unit tests
-    - stage: e2e_tests
-      name: "End-to-end tests"
+    - stage: "end-to-end tests"
       env:
-        global:
-          - CHANGE_MINIKUBE_NONE_USER=true
-        jobs:
-          - KUBE_VERSION=1.16.0 ISTIO=1.4.3 ISTIO=1.4.6
-          - KUBE_VERSION=1.15.10 ISTIO=1.4.3 ISTIO=1.4.6
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.3 ISTIO=1.4.6
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.3 ISTIO=1.4.6
       script:
         - git clone https://github.com/iter8-tools/e2e-tests.git
         - e2e-tests/set-minikube.sh
         - e2e-tests/e2etests.sh # Run end-to-end tests
-
-after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-      echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin;
-      if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-        export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-PR_$TRAVIS_PULL_REQUEST";
-        echo "Building PR Docker image - $IMG";
-        make docker-build;
-        make docker-push;
-      else
-        export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT";
-        echo "Building Docker image - $IMG";
-        make docker-build;
-        make docker-push;
-        LATEST="iter8/iter8-analytics:latest";
-        echo "Tagging image as latest - $LATEST";
-        docker tag $IMG $LATEST;
-        export IMG=$LATEST;
-        make docker-push;
-      fi
-    fi
+      after_success:
+        - if [ "$TRAVIS_BRANCH" == "master" ]; then
+            echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin;
+            if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+              export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-PR_$TRAVIS_PULL_REQUEST";
+              echo "Building PR Docker image - $IMG";
+              make docker-build;
+              make docker-push;
+            else
+              export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT";
+              echo "Building Docker image - $IMG";
+              make docker-build;
+              make docker-push;
+              LATEST="iter8/iter8-analytics:latest";
+              echo "Tagging image as latest - $LATEST";
+              docker tag $IMG $LATEST;
+              export IMG=$LATEST;
+              make docker-push;
+            fi
+          fi
