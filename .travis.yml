@@ -20,18 +20,22 @@ jobs:
       script:
         - make test # Run unit tests
     - &endtoend
-      stage: "end-to-end tests"
+      stage: "end-to-end tests" # Parallel jobs for testing different version combinations
+      language: minimal
       script:
         - git clone https://github.com/iter8-tools/e2e-tests.git
         - e2e-tests/set-minikube.sh
         - e2e-tests/e2etests.sh # Run end-to-end tests
-    - <<: *endtoend # Parallel jobs for testing different version combinations
+    - <<: *endtoend
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.3
+    - <<: *endtoend
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.6
+    - <<: *endtoend
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.10 ISTIO=1.4.3
+    - <<: *endtoend
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.10 ISTIO=1.4.6
       after_success:
