@@ -26,7 +26,6 @@ jobs:
         - git clone https://github.com/iter8-tools/e2e-tests.git
         - e2e-tests/set-minikube.sh
         - e2e-tests/e2etests.sh # Run end-to-end tests
-    - <<: *endtoend
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.3
     - <<: *endtoend
@@ -34,10 +33,10 @@ jobs:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.6
     - <<: *endtoend
       env:
-        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.10 ISTIO=1.4.3
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.3
     - <<: *endtoend
       env:
-        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.10 ISTIO=1.4.6
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.6
       after_success:
         - if [ "$TRAVIS_BRANCH" == "master" ]; then
             echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin;
