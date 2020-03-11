@@ -1578,6 +1578,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 
             #Call the REST API via the test client
             resp = self.flask_test.post(endpoint, json=parameters)
+            log.info(f"{resp.data}")
             self.assertEqual(resp.status_code, 200, resp.data)
             correct_response = ["All success criteria were  met", "Required confidence of 0.5 was reached"]
             self.assertEqual(correct_response, resp.get_json()["assessment"]["summary"]["conclusions"])

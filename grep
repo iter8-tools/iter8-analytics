@@ -1,1 +1,0 @@
-nosetests --exe --with-coverage --cover-package=iter8_analytics --cover-html --cover-html-dir=code_coverage
