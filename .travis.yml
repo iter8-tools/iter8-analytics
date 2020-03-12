@@ -22,9 +22,9 @@ jobs:
       stage: "end-to-end tests" # Parallel jobs for testing different version combinations
       language: minimal
       sudo: required
-      script:
+      install:
         - git clone https://github.com/iter8-tools/e2e-tests.git
-        - e2e-tests/set-minikube.sh
+      script:
         - e2e-tests/e2etests.sh # Run end-to-end tests
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.3
