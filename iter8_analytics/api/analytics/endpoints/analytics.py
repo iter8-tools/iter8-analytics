@@ -29,12 +29,16 @@ DataCapture.data_capture_mode = os.getenv(constants.ITER8_DATA_CAPTURE_MODE_ENV)
 analytics_namespace = api.namespace(
     'analytics',
     description='Operations to support canary releases and A/B tests')
+experiment_namespace = api.namespace(
+    'experiment',
+    description='Operations to support canary releases and A/B tests')
 
 #################
 # REST API
 #################
 
 @analytics_namespace.route('/canary/check_and_increment')
+@experiment_namespace.route('/check_and_increment')
 class CanaryCheckAndIncrement(flask_restplus.Resource):
 
     @api.expect(request_parameters.check_and_increment_parameters,
@@ -66,6 +70,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
 
 
 @analytics_namespace.route('/canary/epsilon_t_greedy')
+@experiment_namespace.route('/epsilon_t_greedy')
 class CanaryEpsilonTGreedy(flask_restplus.Resource):
 
     @api.expect(request_parameters.epsilon_t_greedy_parameters,
@@ -96,6 +101,7 @@ class CanaryEpsilonTGreedy(flask_restplus.Resource):
 
 
 @analytics_namespace.route('/canary/posterior_bayesian_routing')
+@experiment_namespace.route('/posterior_bayesian_routing')
 class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
@@ -126,6 +132,7 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
 
 
 @analytics_namespace.route('/canary/optimistic_bayesian_routing')
+@experiment_namespace.route('/optimistic_bayesian_routing')
 class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
 
     @api.expect(request_parameters.bayesian_routing_parameters,
@@ -134,7 +141,7 @@ class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
     def post(self):
         """Assess the candidate version and recommend traffic-control actions."""
         log.info('Started processing request to assess the candidate using the '
-                 '"posterior_bayesian_routing" strategy')
+                 '"optimistic_bayesian_routing" strategy')
         log.info(f"Data Capture Mode: {DataCapture.data_capture_mode}")
         ######################
 

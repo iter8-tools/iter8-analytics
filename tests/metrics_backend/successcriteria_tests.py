@@ -12,7 +12,7 @@ from iter8_analytics.api.analytics import request_parameters as request_paramete
 import iter8_analytics.constants as constants
 from iter8_analytics.api.analytics.successcriteria import StatisticalTests, SuccessCriterion, DeltaCriterion, ThresholdCriterion
 import dateutil.parser as parser
-from iter8_analytics.api.analytics.iter8experiment import SuccessCriterionDefault as SC
+from iter8_analytics.api.analytics.iter8experiment import FeasibilityCriterionDefault as FCD
 
 import logging
 import os
@@ -26,7 +26,7 @@ from urllib.parse import urlencode
 
 class TestAnalyticsAPI(unittest.TestCase):
     def test_abort_experiment(self):
-        criterion = SC({
+        criterion = FCD({
                         "metric_name": "iter8_error_rate",
                         "is_counter": False,
                         "absent_value": "0.0",
@@ -46,7 +46,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         assert(not tr["abort_experiment"])
 
         #Test for counter metric and success = False
-        criterion = SC({
+        criterion = FCD({
                         "metric_name": "iter8_error_rate",
                         "is_counter": False,
                         "absent_value": "0.0",
@@ -67,7 +67,7 @@ class TestAnalyticsAPI(unittest.TestCase):
 
     def test_each_criterion(self):
         #Testing Threshold Criterion
-        criterion = SC({
+        criterion = FCD({
         "metric_name": "iter8_error_count",
         "is_counter": True,
         "absent_value": "0.0",
@@ -129,7 +129,7 @@ class TestAnalyticsAPI(unittest.TestCase):
 
     def test_sample_size(self):
         #Testing Threshold Criterion
-        criterion = SC({
+        criterion = FCD({
         "metric_name": "iter8_error_rate",
         "is_counter": False,
         "absent_value": "0.0",
@@ -164,7 +164,7 @@ class TestAnalyticsAPI(unittest.TestCase):
 
     def test_threshold_exceeded_for_counter(self):
         #Testing Threshold Criterion
-        criterion = SC({
+        criterion = FCD({
         "metric_name": "iter8_error_count",
         "is_counter": True,
         "absent_value": "0.0",

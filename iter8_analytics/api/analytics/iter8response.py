@@ -343,11 +343,12 @@ class BayesianRoutingResponse(Response):
                 self.response[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR].append(params(None, None, None, None))
             i+=1
         routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
-        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.BASELINE_STR]
-        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = routing_pmf[request_parameters.CANDIDATE_STR]
+        self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = min(routing_pmf[request_parameters.CANDIDATE_STR], self.experiment.traffic_control.max_traffic_percent)
+        self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = 100 - self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
+
 
         #Append confidence string to the assessment summary
-        confidence_str = "not " if self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] < self.experiment.traffic_control.confidence*100 else ""
+        confidence_str = "not " if routing_pmf[request_parameters.CANDIDATE_STR] < self.experiment.traffic_control.confidence*100 else ""
         confidence_str = "Required confidence of " + str(self.experiment.traffic_control.confidence) + " was "+ confidence_str + "reached"
         self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.CONCLUSIONS_STR].append(confidence_str)
 
