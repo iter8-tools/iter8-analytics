@@ -1,9 +1,12 @@
 dist: xenial   # required for Python >= 3.7
 
+language: minimal
+
 stages:
   - "unit tests"
   - "end-to-end tests"
   - "build image"
+    if: branch = master
 
 jobs:
   include:
@@ -20,7 +23,6 @@ jobs:
         - make test # Run unit tests
     - &endtoend
       stage: "end-to-end tests" # Parallel jobs for testing different version combinations
-      language: minimal
       sudo: required
       install:
         - git clone https://github.com/iter8-tools/e2e-tests.git
@@ -38,7 +40,6 @@ jobs:
       env:
         - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.6
     - stage: "build image"
-      language: minimal
       script:
         - if [ "$TRAVIS_BRANCH" == "master" ]; then
             echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin;
