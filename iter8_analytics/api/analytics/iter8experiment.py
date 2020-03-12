@@ -58,7 +58,20 @@ class ServicePayload():
         self.end_time = str(datetime.now(timezone.utc)) if request_parameters.END_TIME_PARAM_STR not in service_payload else service_payload[request_parameters.END_TIME_PARAM_STR]
         self.tags = service_payload[request_parameters.TAGS_PARAM_STR]
 
-class SuccessCriterionDefault:
+class Criterion():
+    def __init__(self, criterion):
+        self.metric_name = criterion[request_parameters.METRIC_NAME_STR]
+        self.is_counter = criterion[request_parameters.IS_COUNTER_STR]
+        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in criterion else criterion[request_parameters.ABSENT_VALUE_STR]
+        self.metric_query_template = criterion[request_parameters.METRIC_QUERY_TEMPLATE_STR]
+        self.metric_sample_size_query_template = criterion[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
+
+    def generate_id(self, criterion):
+        self.criterion_id = hash(frozenset(criterion.items()))
+        return self.criterion_id
+
+
+class FeasibilityCriterion(Criterion):
     def __init__(self, criterion):
         """
         criterion:  {
@@ -73,71 +86,76 @@ class SuccessCriterionDefault:
             "stop_on_failure": false
             }
         """
-        self.metric_name = criterion[request_parameters.METRIC_NAME_STR]
-        self.is_counter = criterion[request_parameters.IS_COUNTER_STR]
-        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in criterion else criterion[request_parameters.ABSENT_VALUE_STR]
-        self.metric_query_template = criterion[request_parameters.METRIC_QUERY_TEMPLATE_STR]
-        self.metric_sample_size_query_template = criterion[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
+        super().__init__(criterion)
         self.type = criterion[request_parameters.CRITERION_TYPE_STR]
         self.value = criterion[request_parameters.CRITERION_VALUE_STR]
+        self.stop_on_failure = False if request_parameters.CRITERION_STOP_ON_FAILURE_STR not in criterion else criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR]
+
+
+class FeasibilityCriterionDefault(FeasibilityCriterion):
+    def __init__(self, criterion):
+        """
+        criterion:  {
+            "metric_name": "iter8_latency",
+            "is_counter": False,
+            "absent_value": "None",
+            "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+            "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
+            "type": "delta",
+            "value": 0.02,
+            "sample_size": 10,
+            "stop_on_failure": false
+            }
+        """
+        super().__init__(criterion)
         self.sample_size = 10 if request_parameters.CRITERION_SAMPLE_SIZE_STR not in criterion else criterion[request_parameters.CRITERION_SAMPLE_SIZE_STR]
-        self.stop_on_failure = False if request_parameters.CRITERION_STOP_ON_FAILURE_STR not in criterion else criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR]
 
-class SuccessCriterionBR:
+class FeasibilityCriterionBR(FeasibilityCriterion):
     def __init__(self, criterion):
         """
         criterion:  {
             "metric_name": "iter8_latency",
             "is_counter": False,
             "absent_value": "None",
-            "min_max": {"min": 0, "max": 1},
             "metric_query_template": "sum(increase(istio_requests_total{response_code=~\"5..\",reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
             "metric_sample_size_query_template": "sum(increase(istio_requests_total{reporter=\"source\"}[$interval]$offset_str)) by ($entity_labels)",
             "type": "delta",
             "value": 0.02,
+            "min_max": {
+                "min": 0,
+                "max": 1
+             },
             "sample_size": 0,
             "stop_on_failure": false
             }
         """
-        self.metric_name = criterion[request_parameters.METRIC_NAME_STR]
-        self.is_counter = criterion[request_parameters.IS_COUNTER_STR]
-        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in criterion else criterion[request_parameters.ABSENT_VALUE_STR]
+        super().__init__(criterion)
+        self.sample_size = 0 #defaults to 0 for PBR/OBR
         self.min_max = None if request_parameters.MIN_MAX_STR not in criterion else criterion[request_parameters.MIN_MAX_STR]
-        self.metric_query_template = criterion[request_parameters.METRIC_QUERY_TEMPLATE_STR]
-        self.metric_sample_size_query_template = criterion[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
-        self.type = criterion[request_parameters.CRITERION_TYPE_STR]
-        self.value = criterion[request_parameters.CRITERION_VALUE_STR]
-        self.stop_on_failure = False if request_parameters.CRITERION_STOP_ON_FAILURE_STR not in criterion else criterion[request_parameters.CRITERION_STOP_ON_FAILURE_STR]
-        self.sample_size = 0 #defaults to 0 for code reusability
 
+class RewardCriterion(Criterion):
+    def __init__(self, reward):
+        super().__init__(reward)
 
 class TrafficControlDefault():
     def __init__(self, traffic_control):
         self.success_criteria = []
         for each_criteria in traffic_control[request_parameters.SUCCESS_CRITERIA_STR]:
-            self.success_criteria.append(SuccessCriterionDefault(each_criteria))
+            self.success_criteria.append(FeasibilityCriterionDefault(each_criteria))
         self.step_size = 2 if request_parameters.STEP_SIZE_STR not in traffic_control else traffic_control[request_parameters.STEP_SIZE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else traffic_control[request_parameters.MAX_TRAFFIC_PERCENT_STR]
-        self.reward = None if request_parameters.REWARD_STR not in traffic_control else Reward(traffic_control[request_parameters.REWARD_STR])
+        self.reward = None if request_parameters.REWARD_STR not in traffic_control else RewardCriterion(traffic_control[request_parameters.REWARD_STR])
 
 class TrafficControlBR():
     def __init__(self, traffic_control):
         self.success_criteria = []
         for each_criteria in traffic_control[request_parameters.SUCCESS_CRITERIA_STR]:
-            self.success_criteria.append(SuccessCriterionBR(each_criteria))
+            self.success_criteria.append(FeasibilityCriterionBR(each_criteria))
         self.confidence = 0.95 if request_parameters.CONFIDENCE_STR not in traffic_control else traffic_control[request_parameters.CONFIDENCE_STR]
         self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else [request_parameters.MAX_TRAFFIC_PERCENT_STR]
-        self.reward = None if request_parameters.REWARD_STR not in traffic_control else Reward(traffic_control[request_parameters.REWARD_STR])
+        self.reward = None if request_parameters.REWARD_STR not in traffic_control else RewardCriterion(traffic_control[request_parameters.REWARD_STR])
 
 
-class Reward():
-    def __init__(self, reward):
-        self.metric_name = reward[request_parameters.METRIC_NAME_STR]
-        self.is_counter = reward[request_parameters.IS_COUNTER_STR]
-        self.absent_value = "0.0" if request_parameters.ABSENT_VALUE_STR not in reward else reward[request_parameters.ABSENT_VALUE_STR]
-        self.metric_query_template = reward[request_parameters.METRIC_QUERY_TEMPLATE_STR]
-        self.metric_sample_size_query_template = reward[request_parameters.METRIC_SAMPLE_SIZE_QUERY_TEMPLATE]
-        self.min_max = None if request_parameters.MIN_MAX_STR not in reward else reward[request_parameters.MIN_MAX_STR]
 
 class Experiment():
     def __init__(self, payload):
