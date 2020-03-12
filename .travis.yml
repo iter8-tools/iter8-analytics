@@ -5,7 +5,7 @@ language: minimal
 stages:
   - "unit tests"
   - "end-to-end tests"
-  - "build image"
+  - name: "build image"
     if: branch = master
 
 jobs:
