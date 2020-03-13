@@ -1,34 +1,62 @@
 dist: xenial   # required for Python >= 3.7
-language: python
-python:
-  - "3.7"
-install:
-  - pip install -r requirements.txt
-  - pip install -r test-requirements.txt
-env:
-  - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
-# command to run tests
 
-script:
-  - make test
+language: minimal
 
-after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-      echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin;
-      if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-        export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-PR_$TRAVIS_PULL_REQUEST";
-        echo "Building PR Docker image - $IMG";
-        make docker-build;
-        make docker-push;
-      else
-        export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT";
-        echo "Building Docker image - $IMG";
-        make docker-build;
-        make docker-push;
-        LATEST="iter8/iter8-analytics:latest";
-        echo "Tagging image as latest - $LATEST";
-        docker tag $IMG $LATEST;
-        export IMG=$LATEST;
-        make docker-push;
-      fi
-    fi
+stages:
+  - "unit tests"
+  - "end-to-end tests"
+  - name: "build image"
+    if: branch = master
+
+jobs:
+  include:
+    - stage: "unit tests"
+      language: python
+      python:
+        - "3.7"
+      install:
+        - pip install -r requirements.txt
+        - pip install -r test-requirements.txt
+      env:
+        - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
+      script:
+        - make test # Run unit tests
+    - &endtoend
+      stage: "end-to-end tests" # Parallel jobs for testing different version combinations
+      sudo: required
+      install:
+        - git clone https://github.com/iter8-tools/e2e-tests.git
+      script:
+        - e2e-tests/e2etests.sh # Run end-to-end tests
+      env:
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.3
+    - <<: *endtoend
+      env:
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.6
+    - <<: *endtoend
+      env:
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.3
+    - <<: *endtoend
+      env:
+        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.6
+    - stage: "build image"
+      script:
+        - if [ "$TRAVIS_BRANCH" == "master" ]; then
+            echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin;
+            if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+              export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-PR_$TRAVIS_PULL_REQUEST";
+              echo "Building PR Docker image - $IMG";
+              make docker-build;
+              make docker-push;
+            else
+              export IMG="iter8/iter8-analytics:$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT";
+              echo "Building Docker image - $IMG";
+              make docker-build;
+              make docker-push;
+              LATEST="iter8/iter8-analytics:latest";
+              echo "Tagging image as latest - $LATEST";
+              docker tag $IMG $LATEST;
+              export IMG=$LATEST;
+              make docker-push;
+            fi
+          fi
