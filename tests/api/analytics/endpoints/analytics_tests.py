@@ -4080,3 +4080,38 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
             #Call the REST API via the test client
             resp = self.flask_test.post(endpoint, json=parameters)
             self.assertEqual(resp.status_code, 200, resp.data)
+
+    ##All tests after this involve the /experiment/algorithms endpoint (until mentioned otherwise)
+    def test_payload_algorithms(self):
+        """Tests the REST endpoint /experiment/algorithms."""
+
+        endpoint = f'http://localhost:5555/api/v1/experiment/algorithms'
+
+        with requests_mock.mock() as m:
+            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+
+            ###################
+            # Test algorithms endpoint
+            ###################
+            log.info("\n\n\n")
+            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+            log.info("Test algorithms endpoint")
+
+            # Call the REST API via the test client
+            resp = self.flask_test.get(endpoint)
+            correct_response = {
+            "check_and_increment": {
+                "endpoint": "/experiment/check_and_increment"
+                },
+            "epsilon_t_greedy": {
+                "endpoint": "/experiment/epsilon_t_greedy"
+                },
+            "posterior_bayesian_routing": {
+                "endpoint": "/experiment/posterior_bayesian_routing"
+                },
+            "optimistic_bayesian_routing": {
+                "endpoint": "/experiment/optimistic_bayesian_routing"
+                },
+            }
+            self.assertEqual(resp.status_code, 200, resp.data)
+            self.assertEqual(correct_response, resp.get_json())

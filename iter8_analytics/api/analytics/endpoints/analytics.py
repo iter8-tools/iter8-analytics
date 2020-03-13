@@ -37,7 +37,8 @@ experiment_namespace = api.namespace(
 # REST API
 #################
 
-@analytics_namespace.route('/experiment/algorithms')
+
+@experiment_namespace.route('/algorithms')
 class CanaryCheckAndIncrement(flask_restplus.Resource):
     def get(self):
         """Return list of available algorithms and the corresponding endpoint"""
@@ -45,16 +46,16 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
                  'available for experimentation')
         return {
         "check_and_increment": {
-            "endpoint": "/analytics/experiment/check_and_increment"
+            "endpoint": "/experiment/check_and_increment"
             },
         "epsilon_t_greedy": {
-            "endpoint": "/analytics/experiment/epsilon_t_greedy"
+            "endpoint": "/experiment/epsilon_t_greedy"
             },
         "posterior_bayesian_routing": {
-            "endpoint": "/analytics/experiment/posterior_bayesian_routing"
+            "endpoint": "/experiment/posterior_bayesian_routing"
             },
         "optimistic_bayesian_routing": {
-            "endpoint": "/analytics/experiment/optimistic_bayesian_routing"
+            "endpoint": "/experiment/optimistic_bayesian_routing"
             },
         }
 
@@ -83,7 +84,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
             self.response_object = CheckAndIncrementResponse(self.experiment, prom_url)
             log.info("Created response object")
             self.response_object.compute_test_results_and_summary()
-            
+
             DataCapture.fill_value("service_response", self.response_object.response)
             DataCapture.save_data()
         except Exception as e:
