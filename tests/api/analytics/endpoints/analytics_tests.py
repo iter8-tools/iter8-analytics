@@ -4087,19 +4087,14 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 
         endpoint = f'http://localhost:5555/api/v1/experiment/algorithms'
 
-        with requests_mock.mock() as m:
-            m.get(self.metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
 
-            ###################
-            # Test algorithms endpoint
-            ###################
-            log.info("\n\n\n")
-            log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
-            log.info("Test algorithms endpoint")
+        log.info("\n\n\n")
+        log.info('===TESTING ENDPOINT {endpoint}'.format(endpoint=endpoint))
+        log.info("Test algorithms endpoint")
 
-            # Call the REST API via the test client
-            resp = self.flask_test.get(endpoint)
-            correct_response = {
+        # Call the REST API via the test client
+        resp = self.flask_test.get(endpoint)
+        correct_response = {
             "check_and_increment": {
                 "endpoint": "/experiment/check_and_increment"
                 },
@@ -4113,5 +4108,5 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
                 "endpoint": "/experiment/optimistic_bayesian_routing"
                 },
             }
-            self.assertEqual(resp.status_code, 200, resp.data)
-            self.assertEqual(correct_response, resp.get_json())
+        self.assertEqual(resp.status_code, 200, resp.data)
+        self.assertEqual(correct_response, resp.get_json())
