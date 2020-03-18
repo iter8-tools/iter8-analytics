@@ -38,7 +38,7 @@ class MetricDetails(BaseModel):
         '"False": Metrics which are not cumulative')
     absent_value: str = Field(None, description='Describes what value should be returned '
         'if Prometheus did not find any data corresponding to the metric')
-    statistics: StatisticalDetails = Field(..., description='Values computed for the metric')    
+    statistics: StatisticalDetails = Field(..., description='Values computed for the metric')
 
 class VersionWithMetrics(BaseModel):
     id: str = Field(..., description = "ID of the version")
