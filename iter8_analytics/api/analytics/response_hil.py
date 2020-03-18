@@ -3,6 +3,8 @@ Specification of the responses for the REST API code related analytics.
 """
 
 from pydantic import BaseModel
+from typing import List
+from enum import IntEnum
 
 ####
 # Schema of the response produced by
@@ -30,10 +32,12 @@ class MetricDetails(BaseModel):
         'if Prometheus did not find any data corresponding to the metric')
     statistics: StatisticalDetails = Field(..., description='Measurements computed for the metric')
 
-class VersionMeasurements(BaseModel):
+class TrafficSplit(BaseModel):
+    baseline: float = Field(..., ge=0, le=100, description='Recommended percentage of traffic to be sent to baseline') 
+    candidates: List[float] = Field(..., min_items = 1, description='Recommended percentage of traffic to be sent to each candidate')
+
+class VersionWithMeasurements(BaseModel):
     metrics: List[MetricDetails] = Field(..., 'List of metrics and corresponding measurements')
-    traffic_percentage: float = Field(..., ge=0, le=100, description='Recommended percentage of traffic '
-        'to be sent to this version')
 
 class SuccessCriteriaResult(BaseModel):
     metric_name: str = Field(..., description='Name identifying the metric')
@@ -41,7 +45,7 @@ class SuccessCriteriaResult(BaseModel):
         'findings with respect to the corresponding metric')
     success_criterion_met: bool = Field(..., description='Indicates whether or not the success criterion for the '
         'corresponding metric has been met')
-    abort_Experiment: bool = Field(..., description='Indicates whether or not the experiment must be '
+    abort_experiment: bool = Field(..., description='Indicates whether or not the experiment must be '
         'aborted on the basis of the criterion for this metric')
 
 class Summary(BaseModel):
@@ -56,12 +60,15 @@ class Assessment(BaseModel):
     summary: Summary = Field(..., description='Overall summary based on all success criteria')
     success_criteria: List[SuccessCriteriaResult] = Field(..., description='Summary of results for each success criterion')
 
+class StatusEnum(IntEnum):
+    all_ok = 0 # Everything looks good from Prometheus
+    prom_unreachable = 1 # Prometheus is unreachable
+    invalid_prom_metric_response = 2 # Prometheus returned with metric values that are invalid -- e.g., None values for a metric with absent_value = None
+
 class Response(BaseModel):
-    metric_backend_url: str = Field(..., description='URL to query the time-series database')
-    baseline: VersionMeasurements = Field(..., description='Measurements and traffic recommendation for the '
-        'baseline version')
-    candidate: VersionMeasurements = Field(..., description='Measurements and traffic recommendation for the '
-        'candidate version')
-    assessment: Assessment = Field(..., description='Summary of the candidate assessment based on success '
-        'criteria')
+    baseline: VersionWithMeasurements = Field(..., description='Baseline version with measurements')
+    candidate: List[VersionWithMeasurements] = Field(..., min_items = 1, description='Candidate versions with measurements')
+    traffic_split_recommendation: TrafficSplit = Field(..., description = "Recommended traffic split")
+    assessment: Assessment = Field(..., description='Summary of the candidate assessment')
+    errors_and_warnings: StatusEnum = Field(StatusEnum.all_ok, description='Status code for this iteration -- did this iteration run without exceptions and if not, what went wrong?')
     last_state: dict = Field(..., description='State returned by the server, to be passed on the next call')
