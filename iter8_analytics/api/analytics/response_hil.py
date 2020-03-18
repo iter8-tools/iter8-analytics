@@ -3,7 +3,7 @@ Specification of the responses for the REST API code related analytics.
 """
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 from enum import IntEnum
 
 ####
@@ -22,23 +22,6 @@ class StatisticalDetails(BaseModel):
     value: float = Field(..., description='Value computed over the sample '
         '(for "gauge" or "counter" metric types)')
 
-
-class MetricDetails(BaseModel):
-    metric_name: str = Field(..., description='Name identifying the metric')
-    is_counter: bool = Field(..., description='Describles the type of metric. '
-        'Options: "True": Metrics which are cumulative in nature and represent monotonically increasing values ; '
-        '"False": Metrics which are not cumulative')
-    absent_value: str = Field(None, description='Describes what value should be returned '
-        'if Prometheus did not find any data corresponding to the metric')
-    statistics: StatisticalDetails = Field(..., description='Measurements computed for the metric')
-
-class TrafficSplit(BaseModel):
-    baseline: float = Field(..., ge=0, le=100, description='Recommended percentage of traffic to be sent to baseline') 
-    candidates: List[float] = Field(..., min_items = 1, description='Recommended percentage of traffic to be sent to each candidate')
-
-class VersionWithMeasurements(BaseModel):
-    metrics: List[MetricDetails] = Field(..., 'List of metrics and corresponding measurements')
-
 class SuccessCriteriaResult(BaseModel):
     metric_name: str = Field(..., description='Name identifying the metric')
     conclusion: List[str]= Field(..., description='List of plain-English sentences summarizing the '
@@ -48,17 +31,25 @@ class SuccessCriteriaResult(BaseModel):
     abort_experiment: bool = Field(..., description='Indicates whether or not the experiment must be '
         'aborted on the basis of the criterion for this metric')
 
-class Summary(BaseModel):
-    conclusion: List[str] = Field(..., description='List of plain-English sentences summarizing the '
-        'the candidate assessment')
-    all_success_criteria_met: bool = Field(..., description='Indicates whether or not all success criteria for '
-        'assessing the canary version have been met')
-    abort_experiment: bool = Field(..., description='Indicates whether or not the experiment must be '
-        'aborted based on the success criteria')
+class MetricDetails(BaseModel):
+    metric_name: str = Field(..., description='Name identifying the metric')
+    is_counter: bool = Field(..., description='Describles the type of metric. '
+        'Options: "True": Metrics which are cumulative in nature and represent monotonically increasing values ; '
+        '"False": Metrics which are not cumulative')
+    absent_value: str = Field(None, description='Describes what value should be returned '
+        'if Prometheus did not find any data corresponding to the metric')
+    statistics: StatisticalDetails = Field(..., description='Values computed for the metric')    
+
+class VersionWithMetrics(BaseModel):
+    id: str = Field(..., description = "ID of the version")
+    baseline: bool = Field(False, description = "Is this the baseline?")
+    win_probability: float = Field(..., le = 1.0, ge = 0.0, description = "Probability that this version is the winner")
+    request_count: int = Field(..., ge = 0, description = "Request count for this version")
+    metrics: List[MetricDetails] = Field(..., 'List of metrics and corresponding values')
 
 class Assessment(BaseModel):
-    summary: Summary = Field(..., description='Overall summary based on all success criteria')
-    success_criteria: List[SuccessCriteriaResult] = Field(..., description='Summary of results for each success criterion')
+    winning_version_found: bool = Field(..., description = 'Indicates whether or not a clear winner has emerged')
+    human_consumable_summary: str = Field(..., description = "Human consumable description of the assessment")
 
 class StatusEnum(IntEnum):
     all_ok = 0 # Everything looks good from Prometheus
@@ -66,9 +57,9 @@ class StatusEnum(IntEnum):
     invalid_prom_metric_response = 2 # Prometheus returned with metric values that are invalid -- e.g., None values for a metric with absent_value = None
 
 class Response(BaseModel):
-    baseline: VersionWithMeasurements = Field(..., description='Baseline version with measurements')
-    candidate: List[VersionWithMeasurements] = Field(..., min_items = 1, description='Candidate versions with measurements')
-    traffic_split_recommendation: TrafficSplit = Field(..., description = "Recommended traffic split")
+    versions: List[VersionWithMetrics] = Field(..., min_items = 1, description='Candidate versions with metric values')
+    traffic_split_recommendation: Dict[str, float] = Field(..., description = "Recommended traffic split")
+    # this is a dictionary which maps version ids to percentage of traffic allocated to them. The percentages need to add up to 100
     assessment: Assessment = Field(..., description='Summary of the candidate assessment')
-    errors_and_warnings: StatusEnum = Field(StatusEnum.all_ok, description='Status code for this iteration -- did this iteration run without exceptions and if not, what went wrong?')
+    status: StatusEnum = Field(StatusEnum.all_ok, description='Status code for this iteration -- did this iteration run without exceptions and if not, what went wrong?')
     last_state: dict = Field(..., description='State returned by the server, to be passed on the next call')
