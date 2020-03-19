@@ -2,54 +2,58 @@
 Specification of the responses for the REST API code related analytics.
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict
 from enum import IntEnum
 
 ####
 # Schema of the response produced by
-# POST /experiment/<algorithm-name>
+# POST /assessment
 ####
 
-#Questions/Comments:
-# 1. Removed all other statistics - other than sample size and metric value
-# 2. Same response outer class for all algorithms
-# 3.
+class Interval(BaseModel):
+    lower: float = Field(..., 'Lower endpoint of the interval')
+    upper: float = Field(..., 'Upper endpoint of the interval')
 
-class StatisticalDetails(BaseModel):
-    sample_size: int = Field(..., description='Number of data points collected for this '
-        'success criterion')
-    value: float = Field(..., description='Value computed over the sample '
-        '(for "gauge" or "counter" metric types)')
+class Statistics(BaseModel):
+    sample_size: int = Field(..., description='Number of data points over which this metric has been measured')
+    value: float = Field(..., description='Current value of this metric')
+    improvement: Interval = Field(..., description = 'Confidence interval for percentage improvement over baseline')
+    probability_to_beat_baseline: float = Field(..., le = 1.0, ge = 0.0, description = 'Probability to beat baseline with respect to this metric')
+    probability_to_be_best_version: float = Field(..., le = 1.0, ge = 0.0, description = 'Probability of being the best version with respect to this metric')
+    confidence_interval: Interval = Field(..., description = 'Confidence interval for the value of this metric')
 
-class SuccessCriteriaResult(BaseModel):
-    metric_name: str = Field(..., description='Name identifying the metric')
-    conclusion: List[str]= Field(..., description='List of plain-English sentences summarizing the '
-        'findings with respect to the corresponding metric')
-    success_criterion_met: bool = Field(..., description='Indicates whether or not the success criterion for the '
-        'corresponding metric has been met')
-    abort_experiment: bool = Field(..., description='Indicates whether or not the experiment must be '
-        'aborted on the basis of the criterion for this metric')
+class SuccessCriterionAssessment(BaseModel):
+    conclusion: str = Field(..., description='Human consumable description of this success criterion assessment')
+    lower_threshold_breached: bool = Field(None, description = 'Indicates whether a counter metric breached the lower threshold. Relevant only for counter metrics.')
+    upper_threshold_breached: bool = Field(None, description = 'Indicates whether a counter metric breached the upper threshold. Relevant only for counter metrics.')
+    probability_of_meeting_success_criterion: float = Field(None, le = 1.0, ge = 0.0, description='Probability that the success criterion will be met. Relevant only for non-counter metrics.')
 
-class MetricDetails(BaseModel):
-    metric_name: str = Field(..., description='Name identifying the metric')
-    is_counter: bool = Field(..., description='Describles the type of metric. '
-        'Options: "True": Metrics which are cumulative in nature and represent monotonically increasing values ; '
-        '"False": Metrics which are not cumulative')
-    absent_value: str = Field(None, description='Describes what value should be returned '
-        'if Prometheus did not find any data corresponding to the metric')
-    statistics: StatisticalDetails = Field(..., description='Values computed for the metric')
+class Metric(BaseModel):
+    id: str = Field(..., description = "ID of the metric")
+    # name: str = Field(..., description='Name of the metric')
+    # is_counter: bool = Field(..., description = "Is this a counter metric?")
+    # lower_is_better: bool = Field(True, description =  "Are lower values of this metric better?")
+    statistics: Statistics = Field(..., description='Values computed for the metric')
+    success_criterion_assessment: SuccessCriterionAssessment = Field(..., description = 'Assessment of success criteria')
 
 class VersionWithMetrics(BaseModel):
     id: str = Field(..., description = "ID of the version")
-    baseline: bool = Field(False, description = "Is this the baseline?")
+    # e.g. keys within tags: destination_service_namespace and destination_workload
+    # tags: Dict[str, str] = Field(..., description='Tags for this version')
+    # baseline: bool = Field(False, description = "Is this the baseline?")
     win_probability: float = Field(..., le = 1.0, ge = 0.0, description = "Probability that this version is the winner")
     request_count: int = Field(..., ge = 0, description = "Request count for this version")
-    metrics: List[MetricDetails] = Field(..., 'List of metrics and corresponding values')
+    metrics: List[Metric] = Field(..., 'List of metrics and corresponding values')
+
+class TrafficSplitRecommendation(BaseModel):
+    recommendation: Dict[str, Dict[str, float]] = Field(..., description = "Traffic split recommendation on a per algorithm basis, each of which contains the percentage of traffic allocated to different versions")
 
 class Assessment(BaseModel):
-    winning_version_found: bool = Field(..., description = 'Indicates whether or not a clear winner has emerged')
-    human_consumable_summary: str = Field(..., description = "Human consumable description of the assessment")
+    winning_version_found: bool = Field(False, description = 'Indicates whether or not a clear winner has emerged')
+    winner: str = Field(None, description = 'ID of the winning version')
+    confidence_in_winner: float = Field(None, description = "Probability of the winner being the best version. This is 'None' if winner is 'None'")
+    human_consumable_summary: str = Field("Experiment has just begun.", description = "Human consumable description of the assessment")
 
 class StatusEnum(IntEnum):
     all_ok = 0 # Everything looks good from Prometheus
@@ -58,7 +62,7 @@ class StatusEnum(IntEnum):
 
 class Response(BaseModel):
     versions: List[VersionWithMetrics] = Field(..., min_items = 1, description='Candidate versions with metric values')
-    traffic_split_recommendation: Dict[str, float] = Field(..., description = "Recommended traffic split")
+    traffic_split_recommendation: TrafficSplitRecommendation = Field(..., description = "Traffic split recommendation on a per algorithm basis")
     # this is a dictionary which maps version ids to percentage of traffic allocated to them. The percentages need to add up to 100
     assessment: Assessment = Field(..., description='Summary of the candidate assessment')
     status: StatusEnum = Field(StatusEnum.all_ok, description='Status code for this iteration -- did this iteration run without exceptions and if not, what went wrong?')
