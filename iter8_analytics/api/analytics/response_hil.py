@@ -12,14 +12,14 @@ from enum import IntEnum
 ####
 
 class Interval(BaseModel):
-    lower: float = Field(..., description='Lower endpoint of the interval')
-    upper: float = Field(..., description='Upper endpoint of the interval')
+    lower: float = Field(..., le=1.0, ge = 0.0, description='Lower endpoint of the interval')
+    upper: float = Field(..., le=1.0, ge = 0.0, description='Upper endpoint of the interval')
 
 class Statistics(BaseModel):
     sample_size: int = Field(..., description='Number of data points over which this metric has been measured')
     value: float = Field(..., description='Current value of this metric')
-    improvement: Interval = Field(..., description = 'Confidence interval for percentage improvement over baseline')
-    probability_to_beat_baseline: float = Field(..., le = 1.0, ge = 0.0, description = 'Probability to beat baseline with respect to this metric')
+    improvement: Interval = Field(None, description = 'Confidence interval for percentage improvement over baseline')
+    probability_to_beat_baseline: float = Field(None, le = 1.0, ge = 0.0, description = 'Probability to beat baseline with respect to this metric')
     probability_to_be_best_version: float = Field(..., le = 1.0, ge = 0.0, description = 'Probability of being the best version with respect to this metric')
     confidence_interval: Interval = Field(..., description = 'Confidence interval for the value of this metric')
 
