@@ -12,8 +12,8 @@ from enum import IntEnum
 ####
 
 class Interval(BaseModel):
-    lower: float = Field(..., 'Lower endpoint of the interval')
-    upper: float = Field(..., 'Upper endpoint of the interval')
+    lower: float = Field(..., description='Lower endpoint of the interval')
+    upper: float = Field(..., description='Upper endpoint of the interval')
 
 class Statistics(BaseModel):
     sample_size: int = Field(..., description='Number of data points over which this metric has been measured')
@@ -44,7 +44,7 @@ class VersionWithMetrics(BaseModel):
     # baseline: bool = Field(False, description = "Is this the baseline?")
     win_probability: float = Field(..., le = 1.0, ge = 0.0, description = "Probability that this version is the winner")
     request_count: int = Field(..., ge = 0, description = "Request count for this version")
-    metrics: List[Metric] = Field(..., 'List of metrics and corresponding values')
+    metrics: List[Metric] = Field(..., description='List of metrics and corresponding values')
 
 class TrafficSplitRecommendation(BaseModel):
     recommendation: Dict[str, Dict[str, float]] = Field(..., description = "Traffic split recommendation on a per algorithm basis, each of which contains the percentage of traffic allocated to different versions")
