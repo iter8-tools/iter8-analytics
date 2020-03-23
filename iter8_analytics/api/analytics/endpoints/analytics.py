@@ -39,7 +39,7 @@ experiment_namespace = api.namespace(
 
 
 @experiment_namespace.route('/algorithms')
-class CanaryCheckAndIncrement(flask_restplus.Resource):
+class Algorithms(flask_restplus.Resource):
     def get(self):
         """Return list of available algorithms and the corresponding endpoint"""
         log.info('Started processing request return the list of algorithms and endpoint '
