@@ -81,7 +81,8 @@ class Response():
             request_parameters.METRIC_NAME_STR: criterion.metric_name,
             request_parameters.IS_COUNTER_STR: criterion.is_counter,
             request_parameters.ABSENT_VALUE_STR: criterion.absent_value,
-            responses.STATISTICS_STR: prometheus_results_per_success_criteria[responses.STATISTICS_STR]
+            responses.STATISTICS_STR: prometheus_results_per_success_criteria[responses.STATISTICS_STR],
+            request_parameters.MIN_MAX_STR: criterion.min_max
         }
 
     def append_if_metrics_changed_in_this_iteration(self, service_version, success_criterion_number):
@@ -295,6 +296,7 @@ class BayesianRoutingResponse(Response):
                 request_parameters.MIN_MAX_STR: criterion.min_max,
                 "params": None
                 }
+
     def append_partial_assessment_summary(self):
         success_criteria_met_str = "not" if not(self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ALL_SUCCESS_CRITERIA_MET_STR]) else ""
         if self.response[responses.ASSESSMENT_STR][responses.SUMMARY_STR][responses.ABORT_EXPERIMENT_STR]:
@@ -312,9 +314,9 @@ class BayesianRoutingResponse(Response):
                 try:
                     self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
                 except Exception as e:
-                    if self.experiment.first_iteration and criterion.min_max:
+                    if self.experiment.first_iteration and criterion[request_parameters.MIN_MAX_STR]:
                         self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(1, 1, None, None)
-                    elif self.experiment.first_iteration and not criterion.min_max:
+                    elif self.experiment.first_iteration and not criterion[request_parameters.MIN_MAX_STR]:
                         self.baseline_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(None, None, 0, 1)
                     else:
                         log.error("Prometheus query did not find usable metric value. Using previous iteration metric details")
@@ -330,9 +332,9 @@ class BayesianRoutingResponse(Response):
                 try:
                     self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = self.update_beliefs(criterion, self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]][request_parameters.MIN_MAX_STR])
                 except Exception as e:
-                    if self.experiment.first_iteration and criterion.min_max:
+                    if self.experiment.first_iteration and criterion[request_parameters.MIN_MAX_STR]:
                         self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(1, 1, None, None)
-                    elif self.experiment.first_iteration and not criterion.min_max:
+                    elif self.experiment.first_iteration and not criterion[request_parameters.MIN_MAX_STR]:
                         self.candidate_beliefs[criterion[request_parameters.METRIC_NAME_STR]]["params"] = params(None, None, 0, 1)
                     else:
                         log.error("Prometheus query did not find usable metric value. Using previous iteration metric details")
@@ -343,9 +345,9 @@ class BayesianRoutingResponse(Response):
                 self.response[request_parameters.LAST_STATE_STR][request_parameters.CANDIDATE_STR][iter8experiment.SUCCESS_CRITERION_BELIEF_STR].append(params(None, None, None, None))
             i+=1
         routing_pmf = self.routing_pmf() # we got back the traffic split of the format {"candidate": x, "baseline": 100 - x}
+
         self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR] = min(routing_pmf[request_parameters.CANDIDATE_STR], self.experiment.traffic_control.max_traffic_percent)
         self.response[request_parameters.BASELINE_STR][responses.TRAFFIC_PERCENTAGE_STR] = 100 - self.response[request_parameters.CANDIDATE_STR][responses.TRAFFIC_PERCENTAGE_STR]
-
 
         #Append confidence string to the assessment summary
         confidence_str = "not " if routing_pmf[request_parameters.CANDIDATE_STR] < self.experiment.traffic_control.confidence*100 else ""

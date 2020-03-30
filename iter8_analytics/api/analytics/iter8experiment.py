@@ -109,6 +109,7 @@ class FeasibilityCriterionDefault(FeasibilityCriterion):
         """
         super().__init__(criterion)
         self.sample_size = 10 if request_parameters.CRITERION_SAMPLE_SIZE_STR not in criterion else criterion[request_parameters.CRITERION_SAMPLE_SIZE_STR]
+        self.min_max = None
 
 class FeasibilityCriterionBR(FeasibilityCriterion):
     def __init__(self, criterion):
@@ -152,7 +153,7 @@ class TrafficControlBR():
         for each_criteria in traffic_control[request_parameters.SUCCESS_CRITERIA_STR]:
             self.success_criteria.append(FeasibilityCriterionBR(each_criteria))
         self.confidence = 0.95 if request_parameters.CONFIDENCE_STR not in traffic_control else traffic_control[request_parameters.CONFIDENCE_STR]
-        self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else [request_parameters.MAX_TRAFFIC_PERCENT_STR]
+        self.max_traffic_percent = 50 if request_parameters.MAX_TRAFFIC_PERCENT_STR not in traffic_control else traffic_control[request_parameters.MAX_TRAFFIC_PERCENT_STR]
         self.reward = None if request_parameters.REWARD_STR not in traffic_control else RewardCriterion(traffic_control[request_parameters.REWARD_STR])
 
 
