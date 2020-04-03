@@ -4054,7 +4054,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
 
 
     #All tests after this involve the /experiment/optimistic_bayesian_routing endpoint for A/B experiments
-    def test_experiment_pyload_ab_optimistic_bayesian_routing(self):
+    def test_experiment_payload_ab_optimistic_bayesian_routing(self):
         """Tests the REST endpoint /experiment/optimistic_bayesian_routing."""
 
         endpoint = f'http://localhost:5555/api/v1/experiment/optimistic_bayesian_routing'
