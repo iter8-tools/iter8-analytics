@@ -10,25 +10,54 @@ app = FastAPI()
 # An example for swagger documentation
 eip_example = {
     'start_time': "2020-04-03T12:55:50.568Z",
-    "iter8_metrics": [
+    "metric_specs": {
+        "counter_metrics": [
         {
-            "id": "simple_ratio",
-            "lower_is_better": True,
-            "numerator_prom_query_template": "sum(of(parts)) > whole",
-            "denomenator_prom_query_template": "whole > sum(or(parts))",
-            "binary_metric": False
+            "id": "iter8_request_count",
+            "query_template": "sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($entity_labels)"
         },
         {
-            "id": "simple_counter",
-            "lower_is_better": True,
-            "prom_query_template": "count(me_in)"
+            "id": "iter8_total_latency",
+            "query_template": "sum(increase(istio_request_duration_seconds_sum{reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+        },
+        {
+            "id": "iter8_error_count",
+            "query_template": "sum(increase(istio_requests_total{response_code=~'5..',reporter='source'}[$interval])) by ($entity_labels)",
+            "preferred_direction": "lower"
+        },
+        {
+            "id": "conversion_count",
+            "query_template": "sum(increase(newsletter_signups[$interval])) by ($entity_labels)"
+        },
+    ],  
+    "ratio_metrics": [
+        {
+            "id": "iter8_mean_latency",
+            "numerator": "iter8_total_latency",
+            "denomenator": "iter8_request_count",
+            "preferred_direction": "lower",
+            "unit_range": False
+        }, 
+        {
+            "id": "iter8_error_rate",
+            "numerator": "iter8_error_count",
+            "denomenator": "iter8_request_count",
+            "preferred_direction": "lower",
+            "unit_range": True
+        }, 
+        {
+            "id": "conversion_rate",
+            "numerator": "conversion_count",
+            "denomenator": "iter8_request_count",
+            "preferred_direction": "higher",
+            "unit_range": True
         }
-    ],
+    ]},
     "assessment_criteria": [
         {
-            "metric_id": "simple_ratio",
+            "metric_id": "iter8_mean_latency",
             "reward": False,
-            "upper_threshold": {
+            "threshold": {
                 "threshold_type": "absolute",
                 "value": 25
             }
@@ -38,7 +67,7 @@ eip_example = {
         "id": "reviews_base",
         "tags": {
             'service': "reviews",
-            'deployment': "candid"
+            'deployment': "baseline"
         }
     },
     "candidates": [
@@ -70,7 +99,7 @@ ar_example = {
         "win_probability": 0.1,
         "metric_assessments": [
             {
-                "id": "simple_ratio",
+                "id": "iter8_mean_latency",
                 "statistics": {
                     "value": 0.005,
                     "ratio_statistics": {
@@ -88,9 +117,8 @@ ar_example = {
                     }
                 },
                 "threshold_assessment": {
-                    "lower_threshold_breached": False,
-                    "upper_threshold_breached": False,
-                    "probability_of_satisfying_thresholds": 0.8
+                    "threshold_breached": False,
+                    "probability_of_satisfying_threshold": 0.8
                 }
             }
         ]
@@ -102,7 +130,7 @@ ar_example = {
             "win_probability": 0.11,
             "metric_assessments": [
                 {
-                    "id": "simple_ratio",
+                    "id": "iter8_mean_latency",
                     "statistics": {
                         "value": 0.1005,
                         "ratio_statistics": {
@@ -120,9 +148,8 @@ ar_example = {
                         }
                     },
                     "threshold_assessment": {
-                        "lower_threshold_breached": False,
-                        "upper_threshold_breached": False,
-                        "probability_of_satisfying_thresholds": 0.180
+                        "threshold_breached": True,
+                        "probability_of_satisfying_threshold": 0.180
                     }
                 }
             ]

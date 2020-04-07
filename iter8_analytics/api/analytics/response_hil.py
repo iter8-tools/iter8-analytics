@@ -26,9 +26,8 @@ class Statistics(BaseModel):
     ratio_statistics: RatioStatistics = Field(None, description="Additional statistics. Defined only for ratio metrics")
 
 class ThresholdAssessment(BaseModel):
-    lower_threshold_breached: bool = Field(None, description = "True if lower threshold is breached. False otherwise. None if lower threshold is not defined.")
-    upper_threshold_breached: bool = Field(None, description = "True if upper threshold is breached. False otherwise. None if upper threshold is not defined.")
-    probability_of_satisfying_thresholds: float = Field(..., le = 1.0, ge = 0.0, description="Probability of satisfying the thresholds. Defined only for ratio metrics. This is currently computed based on Bayesian estimation")
+    threshold_breached: bool = Field(..., description = "True if threshold is breached. False otherwise")
+    probability_of_satisfying_threshold: float = Field(..., le = 1.0, ge = 0.0, description="Probability of satisfying the threshold. Defined only for ratio metrics. This is currently computed based on Bayesian estimation")
 
 class MetricAssessment(BaseModel):
     id: str = Field(..., description = "ID of the metric")
@@ -36,7 +35,7 @@ class MetricAssessment(BaseModel):
     # is_counter: bool = Field(..., description = "Is this a counter metric?")
     # lower_is_better: bool = Field(True, description =  "Are lower values of this metric better?")
     statistics: Statistics = Field(..., description="Statistics for this metric")
-    threshold_assessment: ThresholdAssessment = Field(None, description = "Assessment of how well this metric is doing with respect to thresholds. Defined only for metrics with a threshold")
+    threshold_assessment: ThresholdAssessment = Field(None, description = "Assessment of how well this metric is doing with respect to threshold. Defined only for metrics with a threshold")
 
 class VersionAssessment(BaseModel):
     id: str = Field(..., description = "ID of the version")

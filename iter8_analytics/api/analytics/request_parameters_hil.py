@@ -14,29 +14,29 @@ from iter8_analytics.api.analytics.response_hil import Iter8AssessmentAndRecomme
 
 class Version(BaseModel):
     id: str = Field(..., description="ID of the version")
-    tags: dict = Field(..., description="Key-value pairs used in prometheus queries to enable version level grouping of metrics")
+    tags: dict = Field(..., description="Key-value pairs used in prometheus queries to achieve version level grouping")
 
+class DirectionEnum(str, Enum): # directions for metric values
+    lower = "lower"
+    higher = "higher"
 
-class Iter8Metric(BaseModel):
+class MetricSpec(BaseModel):
     id: str = Field(..., description="ID of the metric")
-    lower_is_better: bool = Field(
-        ..., description="Boolean flag indicating if lower values of this metric are preferable to higher values")
-
+    preferred_direction: DirectionEnum = Field(None, description="Indicates preference for metric values -- lower, higher, or None (default)")
 
 # counter metric defined in iter8 configmaps
-class Iter8CounterMetric(Iter8Metric):
-    prom_query_template: str = Field(...,
+class CounterMetricSpec(MetricSpec):
+    query_template: str = Field(...,
                                      description="Prometheus query template")
 
 
-class Iter8RatioMetric(Iter8Metric):  # ratio metric defined in iter8 configmaps
-    numerator_prom_query_template: str = Field(
-        ..., description="Prometheus query template for numerator")
-    denomenator_prom_query_template: str = Field(
-        ..., description="Prometheus query template for numerator")
-    binary_metric: bool = Field(
-        False, description="This metric is mean value of a binary variable")
-
+class RatioMetricSpec(MetricSpec):  # ratio metric = numerator counter / denomenator counter
+    numerator: str = Field(
+        ..., description="ID of the counter metric used in numerator")
+    denomenator: str = Field(
+        ..., description="ID of the counter metric used in denomenator")
+    unit_range: bool = Field(
+        False, description="Boolean flag indicating if the value of this metric is always in the range 0 to 1")
 
 class ThresholdEnum(str, Enum):
     absolute = "absolute"  # this threshold represents an absolute limit
@@ -50,13 +50,10 @@ class Threshold(BaseModel):
 
 class AssessmentCriterion(BaseModel):
     metric_id: str = Field(
-        ..., description="ID of the metric. This matches the unique ID of the metric in iter8 metric definition")
+        ..., description="ID of the metric. This matches the unique ID of the metric in the metric spec")
     reward: bool = Field(
         False, description="Boolean flag indicating if this metric will be used as reward to be optimized in an A/B test. Only ratio metrics can be used as a reward. At most one metric can be used as reward")
-    lower_threshold: Threshold = Field(
-        None, description="Lower threshold for this metric")
-    upper_threshold: Threshold = Field(
-        None, description="Upper threshold for this metric")
+    threshold: Threshold = Field(None, description="Threshold value for this metric if any")
 
 
 class TrafficControlStrategy(str, Enum):
@@ -85,17 +82,21 @@ class AdvancedAssessmentParameters(BaseModel):
     min_posterior_probability_for_winner: float = Field(
         99.0, description="Minimum value of posterior probability of being the best version which needs to be attained by a version to be declared winner")
 
+class MetricSpecs(BaseModel):
+    counter_metrics: Sequence[CounterMetricSpec] = Field(..., description = "All counter metric specs")
+    ratio_metrics: Sequence[RatioMetricSpec] = Field(..., description = "All ratio metric specs")
+
 # parameters for current iteration of experiment
 class ExperimentIterationParameters(BaseModel):
     start_time: datetime = Field(...,
                                  description="Start time of the experiment")
-    iter8_metrics: Sequence[Union[Iter8RatioMetric, Iter8CounterMetric]] = Field(
-        ..., description="All iter8 metric definitions. Includes ratio and counter metrics")
+    metric_specs: MetricSpecs = Field(
+        ..., description="All metric specification")
     assessment_criteria: Sequence[AssessmentCriterion] = Field(
-        ..., description="Specifications for metric based criteria to be assessed in this experiment")
+        ..., description="Criteria to be assessed for each version in this experiment")
     baseline: Version = Field(..., description="The baseline version")
     candidates: Sequence[Version] = Field(...,
-                                          description="The sequence of candidates")
+                                          description="The set of candidates")
     advanced_traffic_control_parameters: AdvancedTrafficControlParameters = Field(
         None, description="Advanced traffic control related parameters")
     advanced_assessment_parameters: AdvancedAssessmentParameters = Field(
