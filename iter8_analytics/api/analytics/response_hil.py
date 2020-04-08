@@ -29,21 +29,22 @@ class ThresholdAssessment(BaseModel):
     threshold_breached: bool = Field(..., description = "True if threshold is breached. False otherwise")
     probability_of_satisfying_threshold: float = Field(..., le = 1.0, ge = 0.0, description="Probability of satisfying the threshold. Defined only for ratio metrics. This is currently computed based on Bayesian estimation")
 
-class MetricAssessment(BaseModel):
-    id: str = Field(..., description = "ID of the metric")
+class CriterionAssessment(BaseModel): # assessment per criterion per version
+    id: str = Field(..., description = "ID of the criterion")
+    metric_id: str = Field(..., description = "ID of the metric")
     # name: str = Field(..., description="Name of the metric")
     # is_counter: bool = Field(..., description = "Is this a counter metric?")
     # lower_is_better: bool = Field(True, description =  "Are lower values of this metric better?")
     statistics: Statistics = Field(..., description="Statistics for this metric")
     threshold_assessment: ThresholdAssessment = Field(None, description = "Assessment of how well this metric is doing with respect to threshold. Defined only for metrics with a threshold")
 
-class VersionAssessment(BaseModel):
+class VersionAssessment(BaseModel): # assessment per version
     id: str = Field(..., description = "ID of the version")
     # e.g. keys within tags: destination_service_namespace and destination_workload
     # tags: Dict[str, str] = Field(..., description="Tags for this version")
     # baseline: bool = Field(False, description = "Is this the baseline?")
     request_count: int = Field(..., ge = 0, description = "Number of requests sent to this version until now")
-    metric_assessments: List[MetricAssessment] = Field(..., description="Metric assessments for this version")
+    criterion_assessments: List[CriterionAssessment] = Field(..., description="Metric assessments for this version")
     win_probability: float = Field(..., description = "Probability that this version is the winner. This is currently computed based on Bayesian estimation")
 
 class WinnerAssessment(BaseModel):

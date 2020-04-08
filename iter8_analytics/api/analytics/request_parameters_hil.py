@@ -30,11 +30,11 @@ class CounterMetricSpec(MetricSpec):
                                      description="Prometheus query template")
 
 
-class RatioMetricSpec(MetricSpec):  # ratio metric = numerator counter / denomenator counter
+class RatioMetricSpec(MetricSpec):  # ratio metric = numerator counter / denominator counter
     numerator: str = Field(
         ..., description="ID of the counter metric used in numerator")
-    denomenator: str = Field(
-        ..., description="ID of the counter metric used in denomenator")
+    denominator: str = Field(
+        ..., description="ID of the counter metric used in denominator")
     unit_range: bool = Field(
         False, description="Boolean flag indicating if the value of this metric is always in the range 0 to 1")
 
@@ -49,6 +49,7 @@ class Threshold(BaseModel):
 
 
 class AssessmentCriterion(BaseModel):
+    id: str = Field(..., description = "ID of the assessment criterion")
     metric_id: str = Field(
         ..., description="ID of the metric. This matches the unique ID of the metric in the metric spec")
     reward: bool = Field(

@@ -18,7 +18,7 @@ eip_example = {
         },
         {
             "id": "iter8_total_latency",
-            "query_template": "sum(increase(istio_request_duration_seconds_sum{reporter='source'}[$interval]$offset_str)) by ($entity_labels)"
+            "query_template": "sum(increase(istio_request_duration_seconds_sum{reporter='source'}[$interval])) by ($entity_labels)"
         },
         {
             "id": "iter8_error_count",
@@ -34,27 +34,28 @@ eip_example = {
         {
             "id": "iter8_mean_latency",
             "numerator": "iter8_total_latency",
-            "denomenator": "iter8_request_count",
+            "denominator": "iter8_request_count",
             "preferred_direction": "lower",
             "unit_range": False
         }, 
         {
             "id": "iter8_error_rate",
             "numerator": "iter8_error_count",
-            "denomenator": "iter8_request_count",
+            "denominator": "iter8_request_count",
             "preferred_direction": "lower",
             "unit_range": True
         }, 
         {
             "id": "conversion_rate",
             "numerator": "conversion_count",
-            "denomenator": "iter8_request_count",
+            "denominator": "iter8_request_count",
             "preferred_direction": "higher",
             "unit_range": True
         }
     ]},
     "assessment_criteria": [
         {
+            "id": "0",
             "metric_id": "iter8_mean_latency",
             "reward": False,
             "threshold": {
@@ -97,9 +98,10 @@ ar_example = {
         "id": "reviews_base",
         "request_count": 500,
         "win_probability": 0.1,
-        "metric_assessments": [
+        "criterion_assessments": [
             {
-                "id": "iter8_mean_latency",
+                "id": "0",
+                "metric_id": "iter8_mean_latency",
                 "statistics": {
                     "value": 0.005,
                     "ratio_statistics": {
@@ -128,9 +130,10 @@ ar_example = {
             "id": "reviews_candidate",
             "request_count": 1500,
             "win_probability": 0.11,
-            "metric_assessments": [
+            "criterion_assessments": [
                 {
-                    "id": "iter8_mean_latency",
+                    "id": "0",
+                    "metric_id": "iter8_mean_latency",
                     "statistics": {
                         "value": 0.1005,
                         "ratio_statistics": {
