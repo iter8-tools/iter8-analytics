@@ -10,6 +10,7 @@ app = FastAPI()
 # An example for swagger documentation
 eip_example = {
     'start_time': "2020-04-03T12:55:50.568Z",
+    'service_name': "reviews",
     "metric_specs": {
         "counter_metrics": [
         {
@@ -59,24 +60,24 @@ eip_example = {
             "metric_id": "iter8_mean_latency",
             "reward": False,
             "threshold": {
-                "threshold_type": "absolute",
+                "type": "absolute",
                 "value": 25
             }
         }
     ],
     "baseline": {
         "id": "reviews_base",
-        "tags": {
-            'service': "reviews",
-            'deployment': "baseline"
+        "version_labels": {
+            'destination_service_namespace': "bookinfo_ns",
+            'destination_workload': "reviews-v1"
         }
     },
     "candidates": [
         {
             "id": "reviews_candidate",
-            "tags": {
-                'service': "reviews",
-                'deployment': "candid"
+            "version_labels": {
+                'destination_service_namespace': "bookinfo_ns",
+                'destination_workload': "reviews-v2"
             }
         }
     ],

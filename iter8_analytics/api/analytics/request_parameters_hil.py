@@ -4,6 +4,7 @@ Specification of the request parameters for the REST API code related to analyti
 # Core python stuff
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 from typing import Tuple, Union, Sequence
 
 # Module dependencies
@@ -13,15 +14,15 @@ from pydantic import BaseModel, Field
 from iter8_analytics.api.analytics.response_hil import Iter8AssessmentAndRecommendation
 
 class Version(BaseModel):
-    id: str = Field(..., description="ID of the version")
-    tags: dict = Field(..., description="Key-value pairs used in prometheus queries to achieve version level grouping")
+    _id: Union[int, str, UUID] = Field(..., alias = "id", description="ID of the version")
+    version_labels: dict = Field(..., description="Key-value pairs used in prometheus queries to achieve version level grouping")
 
 class DirectionEnum(str, Enum): # directions for metric values
     lower = "lower"
     higher = "higher"
 
 class MetricSpec(BaseModel):
-    id: str = Field(..., description="ID of the metric")
+    _id: Union[int, str, UUID] = Field(..., alias = "id", description="ID of the metric")
     preferred_direction: DirectionEnum = Field(None, description="Indicates preference for metric values -- lower, higher, or None (default)")
 
 # counter metric defined in iter8 configmaps
@@ -44,25 +45,25 @@ class ThresholdEnum(str, Enum):
 
 
 class Threshold(BaseModel):
-    threshold_type: ThresholdEnum = Field(..., description="Type of threshold")
+    threshold_type: ThresholdEnum = Field(..., alias = "type", description="Type of threshold")
     value: float = Field(..., description="Value of threshold")
 
 
 class AssessmentCriterion(BaseModel):
-    id: str = Field(..., description = "ID of the assessment criterion")
-    metric_id: str = Field(
+    _id: Union[int, str, UUID] = Field(..., alias = "id", description = "ID of the assessment criterion")
+    metric_id: Union[int, str, UUID] = Field(
         ..., description="ID of the metric. This matches the unique ID of the metric in the metric spec")
     reward: bool = Field(
         False, description="Boolean flag indicating if this metric will be used as reward to be optimized in an A/B test. Only ratio metrics can be used as a reward. At most one metric can be used as reward")
     threshold: Threshold = Field(None, description="Threshold value for this metric if any")
 
 
-class TrafficControlStrategy(str, Enum):
-    uniform = "Uniform"
-    check_and_increment = "Check and Increment"
-    epsilon_t_greedy = "Decaying Epsilon Greedy"
-    pbr = "Posterior Bayesian Routing"
-    top_k_pbr = "Top-k Posterior Bayesian Routing"
+class Strategy(str, Enum):
+    uniform = "Uniform Traffic Split"
+    check_and_increment = "Simple Progressive Traffic Shift"
+    epsilon_t_greedy = "Greedy Progressive Traffic Shift"
+    pbr = "Bayesian Progressive Traffic Shift"
+    # top_k_pbr = "Bayesian Rapid Rollout" # with a single candidate, top_k works in the same manner as uniform, so disabling this for now
 
 
 class CheckAndIncrementParameters(BaseModel):
@@ -91,6 +92,7 @@ class MetricSpecs(BaseModel):
 class ExperimentIterationParameters(BaseModel):
     start_time: datetime = Field(...,
                                  description="Start time of the experiment")
+    service_name: str = Field(..., description = "Name of the service in this experiment")
     metric_specs: MetricSpecs = Field(
         ..., description="All metric specification")
     assessment_criteria: Sequence[AssessmentCriterion] = Field(
