@@ -46,11 +46,16 @@ class VersionAssessment(BaseModel): # assessment per version
     request_count: int = Field(..., ge = 0, description = "Number of requests sent to this version until now")
     criterion_assessments: List[CriterionAssessment] = Field(..., description="Metric assessments for this version")
     win_probability: float = Field(..., description = "Probability that this version is the winner. This is currently computed based on Bayesian estimation")
+    rollback: bool = Field(False, description = "Rollback this version. Currently candidates can be rolled back if they violate criteria for which rollback_on_violation is True")
+
+class CandidateVersionAssessment(VersionAssessment): # assessment per candidate
+    rollback: bool = Field(False, description = "Rollback this version. Currently candidates can be rolled back if they violate criteria for which rollback_on_violation is True")
 
 class WinnerAssessment(BaseModel):
-    winning_version_found: bool = Field(False, description = "Indicates whether or not a clear winner has emerged. This is currently computed based on Bayesian estimation")
-    winner: str = Field(None, description = "ID of the winning version. This is currently computed based on Bayesian estimation")
-    winner_posterior_probability: float = Field(None, description = "Posterior probability of the version declared as the winner being the best version. This is None if winner is None. This is currently computed based on Bayesian estimation")
+    winning_version_found: bool = Field(False, description = "Indicates whether or not a clear winner has emerged. This is currently computed based on Bayesian estimation and uses posterior_probability_for_winner from the iteration parameters")
+    current_winner: str = Field(None, description = "ID of the current winner with the maximum probability of winning. This is currently computed based on Bayesian estimation")
+    winning_probability: float = Field(None, description = "Posterior probability of the version declared as the current winner. This is None if winner is None. This is currently computed based on Bayesian estimation")
+    version_to_rollforward: str = Field(None, description = "ID of the version to rollforward to. This is None unless this is the final iteration of the experiment")
 
 class StatusEnum(str, Enum):
     no_prom_data = "no_prom_data"
@@ -62,7 +67,7 @@ class Iter8AssessmentAndRecommendation(BaseModel):
     timestamp: datetime = Field(...,
                                  description="Timestamp at which the current assessment and recommendation is created")
     baseline_assessment: VersionAssessment = Field(..., description = "Baseline's assessment")
-    candidate_assessments: List[VersionAssessment] = Field(..., min_items = 1, description="Assessment  of candidate versions")
+    candidate_assessments: List[CandidateVersionAssessment] = Field(..., min_items = 1, description="Assessment  of candidate versions")
     traffic_split_recommendation: Dict[str, Dict[str, float]] = Field(..., description = "Traffic split recommendation on a per algorithm basis. Each recommendation contains the percentage of traffic on a per-version basis")
     # this is a dictionary which maps version ids to percentage of traffic allocated to them. The percentages need to add up to 100
     winner_assessment: WinnerAssessment = Field(..., description="Assessment summary for winning candidate. This is currently computed based on Bayesian estimation")

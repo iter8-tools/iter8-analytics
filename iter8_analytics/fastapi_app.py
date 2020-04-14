@@ -2,14 +2,15 @@
 from fastapi import FastAPI, Body
 
 # iter8 stuff
-from iter8_analytics.api.analytics.response_hil import *
-from iter8_analytics.api.analytics.request_parameters_hil import *
+from iter8_analytics.api.analytics.experiment_iteration_response import *
+from iter8_analytics.api.analytics.experiment_iteration_request import *
 
 app = FastAPI()
 
 # An example for swagger documentation
 eip_example = {
     'start_time': "2020-04-03T12:55:50.568Z",
+    'iteration_number': 1,
     'service_name': "reviews",
     "metric_specs": {
         "counter_metrics": [
@@ -54,7 +55,7 @@ eip_example = {
             "unit_range": True
         }
     ]},
-    "assessment_criteria": [
+    "criteria": [
         {
             "id": "0",
             "metric_id": "iter8_mean_latency",
@@ -176,5 +177,4 @@ def provide_assessment_for_this_experiment_iteration(eip: ExperimentIterationPar
     """
       POST iter8 experiment iteration data and obtain assessment of how the versions are performing and recommendations on how to split traffic based on multiple strategies.
       """
-
     return Iter8AssessmentAndRecommendation(** ar_example)
