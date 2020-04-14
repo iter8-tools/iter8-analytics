@@ -1,5 +1,5 @@
 """
-Specification of the responses for the REST API code related analytics.
+Pydantic data model for iter8 experiment iteration response
 """
 
 # Core python stuff

@@ -1,5 +1,5 @@
 """
-Specification of the request parameters for the REST API code related to analytics.
+Pydantic data model for iter8 experiment iteration request
 """
 # Core python stuff
 from datetime import datetime
