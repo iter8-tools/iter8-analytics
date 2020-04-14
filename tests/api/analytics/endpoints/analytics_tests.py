@@ -12,6 +12,7 @@ from iter8_analytics import fastapi_app
 
 from iter8_analytics.api.analytics.experiment_iteration_request import ExperimentIterationParameters
 from iter8_analytics.api.analytics.experiment_iteration_response import Iter8AssessmentAndRecommendation
+from iter8_analytics.api.analytics.endpoints.examples import eip_example
 
 from iter8_analytics.api.analytics import responses
 from iter8_analytics.api.analytics import request_parameters
@@ -4166,99 +4167,13 @@ class TestUnifiedAnalyticsAPI(unittest.TestCase):
         endpoint = "/assessment"
 
         # fastapi post data
-        _experiment_iteration_parameters = {
-            'start_time': "2020-04-03T12:55:50.568Z",
-            'iteration_number': 1, 
-            'service_name': "reviews",
-            "metric_specs": {
-                "counter_metrics": [
-                    {
-                        "id": "iter8_request_count",
-                        "query_template": "sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($entity_labels)"
-                    },
-                    {
-                        "id": "iter8_total_latency",
-                        "query_template": "sum(increase(istio_request_duration_seconds_sum{reporter='source'}[$interval])) by ($entity_labels)"
-                    },
-                    {
-                        "id": "iter8_error_count",
-                        "query_template": "sum(increase(istio_requests_total{response_code=~'5..',reporter='source'}[$interval])) by ($entity_labels)",
-                        "preferred_direction": "lower"
-                    },
-                    {
-                        "id": "conversion_count",
-                        "query_template": "sum(increase(newsletter_signups[$interval])) by ($entity_labels)"
-                    },
-                ],
-                "ratio_metrics": [
-                    {
-                        "id": "iter8_mean_latency",
-                        "numerator": "iter8_total_latency",
-                        "denominator": "iter8_request_count",
-                        "preferred_direction": "lower",
-                        "unit_range": False
-                    },
-                    {
-                        "id": "iter8_error_rate",
-                        "numerator": "iter8_error_count",
-                        "denominator": "iter8_request_count",
-                        "preferred_direction": "lower",
-                        "unit_range": True
-                    },
-                    {
-                        "id": "conversion_rate",
-                        "numerator": "conversion_count",
-                        "denominator": "iter8_request_count",
-                        "preferred_direction": "higher",
-                        "unit_range": True
-                    }
-                ]},
-            "criteria": [
-                {
-                    "id": "0",
-                    "metric_id": "iter8_mean_latency",
-                    "reward": False,
-                    "threshold": {
-                        "type": "absolute",
-                        "value": 25
-                    }
-                }
-            ],
-            "baseline": {
-                "id": "reviews_base",
-                "version_labels": {
-                    'destination_service_namespace': "bookinfo_ns",
-                    'destination_workload': "reviews-v1"
-                }
-            },
-            "candidates": [
-                {
-                    "id": "reviews_candidate",
-                    "version_labels": {
-                        'destination_service_namespace': "bookinfo_ns",
-                        'destination_workload': "reviews-v2"
-                    }
-                }
-            ],
-            "advanced_traffic_control_parameters": {
-                "exploration_traffic_percentage": 5.0,
-                "check_and_increment_parameters": {
-                    "step_size": 1
-                }
-            },
-            "advanced_assessment_parameters": {
-                "posterior_probability_for_credible_intervals": 95.0,
-                "min_posterior_probability_for_winner": 99.0
-            }
-        }
-
-        eip = ExperimentIterationParameters(** _experiment_iteration_parameters)
+        eip = ExperimentIterationParameters(** eip_example)
 
         log.info("\n\n\n")
         log.info('===TESTING FASTAPI ENDPOINT')
         log.info("Test request with some required parameters")
 
         # Call the FastAPI endpoint via the test client
-        resp = self.client.post(endpoint, json=_experiment_iteration_parameters)
-        it8ar = Iter8AssessmentAndRecommendation(** resp.json())
+        resp = self.client.post(endpoint, json = eip_example)
+        it8_ar_example = Iter8AssessmentAndRecommendation(** resp.json())
         self.assertEqual(resp.status_code, 200, msg = "Successful request")
