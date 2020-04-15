@@ -5,7 +5,7 @@ Pydantic data model for iter8 experiment iteration response
 # Core python stuff
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Any
 
 # Module dependencies
 from pydantic import BaseModel, Field
@@ -79,3 +79,5 @@ class Iter8AssessmentAndRecommendation(BaseModel):
         StatusEnum.invalid_experiment_spec: "Invalid experiment specification"
         }, 
         description="Human-friendly interpretations of the status codes returned by the analytics service") # the index of an interpretation corresponds to the corresponding status enum
+    last_state: Any = Field(
+        None, description="Last recorded state from analytics service")

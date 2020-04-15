@@ -5,7 +5,7 @@ Pydantic data model for iter8 experiment iteration request
 from datetime import datetime
 from enum import Enum
 from uuid import UUID
-from typing import Tuple, Union, Sequence, Dict
+from typing import Tuple, Union, Sequence, Dict, Any
 
 # Module dependencies
 from pydantic import BaseModel, Field
@@ -101,5 +101,5 @@ class ExperimentIterationParameters(BaseModel):
     advanced_parameters: AdvancedParameters = Field(
         None, description = "Advanced parameters")
     current_traffic_split: Dict[Union[int, str, UUID], float] = Field(None, description="Current traffic split across versions")
-    last_state: Iter8AssessmentAndRecommendation = Field(
-        None, description="Last recorded state (response) from analytics service")
+    last_state: Any = Field(
+        None, description="Last recorded state from analytics service")
