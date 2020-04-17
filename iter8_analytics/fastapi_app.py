@@ -15,3 +15,12 @@ def provide_assessment_for_this_experiment_iteration(eip: ExperimentIterationPar
       POST iter8 experiment iteration data and obtain assessment of how the versions are performing and recommendations on how to split traffic based on multiple strategies.
       """
     return Experiment(eip).run()
+
+
+
+@app.get("/health_check")
+def provide_iter8_analytics_health():
+    """
+      Get iter8 analytics health status
+      """
+    return {"status": "Ok"}
