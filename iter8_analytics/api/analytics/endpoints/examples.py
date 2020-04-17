@@ -28,21 +28,21 @@ eip_example = {
             "numerator": "iter8_total_latency",
             "denominator": "iter8_request_count",
             "preferred_direction": "lower",
-            "unit_range": False
+            "zero_to_one": False
         }, 
         {
             "id": "iter8_error_rate",
             "numerator": "iter8_error_count",
             "denominator": "iter8_request_count",
             "preferred_direction": "lower",
-            "unit_range": True
+            "zero_to_one": True
         }, 
         {
             "id": "conversion_rate",
             "numerator": "conversion_count",
             "denominator": "iter8_request_count",
             "preferred_direction": "higher",
-            "unit_range": True
+            "zero_to_one": True
         }
     ]},
     "criteria": [
@@ -97,7 +97,6 @@ ar_example = {
                 "statistics": {
                     "value": 0.005,
                     "ratio_statistics": {
-                        "sample_size": 500,
                         "improvement_over_baseline": {
                             'lower': 2.3,
                             'upper': 5.0

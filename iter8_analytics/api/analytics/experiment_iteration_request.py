@@ -35,7 +35,7 @@ class RatioMetricSpec(MetricSpec):  # ratio metric = numerator counter / denomin
         ..., description="ID of the counter metric used in numerator")
     denominator: str = Field(
         ..., description="ID of the counter metric used in denominator")
-    unit_range: bool = Field(
+    zero_to_one: bool = Field(
         False, description="Boolean flag indicating if the value of this metric is always in the range 0 to 1")
 
 class MetricSpecs(BaseModel):
@@ -89,7 +89,7 @@ class AdvancedParameters(BaseModel):
 class ExperimentIterationParameters(BaseModel):
     start_time: datetime = Field(...,
                                  description="Start time of the experiment")
-    iteration_number: int = Field(..., description = "Iteration number, ranging from 1 to maximum number of iterations (advanced_parameters.max_iterations)", ge = 1)
+    iteration_number: int = Field(None, description = "Iteration number, ranging from 1 to maximum number of iterations (advanced_parameters.max_iterations). This is mandatory for controller interactions. Optional for human-in-the-loop interactions", ge = 1)
     service_name: str = Field(..., description = "Name of the service in this experiment")
     baseline: Version = Field(..., description="The baseline version")
     candidates: Sequence[Version] = Field(...,

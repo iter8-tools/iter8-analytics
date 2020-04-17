@@ -2,9 +2,10 @@
 from fastapi import FastAPI, Body
 
 # iter8 stuff
-from iter8_analytics.api.analytics.experiment_iteration_response import *
-from iter8_analytics.api.analytics.experiment_iteration_request import *
-from iter8_analytics.api.analytics.endpoints.examples import *
+from iter8_analytics.api.analytics.experiment_iteration_request import ExperimentIterationParameters
+from iter8_analytics.api.analytics.experiment_iteration_response import Iter8AssessmentAndRecommendation
+from iter8_analytics.api.analytics.experiment import  Experiment
+from iter8_analytics.api.analytics.endpoints.examples import eip_example
 
 app = FastAPI()
 
@@ -13,4 +14,4 @@ def provide_assessment_for_this_experiment_iteration(eip: ExperimentIterationPar
     """
       POST iter8 experiment iteration data and obtain assessment of how the versions are performing and recommendations on how to split traffic based on multiple strategies.
       """
-    return Iter8AssessmentAndRecommendation(** ar_example)
+    return Experiment(eip).run()
