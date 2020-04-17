@@ -57,9 +57,11 @@ class WinnerAssessment(BaseModel):
     # safe_to_rollforward: bool = Field(False, description = "True if it is now safe to terminate the experiment early and rollforward to the winner")
 
 class StatusEnum(str, Enum):
-    no_prom_data = "no_prom_data"
     all_ok = "all_ok"
     no_last_state = "no_last_state"
+    no_prom_server = "no_prom_server"
+    no_prom_data = "no_prom_data"
+    insufficient_data_for_assessment = "insufficient_data_for_assessment" # needs to be refined
     invalid_experiment_spec = "invalid_experiment_spec" # needs to be refined
 
 class Iter8AssessmentAndRecommendation(BaseModel):
@@ -72,9 +74,11 @@ class Iter8AssessmentAndRecommendation(BaseModel):
     winner_assessment: WinnerAssessment = Field(..., description="Assessment summary for winning candidate. This is currently computed based on Bayesian estimation")
     status: List[StatusEnum] = Field([StatusEnum.all_ok], description="List of status codes for this iteration -- did this iteration run without exceptions and if not, what went wrong?")
     status_interpretations: Dict[str, str] = Field({
-        StatusEnum.no_prom_data: "Incomplete Prometheus data during this iteration", 
         StatusEnum.all_ok: "Data from Prometheus available and was utilized without a glitch during this iteration", 
         StatusEnum.no_last_state: "No last state available during this iteration", 
+        StatusEnum.no_prom_server: "Prometheus server unavailable", 
+        StatusEnum.no_prom_data: "Incomplete Prometheus data during this iteration", 
+        StatusEnum.insufficient_data_for_assessment: "Insufficient data available to create an assessment",
         StatusEnum.invalid_experiment_spec: "Invalid experiment specification"
         }, 
         description="Human-friendly interpretations of the status codes returned by the analytics service") # the index of an interpretation corresponds to the corresponding status enum
