@@ -1,4 +1,0 @@
-{
-  "metric_backend_url": "http://169.47.97.150:30602",
-  "test_connection_query": "istio_requests_total"
-}

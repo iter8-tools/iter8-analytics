@@ -6,6 +6,7 @@ import math
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 import iter8_analytics.api.analytics.request_parameters as request_parameters
 import iter8_analytics.constants as constants
+from iter8_analytics.metrics_backend.config import MetricsBackendConfig
 
 log = logging.getLogger(__name__)
 
@@ -13,10 +14,8 @@ class PrometheusQuery():
     def __init__(self, prometheus_url, query_spec, authentication=None):
         self.prometheus_url = prometheus_url + "/api/v1/query"
         self.query_spec = query_spec
-        self.authentication = authentication
-        self.auth_type = constants.METRICS_BACKEND_AUTH_NONE
-        if self.authentication:
-            self.auth_type = self.authentication.get('type', constants.METRICS_BACKEND_AUTH_NONE).lower()
+        self.authentication = MetricsBackendConfig.getAuthentication()
+        self.auth_type = MetricsBackendConfig.getAuthenticationType()
 
     def query_from_template(self, interval_str, offset_str):
         kwargs = {
@@ -30,24 +29,24 @@ class PrometheusQuery():
         return self.query(query)
 
     def query(self, query):
-        log.info('backend url is: {}'.format(self.prometheus_url))
+        log.info(f"backend url is: {self.prometheus_url}")
         params = {'query': query}
         log.info(params)
         DataCapture.append_value("prometheus_requests", query)
 
         query_result = None
-        log.info('authentication type is: {}'.format(self.auth_type))
-        if self.auth_type == constants.METRICS_BACKEND_AUTH_NONE:
+        log.debug(f"authentication type is: {self.auth_type}")
+        if self.auth_type == constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE:
             query_result = requests.get(self.prometheus_url, params=params).json()
-        elif self.auth_type == constants.METRICS_BACKEND_AUTH_BASIC:
-            log.info('username is: {}'.format(self.authentication.get('username')))
+        elif self.auth_type == constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_BASIC:
+            log.debug(f"username is: {self.authentication.get('username')}")
             auth=HTTPBasicAuth(self.authentication.get('username'), self.authentication.get('password'))
             verify = (not self.authentication.get('insecure_skip_verify'))
-            log.info('verify is: {}'.format(verify))
+            log.debug(f"verify is: {verify}")
             query_result = requests.get(self.prometheus_url, params=params, auth=auth, verify=verify).json()
         else:
-            # probably should be an error
-            log.warning('Unsupported authentication type: {}; trying {}'.format(self.auth_type, constants.METRICS_BACKEND_AUTH_NONE))
+            # should not happen, validated in app.py, fastapi_app.py
+            log.warning(f"Unsupported authentication type: {self.auth_type}; trying {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE}")
             query_result = requests.get(self.prometheus_url, params=params).json()
 
         DataCapture.append_value("prometheus_responses", query_result)

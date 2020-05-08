@@ -11,10 +11,9 @@ log = logging.getLogger(__name__)
 class Iter8MetricFactory:
     def __init__(self, metrics_backend_url, authentication=None):
         self.metrics_backend_url = metrics_backend_url
-        self.authentication = authentication
 
     def get_iter8_metric(self, metric_spec):
-        return Iter8Metric(metric_spec, self.metrics_backend_url, self.authentication)
+        return Iter8Metric(metric_spec, self.metrics_backend_url)
 
     @staticmethod
     def create_metric_spec(criterion, entity_tag):
@@ -44,13 +43,13 @@ class Iter8MetricFactory:
         return interval_str,offset_str
 
 class Iter8Metric:
-    def __init__(self, metric_spec, metrics_backend_url, authentication=None):
+    def __init__(self, metric_spec, metrics_backend_url):
         self.name = metric_spec["name"]
         self.is_counter = metric_spec[request_parameters.IS_COUNTER_STR]
         self.absent_value = metric_spec[request_parameters.ABSENT_VALUE_STR]
         self.query_specs = metric_spec["query_specs"]
         self.metrics_backend_url = metrics_backend_url
-        self.prom_queries = [PrometheusQuery(self.metrics_backend_url, query_spec, authentication) for query_spec in self.query_specs]
+        self.prom_queries = [PrometheusQuery(self.metrics_backend_url, query_spec) for query_spec in self.query_specs]
 
     def get_stats(self, interval_str, offset_str):
         results = {responses.STATISTICS_STR: {}, "messages": []}

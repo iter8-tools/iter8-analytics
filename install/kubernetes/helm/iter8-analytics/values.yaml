@@ -11,18 +11,18 @@ image:
 
 namespace: iter8
 
-iter8Config:
+configFile: config.yaml
 
-  # Prometheus URL that iter8-analytics will use for querying it
-  metricsBackendURL: "http://prometheus.istio-system:9090"
-
+# Prometheus URL that iter8-analytics will use for querying it
+metricsBackend:
+  url: "http://prometheus.istio-system:9090"
   authentication:
     ca_file: ""
     insecure_skip_verify: false
-    password: "passw0rd"
+    password: ""
     token: ""
     type: "none"
-    username: "user"
+    username: ""
 
 nameOverride: "iter8-analytics"
 fullnameOverride: "iter8-analytics"

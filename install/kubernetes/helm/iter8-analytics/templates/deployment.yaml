@@ -25,10 +25,8 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: ITER8_ANALYTICS_SERVER_PORT
-              value: "{{ .Values.service.port }}"
-            - name: ITER8_ANALYTICS_METRICS_BACKEND_URL
-              value: "{{ .Values.iter8Config.metricsBackendURL }}"
+            - name: METRICS_BACKEND_CONFIGFILE
+              value: "{{ .Values.configFile }}"
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -37,8 +35,8 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: config-volume
-              mountPath: /python_code/src/config.yaml
-              subPath: config.yaml
+              mountPath: /python_code/src/{{ .Values.configFile }}
+              subPath: {{ .Values.configFile }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

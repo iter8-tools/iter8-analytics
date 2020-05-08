@@ -20,15 +20,16 @@ metadata:
 data: 
   config.yaml: |
     port: 8080
-    prometheus:
+    metricsBackend:
+      url: http://prometheus.istio-system:9090
       auth:
         ca_file: 
         insecure_skip_verify: false
-        password: passw0rd
+        password: 
         token: 
         type: none
-        username: user
-      url: http://prometheus.istio-system:9090
+        username: 
+
 ---
 # Source: iter8-analytics/templates/service.yaml
 apiVersion: v1
@@ -81,10 +82,8 @@ spec:
           image: "iter8/iter8-analytics:v0.0.1"
           imagePullPolicy: Always
           env:
-            - name: ITER8_ANALYTICS_SERVER_PORT
-              value: "8080"
-            - name: ITER8_ANALYTICS_METRICS_BACKEND_URL
-              value: "http://prometheus.istio-system:9090"
+            - name: METRICS_BACKEND_CONFIGFILE
+              value: "config.yaml"
           ports:
             - name: http
               containerPort: 8080
