@@ -12,8 +12,10 @@ log = logging.getLogger(__name__)
 
 class PrometheusQuery():
     def __init__(self, prometheus_url, query_spec, authentication=None):
-        # self.prometheus_url = prometheus_url + "/api/v1/query"
-        self.prometheus_url = current_app.config[constants.METRICS_BACKEND_CONFIG_URL] + "/api/v1/query"
+        if prometheus_url:
+            self.prometheus_url = prometheus_url + "/api/v1/query"
+        else: 
+            self.prometheus_url = current_app.config[constants.METRICS_BACKEND_CONFIG_URL] + "/api/v1/query"
         self.query_spec = query_spec
         self.authentication = current_app.config[constants.METRICS_BACKEND_CONFIG_AUTH]
         self.auth_type = self.authentication[constants.METRICS_BACKEND_CONFIG_AUTH_TYPE]
