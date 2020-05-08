@@ -63,11 +63,11 @@ def get_env_config():
       Reads the environment variables that control the server behavior and populates the config dictionary
       """
 
-    if not os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV):
+    if not os.getenv(constants.METRICS_BACKEND_URL_ENV):
         logging.getLogger(__name__).critical(
             u'The environment variable {0} was not set. '
             'Example of a valid value: "http://localhost:9090". '
-            'Aborting!'.format(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV))
+            'Aborting!'.format(constants.METRICS_BACKEND_URL_ENV))
         sys.exit(1)
 
     logging.getLogger(__name__).info('Configuring iter8 analytics server')
@@ -76,12 +76,12 @@ def get_env_config():
     config[constants.ITER8_ANALYTICS_LOG_LEVEL_ENV] = os.getenv(
         constants.ITER8_ANALYTICS_LOG_LEVEL_ENV, 'debug')
 
-    config[constants.ITER8_ANALYTICS_SERVER_PORT_ENV] = os.getenv(
-        constants.ITER8_ANALYTICS_SERVER_PORT_ENV, 5555)
+    config[constants.ANALYTICS_SERVICE_PORT] = os.getenv(
+        constants.ANALYTICS_SERVICE_PORT_ENV, 5555)
 
     logging.getLogger(__name__).info(
         u'The iter8 analytics server will listen on port {0}. '
-        'This value can be set by the environment variable {1}'.format(config[constants.ITER8_ANALYTICS_SERVER_PORT_ENV], constants.ITER8_ANALYTICS_SERVER_PORT_ENV))
+        'This value can be set by the environment variable {1}'.format(config[constants.ANALYTICS_SERVICE_PORT], constants.ANALYTICS_SERVICE_PORT_ENV))
 
     return config
 
@@ -91,4 +91,4 @@ if __name__ == '__main__':
     config_logger(env_config[constants.ITER8_ANALYTICS_LOG_LEVEL_ENV])
     logging.getLogger(__name__).info('Starting iter8 analytics server')
 
-    uvicorn.run('fastapi_app:app', host='0.0.0.0', port=int(env_config[constants.ITER8_ANALYTICS_SERVER_PORT_ENV]), log_level=env_config[constants.ITER8_ANALYTICS_LOG_LEVEL_ENV])
+    uvicorn.run('fastapi_app:app', host='0.0.0.0', port=int(env_config[constants.ANALYTICS_SERVICE_PORT]), log_level=env_config[constants.ITER8_ANALYTICS_LOG_LEVEL_ENV])
