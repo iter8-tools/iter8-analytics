@@ -6,16 +6,17 @@ import math
 from iter8_analytics.metrics_backend.datacapture import DataCapture
 import iter8_analytics.api.analytics.request_parameters as request_parameters
 import iter8_analytics.constants as constants
-from iter8_analytics.metrics_backend.config import MetricsBackendConfig
+from flask import current_app
 
 log = logging.getLogger(__name__)
 
 class PrometheusQuery():
     def __init__(self, prometheus_url, query_spec, authentication=None):
-        self.prometheus_url = prometheus_url + "/api/v1/query"
+        # self.prometheus_url = prometheus_url + "/api/v1/query"
+        self.prometheus_url = current_app.config[constants.METRICS_BACKEND_CONFIG_URL] + "/api/v1/query"
         self.query_spec = query_spec
-        self.authentication = MetricsBackendConfig.getAuthentication()
-        self.auth_type = MetricsBackendConfig.getAuthenticationType()
+        self.authentication = current_app.config[constants.METRICS_BACKEND_CONFIG_AUTH]
+        self.auth_type = self.authentication[constants.METRICS_BACKEND_CONFIG_AUTH_TYPE]
 
     def query_from_template(self, interval_str, offset_str):
         kwargs = {
@@ -30,6 +31,7 @@ class PrometheusQuery():
 
     def query(self, query):
         log.info(f"backend url is: {self.prometheus_url}")
+        # log.info(f"backend url is: {current_app.config['url']}")
         params = {'query': query}
         log.info(params)
         DataCapture.append_value("prometheus_requests", query)

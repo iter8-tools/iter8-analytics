@@ -12,7 +12,6 @@ from iter8_analytics.api.analytics.endpoints.analytics \
 from iter8_analytics.api.analytics.endpoints.analytics \
     import experiment_namespace
 import iter8_analytics.constants as constants
-from iter8_analytics.metrics_backend.config import MetricsBackendConfig
 
 #  Create a Flask application
 app = Flask(__name__)
@@ -101,25 +100,28 @@ def config_app():
     logging.getLogger(__name__).info(f"The iter8 analytics server will listen on port {app.config[constants.ANALYTICS_SERVICE_PORT]}")
 
     # metrics backend
-    # default value defined in MetricsBackendConfig
+    # # default value
+    app.config[constants.METRICS_BACKEND_CONFIG_URL] = "http://default-metrics-backend"
+    logging.getLogger(__name__).info(f"Set default url as: {app.config[constants.METRICS_BACKEND_CONFIG_URL]}")
+    app.config[constants.METRICS_BACKEND_CONFIG_AUTH] = { 
+        constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE
+    }
+    logging.getLogger(__name__).info(f"Set default auth as: {app.config[constants.METRICS_BACKEND_CONFIG_AUTH]}")
     # override with value in configFile
-    auth = { constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE }
-    logging.getLogger(__name__).info(f"Set default auth as: {auth}")
-    if constants.METRICS_BACKEND_CONFIGFILE_PROMETHEUS in configMap:
-        if constants.METRICS_BACKEND_CONFIGFILE_URL in configMap[constants.METRICS_BACKEND_CONFIGFILE_PROMETHEUS]:
-            url = configMap[constants.METRICS_BACKEND_CONFIGFILE_PROMETHEUS][constants.METRICS_BACKEND_CONFIGFILE_URL]
-            logging.getLogger(__name__).info(f"Read url from config as: {url}")
-        if constants.METRICS_BACKEND_CONFIG_AUTH in configMap[constants.METRICS_BACKEND_CONFIGFILE_PROMETHEUS]:
-            auth = configMap[constants.METRICS_BACKEND_CONFIGFILE_PROMETHEUS][constants.METRICS_BACKEND_CONFIG_AUTH]
-            logging.getLogger(__name__).info(f"Read auth from config as: {auth}")
-        MetricsBackendConfig.addMetricsBackendConfig(url, auth)
+    if constants.METRICS_BACKEND_CONFIG_METRICS_BACKEND in configMap:
+        backend = configMap[constants.METRICS_BACKEND_CONFIG_METRICS_BACKEND]
+        if constants.METRICS_BACKEND_CONFIGFILE_URL in backend:
+            app.config[constants.METRICS_BACKEND_CONFIG_URL] = backend[constants.METRICS_BACKEND_CONFIGFILE_URL]
+            logging.getLogger(__name__).info(f"Set url from config as: {app.config[constants.METRICS_BACKEND_CONFIG_URL]}")
+        if constants.METRICS_BACKEND_CONFIG_AUTH in backend:
+            app.config[constants.METRICS_BACKEND_CONFIG_AUTH].update(backend[constants.METRICS_BACKEND_CONFIG_AUTH])
+            logging.getLogger(__name__).info(f"Merged auth from config as: {app.config[constants.METRICS_BACKEND_CONFIG_AUTH]}")
     # override with value in environment variable (in which case no )
     if os.getenv(constants.METRICS_BACKEND_URL_ENV):
-        url = os.getenv(constants.METRICS_BACKEND_URL_ENV)
-        logging.getLogger(__name__).info(f"Read url from env as: {url}")
-        MetricsBackendConfig.addMetricsBackendConfig(url, auth)
+        app.config[constants.METRICS_BACKEND_CONFIG_URL] = os.getenv(constants.METRICS_BACKEND_URL_ENV)
+        logging.getLogger(__name__).info(f"Set url from env as: {app.config[constants.METRICS_BACKEND_CONFIG_URL]}")
     # log result
-    logging.getLogger(__name__).info(f"The backend metrics server is {MetricsBackendConfig.getUrl()}")
+    logging.getLogger(__name__).info(f"The backend metrics server is {app.config[constants.METRICS_BACKEND_CONFIG_URL]}")
     
     # debug mode
     # default is False

@@ -9,13 +9,10 @@ from iter8_analytics.metrics_backend.datacapture import DataCapture
 from iter8_analytics.api.analytics.iter8response import CheckAndIncrementResponse, EpsilonTGreedyResponse, PosteriorBayesianRoutingResponse, OptimisticBayesianRoutingResponse
 from iter8_analytics.api.analytics.iter8experiment import CheckAndIncrementExperiment, EpsilonTGreedyExperiment, BayesianRoutingExperiment
 import iter8_analytics.constants as constants
-from iter8_analytics.metrics_backend.config import MetricsBackendConfig
 import flask_restplus
-from flask import request
+from flask import request, current_app
 from datetime import datetime, timezone, timedelta
 import dateutil.parser as parser
-import yaml
-
 
 import json
 import os
@@ -24,7 +21,7 @@ import copy
 
 log = logging.getLogger(__name__)
 
-prom_url = MetricsBackendConfig.getUrl()
+prom_url = None #TODO remove uses of this variable
 DataCapture.data_capture_mode = os.getenv(constants.ITER8_DATA_CAPTURE_MODE_ENV)
 
 analytics_namespace = api.namespace(
