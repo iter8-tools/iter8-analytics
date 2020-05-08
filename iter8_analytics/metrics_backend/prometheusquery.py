@@ -17,7 +17,9 @@ class PrometheusQuery():
         else: 
             self.prometheus_url = current_app.config[constants.METRICS_BACKEND_CONFIG_URL] + "/api/v1/query"
         self.query_spec = query_spec
-        self.authentication = current_app.config[constants.METRICS_BACKEND_CONFIG_AUTH]
+        self.authentication = {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE}
+        if constants.METRICS_BACKEND_CONFIG_AUTH in current_app.config:
+            self.authentication = current_app.config[constants.METRICS_BACKEND_CONFIG_AUTH]
         self.auth_type = self.authentication[constants.METRICS_BACKEND_CONFIG_AUTH_TYPE]
 
     def query_from_template(self, interval_str, offset_str):
