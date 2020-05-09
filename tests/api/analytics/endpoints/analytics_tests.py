@@ -17,6 +17,8 @@ from iter8_analytics.api.analytics.endpoints.examples import eip_example
 from iter8_analytics.api.analytics import responses
 from iter8_analytics.api.analytics import request_parameters
 
+from iter8_analytics.metrics_backend.prometheusquery import PrometheusQuery
+
 import iter8_analytics.constants as constants
 from iter8_analytics.api.analytics.successcriteria import StatisticalTests, SuccessCriterion
 import dateutil.parser as parser

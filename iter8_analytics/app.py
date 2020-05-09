@@ -101,7 +101,7 @@ def config_app():
 
     # metrics backend
     # # default value
-    app.config[constants.METRICS_BACKEND_CONFIG_URL] = "http://default-metrics-backend"
+    app.config[constants.METRICS_BACKEND_CONFIG_URL] = constants.METRICS_BACKEND_CONFIG_DEFAULT_URL
     logging.getLogger(__name__).info(f"Set default url as: {app.config[constants.METRICS_BACKEND_CONFIG_URL]}")
     app.config[constants.METRICS_BACKEND_CONFIG_AUTH] = { 
         constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE

@@ -6,7 +6,9 @@ from unittest.mock import patch
 from requests.models import Response
 
 import json
-from iter8_analytics import app as flask_app
+from fastapi.testclient import TestClient
+from iter8_analytics import fastapi_app
+
 from iter8_analytics.api.analytics import responses as responses
 from iter8_analytics.api.analytics import request_parameters as request_parameters
 import iter8_analytics.constants as constants
@@ -24,6 +26,13 @@ import re
 from urllib.parse import urlencode
 
 class TestAnalyticsAPI(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Setup common to all tests in this class"""
+
+        cls.client = TestClient(fastapi_app.app)
+        log.info('Completed initialization for FastAPI based  REST API tests')
+
     def test_prometheus_responses(self):
         #No value for Correctness query
         query_spec = {
@@ -33,7 +42,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         "absent_value": "0.0",
         "entity_tags": "entity_tags"
         }
-        prometheus_object = PrometheusQuery("http://localhost:9090", query_spec)
+        prometheus_object = PrometheusQuery("http://localhost:9090", query_spec, {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE})
 
         result = prometheus_object.post_process({"status": "success", "data": {"resultType": "vector", "result": []}})
         self.assertEqual(result["message"], "No data found in Prometheus but query succeeded. Return value based on metric type")
@@ -47,7 +56,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         "absent_value": "None",
         "entity_tags": "entity_tags"
         }
-        prometheus_object = PrometheusQuery("http://localhost:9090", query_spec)
+        prometheus_object = PrometheusQuery("http://localhost:9090", query_spec, {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE})
 
         result = prometheus_object.post_process({"status": "success", "data": {"resultType": "vector", "result": []}})
         self.assertEqual(result["message"], "No data found in Prometheus but query succeeded. Return value based on metric type")

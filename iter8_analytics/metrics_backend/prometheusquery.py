@@ -12,14 +12,20 @@ log = logging.getLogger(__name__)
 
 class PrometheusQuery():
     def __init__(self, prometheus_url, query_spec, authentication=None):
+        # TODO ability to set explicit query_spec and authentication is only to 
+        # appease prometheusquery_tests.py. This has made the method a bit unweildly
         if prometheus_url:
             self.prometheus_url = prometheus_url + "/api/v1/query"
         else: 
             self.prometheus_url = current_app.config[constants.METRICS_BACKEND_CONFIG_URL] + "/api/v1/query"
         self.query_spec = query_spec
         self.authentication = {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE}
-        if constants.METRICS_BACKEND_CONFIG_AUTH in current_app.config:
+        if authentication:
+            self.authentication = authentication   
+        elif constants.METRICS_BACKEND_CONFIG_AUTH in current_app.config:
             self.authentication = current_app.config[constants.METRICS_BACKEND_CONFIG_AUTH]
+        else:
+            self.authentication = {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE}
         self.auth_type = self.authentication[constants.METRICS_BACKEND_CONFIG_AUTH_TYPE]
 
     def query_from_template(self, interval_str, offset_str):
