@@ -2,33 +2,45 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# number of instances of analytics engine that should be started
 replicaCount: 1
 
+# image to be used
 image:
   repository: iter8/iter8-analytics
   tag: v0.0.1
   pullPolicy: Always
 
+# Namespace where analytics engine should be executed
 namespace: iter8
 
+# Name of configuration file to use
 configFile: config.yaml
 
-# Prometheus URL that iter8-analytics will use for querying it
+# Details of backend metrics server to be used for data.
+# Currently, only a single metrics server is supported.
+# Further, it must be a Prometheus server.
 metricsBackend:
+  # The URL of the Prometheus server
   url: "http://prometheus.istio-system:9090"
   authentication:
-    ca_file: ""
-    insecure_skip_verify: false
-    password: ""
-    token: ""
+    # Type of authentication required by the Prometheus server. 
+    # Currently supported are "none" and "basic"
     type: "none"
+    # When using "basic" authentication, a username and password are required
     username: ""
+    password: ""
+    # Flag indicating whether or not to allow skipping the verification of the server
+    insecure_skip_verify: false
 
+# Name to be used when creating Kubernetes resources
 nameOverride: "iter8-analytics"
 fullnameOverride: "iter8-analytics"
 
 service:
+  # Type of Kubernetes service to create
   type: ClusterIP
+  # Port on which iter8 should listen
   port: 8080
 
 resources: {}
