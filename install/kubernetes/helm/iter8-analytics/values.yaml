@@ -2,17 +2,28 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Name to be used when creating Kubernetes resources
+name: iter8-analytics
+
+# Namespace where analytics engine should be executed
+namespace: iter8
+
 # number of instances of analytics engine that should be started
 replicaCount: 1
 
 # image to be used
 image:
   repository: iter8/iter8-analytics
-  tag: v0.0.1
+  tag: v0.1.1
   pullPolicy: Always
 
-# Namespace where analytics engine should be executed
-namespace: iter8
+# optional limits/requirements on needed resources
+resources: {}
+
+# Optiomal resetrictioms on target node(s)
+nodeSelector: {}
+tolerations: []
+affinity: {}
 
 # Name of configuration file to use
 configFile: config.yaml
@@ -33,30 +44,6 @@ metricsBackend:
     # Flag indicating whether or not to allow skipping the verification of the server
     insecure_skip_verify: false
 
-# Name to be used when creating Kubernetes resources
-nameOverride: "iter8-analytics"
-fullnameOverride: "iter8-analytics"
-
 service:
-  # Type of Kubernetes service to create
-  type: ClusterIP
   # Port on which iter8 should listen
   port: 8080
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
