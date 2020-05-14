@@ -1,20 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "iter8-analytics.fullname" . }}
+  name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "iter8-analytics.name" . }}
-    helm.sh/chart: {{ include "iter8-analytics.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app: {{ .Values.name }}
 spec:
+  selector:
+    app: {{ .Values.name }}
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.port }}
       protocol: TCP
       name: http
-  selector:
-    app.kubernetes.io/name: {{ include "iter8-analytics.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
