@@ -8,6 +8,16 @@ stages:
   - name: "build image"
     if: branch = master
 
+# Define yaml anchor to be reused across testing matrix
+_end_to_end_script: &end_to_end_script
+  script:
+    - git clone https://github.com/iter8-tools/iter8-trend.git
+    - iter8-trend/test/install-minikube.sh
+    - iter8-trend/test/sanity-check.sh
+    - iter8-trend/test/install-istio.sh
+    - tests/install-iter8.sh
+    - tests/e2e-test.sh
+
 jobs:
   include:
     - stage: "unit tests"
@@ -21,24 +31,15 @@ jobs:
         - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
       script:
         - make test # Run unit tests
-    - &endtoend
-      stage: "end-to-end tests" # Parallel jobs for testing different version combinations
-      sudo: required
-      install:
-        - git clone https://github.com/iter8-tools/e2e-tests.git
-      script:
-        - e2e-tests/e2etests.sh # Run end-to-end tests
-      env:
-        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.3
-    - <<: *endtoend
-      env:
-        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.15.10 ISTIO=1.4.6
-    - <<: *endtoend
-      env:
-        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.3
-    - <<: *endtoend
-      env:
-        - CHANGE_MINIKUBE_NONE_USER=true KUBE_VERSION=1.16.0 ISTIO=1.4.6
+    - stage: "end-to-end tests"
+      env: KUBE_VERSION=v1.15.10 ISTIO_VERSION=1.4.3
+      <<: *end_to_end_script
+    - env: KUBE_VERSION=v1.15.10 ISTIO_VERSION=1.4.6
+      <<: *end_to_end_script
+    - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.3
+      <<: *end_to_end_script
+    - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.6
+      <<: *end_to_end_script
     - stage: "build image"
       script:
         - if [ "$TRAVIS_BRANCH" == "master" ]; then
