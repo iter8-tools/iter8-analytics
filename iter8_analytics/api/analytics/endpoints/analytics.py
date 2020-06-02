@@ -10,11 +10,9 @@ from iter8_analytics.api.analytics.iter8response import CheckAndIncrementRespons
 from iter8_analytics.api.analytics.iter8experiment import CheckAndIncrementExperiment, EpsilonTGreedyExperiment, BayesianRoutingExperiment
 import iter8_analytics.constants as constants
 import flask_restplus
-from flask import request
+from flask import request, current_app
 from datetime import datetime, timezone, timedelta
 import dateutil.parser as parser
-import yaml
-
 
 import json
 import os
@@ -23,51 +21,7 @@ import copy
 
 log = logging.getLogger(__name__)
 
-prom_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
 DataCapture.data_capture_mode = os.getenv(constants.ITER8_DATA_CAPTURE_MODE_ENV)
-
-# Attempt to read configuration file for analytics service. 
-# If the configuration file is not present, default values will be used.
-# When an environment variable option exists, the value of the environment variable
-# takes precedence.
-# The following code focuses on the configuration of the connection to a backend
-# Prometheus server used for metrics. The logic isL
-#     If no configuration file is present, it is assumed
-#     If a configuration file is present, the field prometheus.auth defines the 
-#     authentication to use. 
-# This code merely identifies the set of authentication options in the field 'authentication'
-# This is passed to the PrometheusQuery which processes it further.
-# Within the authenticatiom block, the scheme is identiied by the 'type' field
-#     valid values for 'type' are  "none" (no authentication), 
-#     and "basic" (basic authentication)
-# If the type field is not set, it defaults to "none"
-# TODO this should probably be refactored into a PrometheusConnection that gets 
-# passed to (or used by) a PrometheusQuery. 
-config = None
-try:
-    with open("config.yaml", 'r') as stream:
-        try:
-            config = yaml.safe_load(stream)
-        except yaml.YAMLError:
-            log.warning("Unable to read configuration file")
-except IOError:
-    log.warning("No configuration file")
-authentication = None
-if config:
-    authentication = config['prometheus']['auth']
-
-config = None
-try:
-    with open("config.yaml", 'r') as stream:
-        try:
-            config = yaml.safe_load(stream)
-        except yaml.YAMLError:
-            log.warning("Unable to read configuration file")
-except IOError:
-    log.warning("No configuration file")
-authentication = None
-if config:
-    authentication = config['prometheus']['auth']
 
 analytics_namespace = api.namespace(
     'analytics',
@@ -124,7 +78,7 @@ class CanaryCheckAndIncrement(flask_restplus.Resource):
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = CheckAndIncrementExperiment(payload)
             log.info("Fixed experiment")
-            self.response_object = CheckAndIncrementResponse(self.experiment, prom_url, authentication)
+            self.response_object = CheckAndIncrementResponse(self.experiment)
             log.info("Created response object")
             self.response_object.compute_test_results_and_summary()
 
@@ -156,7 +110,7 @@ class CanaryEpsilonTGreedy(flask_restplus.Resource):
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = EpsilonTGreedyExperiment(payload)
             log.info("Fixed experiment")
-            self.response_object = EpsilonTGreedyResponse(self.experiment, prom_url, authentication)
+            self.response_object = EpsilonTGreedyResponse(self.experiment)
             log.info("Created response object")
             self.response_object.compute_test_results_and_summary()
 
@@ -187,7 +141,7 @@ class CanaryPosteriorBayesianRouting(flask_restplus.Resource):
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = BayesianRoutingExperiment(payload)
             log.info("Fixed experiment")
-            self.response_object = PosteriorBayesianRoutingResponse(self.experiment, prom_url, authentication)
+            self.response_object = PosteriorBayesianRoutingResponse(self.experiment)
             log.info("Created response object")
             self.response_object.compute_test_results_and_summary()
             DataCapture.fill_value("service_response", self.response_object.response)
@@ -218,7 +172,7 @@ class CanaryOptimisticBayesianRouting(flask_restplus.Resource):
             DataCapture.fill_value("request_payload", copy.deepcopy(payload))
             self.experiment = BayesianRoutingExperiment(payload)
             log.info("Fixed experiment")
-            self.response_object = OptimisticBayesianRoutingResponse(self.experiment, prom_url, authentication)
+            self.response_object = OptimisticBayesianRoutingResponse(self.experiment)
             log.info("Created response object")
             self.response_object.compute_test_results_and_summary()
             DataCapture.fill_value("service_response", self.response_object.response)

@@ -118,3 +118,6 @@ tests/.DS_Store
 
 # local dev
 .local
+
+# Mac file information
+**/.DS_Store

@@ -1,7 +1,6 @@
 """Tests for module iter8_analytics.api.analytics.endpoints.metrics_test"""
 # standard python stuff
 import logging
-import os
 from datetime import datetime
 import json
 
@@ -12,14 +11,15 @@ import requests_mock
 from iter8_analytics import fastapi_app
 from iter8_analytics.api.analytics.types import *
 import iter8_analytics.constants as constants
+import iter8_analytics.config as config
 from iter8_analytics.api.analytics.experiment import Experiment
 from iter8_analytics.api.analytics.endpoints.examples import *
 
-env_config = fastapi_app.get_env_config()
-fastapi_app.config_logger(env_config[constants.ITER8_ANALYTICS_LOG_LEVEL_ENV])
+env_config = config.get_env_config()
+fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 logger = logging.getLogger('iter8_analytics')
 
-metrics_backend_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
+metrics_backend_url = env_config[constants.METRICS_BACKEND_CONFIG_URL]
 metrics_endpoint = f'{metrics_backend_url}/api/v1/query'
 
 class TestExperiment:

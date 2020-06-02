@@ -43,7 +43,7 @@ class TestAnalyticsNamespaceAPI(unittest.TestCase):
         # Get an internal Flask test client
         cls.flask_test = flask_app.app.test_client()
 
-        cls.backend_url = os.getenv(constants.ITER8_ANALYTICS_METRICS_BACKEND_URL_ENV)
+        cls.backend_url = os.getenv(constants.METRICS_BACKEND_URL_ENV)
         cls.metrics_endpoint = f'{cls.backend_url}/api/v1/query'
         #cls.metrics_endpoint = f'http://localhost:9090/api/v1/query'
         log.info('Completed initialization for all analytics REST API tests.')

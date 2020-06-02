@@ -1,22 +1,19 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "iter8-analytics.fullname" . }}
+  name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "iter8-analytics.name" . }}
-    helm.sh/chart: {{ include "iter8-analytics.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app: {{ .Values.name }}
 data: 
   config.yaml: |
     port: {{ .Values.service.port }}
-    prometheus:
+    metricsBackend:
+      url: {{ .Values.metricsBackend.url }}
       auth:
-        ca_file: {{ .Values.iter8Config.authentication.ca_file }}
-        insecure_skip_verify: {{ .Values.iter8Config.authentication.insecure_skip_verify }}
-        password: {{ .Values.iter8Config.authentication.password }}
-        token: {{ .Values.iter8Config.authentication.token }}
-        type: {{ .Values.iter8Config.authentication.type }}
-        username: {{ .Values.iter8Config.authentication.username }}
-      url: {{ .Values.iter8Config.metricsBackendURL }}
+        ca_file: {{ .Values.metricsBackend.authentication.ca_file }}
+        insecure_skip_verify: {{ .Values.metricsBackend.authentication.insecure_skip_verify }}
+        password: {{ .Values.metricsBackend.authentication.password }}
+        token: {{ .Values.metricsBackend.authentication.token }}
+        type: {{ .Values.metricsBackend.authentication.type }}
+        username: {{ .Values.metricsBackend.authentication.username }}

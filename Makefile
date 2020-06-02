@@ -21,6 +21,7 @@ deploy:
 docker-run: docker-cleanup docker-build
 	docker run -d --name iter8-analytics \
 	  -p 5555:5555 \
+	  -e ITER8_ANALYTICS_SERVER_PORT=5555 \
 	  -e ITER8_ANALYTICS_METRICS_BACKEND_URL=${ITER8_ANALYTICS_METRICS_BACKEND_URL} \
 	  -e ITER8_ANALYTICS_DEBUG_ENV=${ITER8_ANALYTICS_DEBUG_ENV} \
 	${IMG}

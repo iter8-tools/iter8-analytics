@@ -13,22 +13,20 @@ metadata:
   name: iter8-analytics
   namespace: iter8
   labels:
-    app.kubernetes.io/name: iter8-analytics
-    helm.sh/chart: iter8-analytics-0.1.0
-    app.kubernetes.io/instance: iter8-analytics
-    app.kubernetes.io/managed-by: Tiller
+    app: iter8-analytics
 data: 
   config.yaml: |
     port: 8080
-    prometheus:
+    metricsBackend:
+      url: http://prometheus.istio-system:9090
       auth:
         ca_file: 
         insecure_skip_verify: false
-        password: passw0rd
+        password: 
         token: 
         type: none
-        username: user
-      url: http://prometheus.istio-system:9090
+        username: 
+
 ---
 # Source: iter8-analytics/templates/service.yaml
 apiVersion: v1
@@ -37,20 +35,16 @@ metadata:
   name: iter8-analytics
   namespace: iter8
   labels:
-    app.kubernetes.io/name: iter8-analytics
-    helm.sh/chart: iter8-analytics-0.1.0
-    app.kubernetes.io/instance: iter8-analytics
-    app.kubernetes.io/managed-by: Tiller
+    app: iter8-analytics
 spec:
+  selector:
+    app: iter8-analytics
   type: ClusterIP
   ports:
     - port: 8080
       targetPort: 8080
       protocol: TCP
       name: http
-  selector:
-    app.kubernetes.io/name: iter8-analytics
-    app.kubernetes.io/instance: iter8-analytics
 
 ---
 # Source: iter8-analytics/templates/deployment.yaml
@@ -60,35 +54,24 @@ metadata:
   name: iter8-analytics
   namespace: iter8
   labels:
-    app.kubernetes.io/name: iter8-analytics
-    helm.sh/chart: iter8-analytics-0.1.0
-    app.kubernetes.io/instance: iter8-analytics
-    app.kubernetes.io/managed-by: Tiller
+    name: iter8-analytics
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: iter8-analytics
-      app.kubernetes.io/instance: iter8-analytics
+      app: iter8-analytics
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: iter8-analytics
-        app.kubernetes.io/instance: iter8-analytics
+        app: iter8-analytics
     spec:
       containers:
         - name: iter8-analytics
           image: "iter8/iter8-analytics:stable"
           imagePullPolicy: Always
           env:
-            - name: ITER8_ANALYTICS_SERVER_PORT
-              value: "8080"
-            - name: ITER8_ANALYTICS_METRICS_BACKEND_URL
-              value: "http://prometheus.istio-system:9090"
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
+            - name: METRICS_BACKEND_CONFIGFILE
+              value: "config.yaml"
           resources:
             {}
             
@@ -100,3 +83,4 @@ spec:
         - name: config-volume
           configMap: 
             name: iter8-analytics
+

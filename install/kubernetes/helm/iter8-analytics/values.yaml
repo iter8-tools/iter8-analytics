@@ -2,49 +2,53 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Name to be used when creating Kubernetes resources
+name: iter8-analytics
+
+# Namespace where analytics engine should be executed
+namespace: iter8
+
+# number of instances of analytics engine that should be started
 replicaCount: 1
 
+# image to be used
 image:
   repository: iter8/iter8-analytics
   tag: stable
   pullPolicy: Always
 
+# namespace where analytics engine should be executed
 namespace: iter8
 
-iter8Config:
+# optional limits/requirements on needed resources
+resources: {}
 
-  # Prometheus URL that iter8-analytics will use for querying it
-  metricsBackendURL: "http://prometheus.istio-system:9090"
+# Optiomal restrictions on target node(s)
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Name of configuration file to use
+configFile: config.yaml
+
+# Details of backend metrics server to be used for data.
+# Currently, only a single Prometheus metrics server is supported.
+metricsBackend:
+  # The URL of the Prometheus server
+  url: "http://prometheus.istio-system:9090"
 
   authentication:
-    ca_file: ""
-    insecure_skip_verify: false
-    password: "passw0rd"
-    token: ""
+    # Type of authentication required by the Prometheus server.
+    # Currently supported are "none" and "basic"
     type: "none"
-    username: "user"
-
-nameOverride: "iter8-analytics"
-fullnameOverride: "iter8-analytics"
+    # When using "basic" authentication, a username and password are required
+    username: ""
+    password: ""
+    # Flag indicating whether or not to allow skipping verification of the server
+    insecure_skip_verify: false
 
 service:
+  # Type of Kubernetes service to create
   type: ClusterIP
+  # Port on which analytics service should listen
   port: 8080
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}

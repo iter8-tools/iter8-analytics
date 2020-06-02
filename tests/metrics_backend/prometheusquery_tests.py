@@ -33,7 +33,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         "absent_value": "0.0",
         "entity_tags": "entity_tags"
         }
-        prometheus_object = PrometheusQuery("http://localhost:9090", query_spec)
+        prometheus_object = PrometheusQuery(query_spec, "http://localhost:9090", {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE})
 
         result = prometheus_object.post_process({"status": "success", "data": {"resultType": "vector", "result": []}})
         self.assertEqual(result["message"], "No data found in Prometheus but query succeeded. Return value based on metric type")
@@ -47,7 +47,7 @@ class TestAnalyticsAPI(unittest.TestCase):
         "absent_value": "None",
         "entity_tags": "entity_tags"
         }
-        prometheus_object = PrometheusQuery("http://localhost:9090", query_spec)
+        prometheus_object = PrometheusQuery(query_spec, "http://localhost:9090", {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE})
 
         result = prometheus_object.post_process({"status": "success", "data": {"resultType": "vector", "result": []}})
         self.assertEqual(result["message"], "No data found in Prometheus but query succeeded. Return value based on metric type")
