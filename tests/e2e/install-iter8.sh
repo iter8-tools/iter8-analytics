@@ -3,8 +3,12 @@
 # Exit on error
 set -e
 
+DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1; pwd -P )"
+source "$DIR/../iter8-controller/test/e2e/library.sh"
+
 # Install Iter8 controller manager
-kubectl apply -f https://github.com/iter8-tools/iter8-controller/releases/latest/download/iter8-controller.yaml
+header "Install iter8-controller"
+kubectl apply -f https://raw.githubusercontent.com/iter8-tools/iter8-controller/master/install/iter8-controller.yaml
 
 # Build a new Iter8-analytics image based on the new code
 IMG=iter8-analytics:test make docker-build
@@ -22,6 +26,7 @@ helm template install/kubernetes/helm/iter8-analytics/ --name iter8-analytics \
 cat install/kubernetes/iter8-analytics.yaml
 
 # Install Iter8-analytics
+header "Install iter8-analytics"
 kubectl apply -f install/kubernetes/iter8-analytics.yaml
 
 # Check if Iter8 pods are all up and running. However, sometimes
