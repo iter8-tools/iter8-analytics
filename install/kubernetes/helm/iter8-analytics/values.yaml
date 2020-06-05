@@ -14,7 +14,7 @@ replicaCount: 1
 # image to be used
 image:
   repository: iter8/iter8-analytics
-  tag: stable
+  tag: master
   pullPolicy: Always
 
 # namespace where analytics engine should be executed
