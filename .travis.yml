@@ -9,6 +9,7 @@ stages:
 
 # Define yaml anchor to be reused across testing matrix
 _end_to_end_script: &end_to_end_script
+  if: (type = pull_request) AND (head_branch != master) AND (head_branch !~ /^v[0-9]+\.[0-9]+$/)
   script:
     - git clone https://github.com/iter8-tools/iter8-controller.git -b v0.2
     - iter8-controller/test/e2e/install-minikube.sh
@@ -23,6 +24,7 @@ jobs:
       language: python
       python:
         - "3.7"
+      if: (type = pull_request) AND (head_branch != master) AND (head_branch !~ /^v[0-9]+\.[0-9]+$/)
       install:
         - pip install -r requirements.txt
         - pip install -r test-requirements.txt
@@ -40,5 +42,6 @@ jobs:
     - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.6
       <<: *end_to_end_script
     - stage: "build image"
+      if: (type = push) AND (branch = master OR branch =~ /^v[0-9]+\.[0-9]+$/)
       script:
         - tests/e2e/build-image.sh
