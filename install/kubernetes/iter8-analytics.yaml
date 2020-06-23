@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
         - name: iter8-analytics
-          image: "iter8/iter8-analytics:v0.2.0"
+          image: "iter8/iter8-analytics:v0.2"
           imagePullPolicy: Always
           env:
             - name: METRICS_BACKEND_CONFIGFILE
