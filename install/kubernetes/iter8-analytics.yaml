@@ -77,7 +77,7 @@ spec:
             
           volumeMounts:
             - name: config-volume
-              mountPath: /python_code/src/config.yaml
+              mountPath: /config.yaml
               subPath: config.yaml
       volumes:
         - name: config-volume

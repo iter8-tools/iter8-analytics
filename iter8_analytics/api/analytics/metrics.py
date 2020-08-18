@@ -7,6 +7,7 @@ from uuid import UUID
 from typing import Dict, Iterable, Any, Union
 import logging
 import requests
+from requests.auth import HTTPBasicAuth
 from string import Template
 import math
 from pprint import pformat
@@ -181,6 +182,11 @@ class PrometheusMetricQuery():
         prometheus_url = env_config[constants.METRICS_BACKEND_CONFIG_URL]
         self.prometheus_url = prometheus_url + "/api/v1/query"
         self.query_spec = query_spec
+        self.authentication = {
+            constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE,
+        }
+        if constants.METRICS_BACKEND_CONFIG_AUTH in env_config:
+            self.authentication = env_config[constants.METRICS_BACKEND_CONFIG_AUTH]
         self.version_labels_to_id = {
             frozenset(version.version_labels.items()): version.id for version in versions
         }
@@ -227,8 +233,22 @@ class PrometheusMetricQuery():
             Exception: HTTP connection errors related to prom requests.
         """
         params = {'query': query}
+        auth_type = self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_TYPE)
+        logger.debug(f"authentication type is: {auth_type}")
         try:
-            query_result = requests.get(self.prometheus_url, params=params).json()
+            query_result = None
+            if auth_type == constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE:
+                query_result = requests.get(self.prometheus_url, params=params).json()
+            elif auth_type == constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_BASIC:
+                auth=HTTPBasicAuth(
+                    self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_USERNAME), 
+                    self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_PASSWORD)
+                )
+                verify = (not self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_INSECURE_SKIP_VERIFY))
+                query_result = requests.get(self.prometheus_url, params=params, auth=auth, verify=verify).json()
+            else:
+                logger.warning(f"Unsupported authentication type: {auth_type}; trying {constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE}")
+                query_result = requests.get(self.prometheus_url, params=params).json()
             logger.debug("query result -- raw")
             logger.debug(query_result)
         except Exception as e:
