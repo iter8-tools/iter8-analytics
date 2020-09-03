@@ -190,6 +190,7 @@ class PrometheusMetricQuery():
         self.version_labels_to_id = {
             frozenset(version.version_labels.items()): version.id for version in versions
         }
+        self.versions = versions
         """the above frozenset maps from version labels to version ids
         """
 
@@ -286,8 +287,8 @@ class PrometheusMetricQuery():
         else: # query succeeded and we have some proper data to work with
             results = raw_query_result["data"]["result"]
             for result in results:
-                version_id = self.get_version_id(result['metric'])
-                if version_id:
+                version_ids = self.get_version_ids(result['metric'])
+                for version_id in version_ids:
                     prom_result[version_id] = self.result_value_to_data_point(result['value'][1], ts)
 
         return prom_result
@@ -302,6 +303,18 @@ class PrometheusMetricQuery():
             version_id (str): id of the corresponding version      
         """
         return self.version_labels_to_id.get(frozenset(version_labels.items()), None)
+
+    def get_version_ids(self, version_labels):
+        """Get version ids from version labels.
+
+        Args:
+            version_labels (Dict[str, str]): Dictionary of labels and their values for a version
+
+        Returns:
+            version_ids (str): ids of versions with matching version labels
+        """
+        return [version.id for version in self.versions if 
+        frozenset(version_labels.items()) == version.version_labels.items()]
 
 
 class PrometheusCounterMetricQuery(PrometheusMetricQuery):

@@ -10,13 +10,14 @@ from iter8_analytics.api.analytics.types import *
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
 from iter8_analytics.api.analytics.detailedmetric import *
-from iter8_analytics.api.analytics.endpoints.examples import *
+from iter8_analytics.tests.unit.data.inputs.inputs import *
 from iter8_analytics.api.analytics.detailedversion import *
 from iter8_analytics.api.analytics.experiment import *
 
 env_config = config.get_env_config()
-fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 logger = logging.getLogger('iter8_analytics')
+if not logger.hasHandlers():
+    fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 
 metrics_backend_url = env_config[constants.METRICS_BACKEND_CONFIG_URL]
 metrics_endpoint = f'{metrics_backend_url}/api/v1/query'

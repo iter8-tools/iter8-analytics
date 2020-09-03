@@ -3,6 +3,7 @@
 import logging
 import requests_mock
 import json
+import os
 
 # iter8 stuff
 from iter8_analytics import fastapi_app
@@ -12,8 +13,9 @@ import iter8_analytics.config as config
 from iter8_analytics.api.analytics.metrics import *
 
 env_config = config.get_env_config()
-fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 logger = logging.getLogger('iter8_analytics')
+if not logger.hasHandlers():
+    fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 
 metrics_backend_url = env_config[constants.METRICS_BACKEND_CONFIG_URL]
 metrics_endpoint = f'{metrics_backend_url}/api/v1/query'
@@ -21,7 +23,9 @@ metrics_endpoint = f'{metrics_backend_url}/api/v1/query'
 class TestMetrics:
     def test_prometheus_counter_metric_query(self):
         with requests_mock.mock(real_http=True) as m:
-            m.get(metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 
+            'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
             versions = [Version(
                 id = "reviews-v1", 
@@ -50,7 +54,9 @@ class TestMetrics:
 
     def test_prometheus_ratio_metric_query(self):
         with requests_mock.mock(real_http=True) as m:
-            m.get(metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 
+            'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
             versions = [Version(
                 id = "reviews-v1", 
@@ -123,7 +129,9 @@ class TestMetrics:
         ]
 
         with requests_mock.mock(real_http=True) as m:
-            m.get(metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")))
+            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 
+            'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
             cm = get_counter_metrics(
                 counter_metric_specs, 
@@ -211,9 +219,13 @@ class TestMetrics:
             return not ("newsletter_signups" in req.path_url and "istio_requests_total" in req.path_url)
 
         with requests_mock.mock(real_http=True) as m:
-            m.register_uri('GET', metrics_endpoint, json=json.load(open("tests/data/prometheus_sample_response.json")), additional_matcher = match_non_newsletter_query)
+            file_path_resp = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 'prometheus_sample_response.json')
 
-            m.register_uri('GET', metrics_endpoint, json=json.load(open("tests/data/prometheus_no_data_response.json")), additional_matcher = match_newsletter_query)
+            file_path_no_resp = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 'prometheus_no_data_response.json')
+
+            m.register_uri('GET', metrics_endpoint, json=json.load(open(file_path_resp)), additional_matcher = match_non_newsletter_query)
+
+            m.register_uri('GET', metrics_endpoint, json=json.load(open(file_path_no_resp)), additional_matcher = match_newsletter_query)
 
             cm = get_counter_metrics(
                 counter_metric_specs, 

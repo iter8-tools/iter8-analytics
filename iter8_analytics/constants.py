@@ -2,12 +2,14 @@
 Environment variables that control the iter8 analytics server
 """
 
-ITER8_ANALYTICS_DEBUG_ENV = 'ITER8_ANALYTICS_DEBUG' # deprecated; used only by flask
-ITER8_ANALYTICS_LOG_LEVEL_ENV = 'ITER8_ANALYTICS_LOG_LEVEL' # used by fastapi
+# deprecated; used only by flask
+ITER8_ANALYTICS_DEBUG_ENV = 'ITER8_ANALYTICS_DEBUG'
+ITER8_ANALYTICS_LOG_LEVEL_ENV = 'ITER8_ANALYTICS_LOG_LEVEL'  # used by fastapi
 
 ITER8_DATA_CAPTURE_MODE_ENV = 'ITER8_DATA_CAPTURE_MODE'
 
-ITER8_REQUEST_COUNT = 'iter8_request_count' # special metric indicating num requests to a version
+# special metric indicating num requests to a version
+ITER8_REQUEST_COUNT = 'iter8_request_count'
 
 METRICS_BACKEND_DEFAULT_CONFIGFILE = 'config.yaml'
 METRICS_BACKEND_CONFIGFILE_ENV = 'METRICS_BACKEND_CONFIGFILE'
