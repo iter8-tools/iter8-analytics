@@ -4,6 +4,7 @@ import logging
 import requests_mock
 import json
 import os
+from datetime import timedelta
 
 # iter8 stuff
 from iter8_analytics import fastapi_app
