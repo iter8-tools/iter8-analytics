@@ -21,6 +21,7 @@ from iter8_analytics.config import env_config
 
 logger = logging.getLogger('iter8_analytics')
 
+
 def new_ratio_max_min(metric_id_to_list_of_values):
     """Return min and max for each ratio metric
 
@@ -42,22 +43,24 @@ def new_ratio_max_min(metric_id_to_list_of_values):
         try:
             max_min_lists[metric_id][0], max_min_lists[metric_id][1] = \
                 min(metric_id_to_list_of_values[metric_id]), \
-                    max(metric_id_to_list_of_values[metric_id])
+                max(metric_id_to_list_of_values[metric_id])
         except ValueError:
             logger.debug("Empty list of values found for metric %s", metric_id)
 
         max_min_lists[metric_id] = RatioMaxMin(
-                minimum = max_min_lists[metric_id][0],
-                maximum = max_min_lists[metric_id][1]
+            minimum=max_min_lists[metric_id][0],
+            maximum=max_min_lists[metric_id][1]
         )
-        # if the list of values is empty for a metric id, return None values for max and min
+        # if the list of values is empty for a metric id, return None values
+        # for max and min
 
     return max_min_lists
 
+
 def get_counter_metrics(
-    counter_metric_specs, \
-    versions, \
-    start_time):
+        counter_metric_specs,
+        versions,
+        start_time):
     """Query prometheus and get counter metric data for given set of counter metrics and versions.
 
     Args:
@@ -84,13 +87,13 @@ def get_counter_metrics(
             }
         }
     """
-    cmd = {version.id: {} for version in versions} #  initialize cmd
+    cmd = {version.id: {} for version in versions}  # initialize cmd
     # populate cmd
     for counter_metric_spec in counter_metric_specs.values():
         query_spec = CounterQuerySpec(
-            version_label_keys = versions[0].version_labels.keys(),
-            query_template = counter_metric_spec.query_template,
-            start_time = start_time
+            version_label_keys=versions[0].version_labels.keys(),
+            query_template=counter_metric_spec.query_template,
+            start_time=start_time
         )
         pcmq = PrometheusCounterMetricQuery(query_spec, versions)
         current_time = datetime.now(timezone.utc)
@@ -102,9 +105,9 @@ def get_counter_metrics(
                 cmd[version.id][counter_metric_spec.id] = cmd_from_prom[version.id]
             else:
                 cmd[version.id][counter_metric_spec.id] = CounterDataPoint(
-                    value = 0,
-                    timestamp = current_time,
-                    status = status
+                    value=0,
+                    timestamp=current_time,
+                    status=status
                 )
         # if a version cannot be found in the list of counter metrics
         # returned by prometheus, then the value of the counter is assumed
@@ -112,12 +115,13 @@ def get_counter_metrics(
 
     return cmd
 
+
 def get_ratio_metrics(
-    ratio_metric_specs, \
-    counter_metric_specs, \
-    counter_metrics, \
-    versions, \
-    start_time):
+        ratio_metric_specs,
+        counter_metric_specs,
+        counter_metrics,
+        versions,
+        start_time):
     """Query prometheus and get ratio metric data for given set of ratio metrics and versions.
 
     Args:
@@ -158,12 +162,10 @@ def get_ratio_metrics(
     # populate rmd
     for ratio_metric_spec in ratio_metric_specs.values():
         query_spec = RatioQuerySpec(
-            version_label_keys = versions[0].version_labels.keys(),
-            numerator_template = \
-                counter_metric_specs[ratio_metric_spec.numerator].query_template,
-            denominator_template = \
-                counter_metric_specs[ratio_metric_spec.denominator].query_template,
-            start_time = start_time
+            version_label_keys=versions[0].version_labels.keys(),
+            numerator_template=counter_metric_specs[ratio_metric_spec.numerator].query_template,
+            denominator_template=counter_metric_specs[ratio_metric_spec.denominator].query_template,
+            start_time=start_time
         )
         prmq = PrometheusRatioMetricQuery(query_spec, versions)
         current_time = datetime.now(timezone.utc)
@@ -174,23 +176,24 @@ def get_ratio_metrics(
                 rmd[version.id][ratio_metric_spec.id] = rmd_from_prom[version.id]
             else:
                 if version.id in counter_metrics and \
-                    counter_metrics[version.id][ratio_metric_spec.denominator].value:
+                        counter_metrics[version.id][ratio_metric_spec.denominator].value:
                     rmd[version.id][ratio_metric_spec.id] = RatioDataPoint(
-                        value = 0,
-                        timestamp = current_time,
-                        status = StatusEnum.zeroed_ratio
+                        value=0,
+                        timestamp=current_time,
+                        status=StatusEnum.zeroed_ratio
                     )
                 else:
                     rmd[version.id][ratio_metric_spec.id] = RatioDataPoint(
-                        value = None,
-                        timestamp = current_time,
-                        status = StatusEnum.absent_version_in_prom_response
+                        value=None,
+                        timestamp=current_time,
+                        status=StatusEnum.absent_version_in_prom_response
                     )
         # if a version cannot be found in the list of ratio metrics
         # returned by prometheus, then the value of the ratio is set to zero
         # if denominator is non-zero, and is set to None otherwise.
 
     return rmd
+
 
 class PrometheusMetricQuery():
     """Base class for querying prometheus.
@@ -201,6 +204,7 @@ class PrometheusMetricQuery():
         version_labels_to_id (Dict[Set[Tuple[str, str]], str]):
         Dictionary mapping version labels to their ids
     """
+
     def __init__(self, query_spec, versions):
         """Initialize prometheus metric query object.
 
@@ -212,14 +216,13 @@ class PrometheusMetricQuery():
         self.prometheus_url = prometheus_url + "/api/v1/query"
         self.query_spec = query_spec
         self.authentication = {
-            constants.METRICS_BACKEND_CONFIG_AUTH_TYPE: \
-                constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE
+            constants.METRICS_BACKEND_CONFIG_AUTH_TYPE:
+            constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE
         }
         if constants.METRICS_BACKEND_CONFIG_AUTH in env_config:
             self.authentication = env_config[constants.METRICS_BACKEND_CONFIG_AUTH]
-        self.version_labels_to_id = {
-            frozenset(version.version_labels.items()): version.id for version in versions
-        }
+        self.version_labels_to_id = {frozenset(
+            version.version_labels.items()): version.id for version in versions}
         self.versions = versions
         """the above frozenset maps from version labels to version ids
         """
@@ -233,9 +236,11 @@ class PrometheusMetricQuery():
         Returns:
             query_result (Dict[str, Dict[str, DataPoint]]]): Post processed query result
         """
-        interval = int((current_time - self.query_spec.start_time).total_seconds())
-        if interval < 20.0: # less than twenty seconds has elapsed since start of the experiment
-            logger.debug("Less than 20 seconds have elapsed since the start of the experiment")
+        interval = int(
+            (current_time - self.query_spec.start_time).total_seconds())
+        if interval < 20.0:  # less than twenty seconds has elapsed since start of the experiment
+            logger.debug(
+                "Less than 20 seconds have elapsed since the start of the experiment")
             return self.post_process({
                 "status": "success",
                 "data": {
@@ -246,7 +251,8 @@ class PrometheusMetricQuery():
 
         kwargs = {
             "interval": f"{interval}s",
-            "version_labels": ",".join(self.query_spec.version_label_keys) # also hard coded
+            # also hard coded
+            "version_labels": ",".join(self.query_spec.version_label_keys)
         }
         query = self.get_query(kwargs)
         return self.query(query, current_time)
@@ -270,30 +276,37 @@ class PrometheusMetricQuery():
             Exception: HTTP connection errors related to prom requests.
         """
         params = {'query': query}
-        auth_type = self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_TYPE)
+        auth_type = self.authentication.get(
+            constants.METRICS_BACKEND_CONFIG_AUTH_TYPE)
         logger.debug("authentication type is: %s", auth_type)
         try:
             query_result = None
             if auth_type == constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE:
-                query_result = requests.get(self.prometheus_url, params=params).json()
+                query_result = requests.get(
+                    self.prometheus_url, params=params).json()
             elif auth_type == constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_BASIC:
-                auth=HTTPBasicAuth(
-                    self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_USERNAME),
-                    self.authentication.get(constants.METRICS_BACKEND_CONFIG_AUTH_PASSWORD)
-                )
-                verify = (not self.authentication.get(\
-                    constants.METRICS_BACKEND_CONFIG_AUTH_INSECURE_SKIP_VERIFY))
-                query_result = requests.get(self.prometheus_url, params=params, \
-                    auth=auth, verify=verify).json()
+                auth = HTTPBasicAuth(
+                    self.authentication.get(
+                        constants.METRICS_BACKEND_CONFIG_AUTH_USERNAME), self.authentication.get(
+                        constants.METRICS_BACKEND_CONFIG_AUTH_PASSWORD))
+                verify = (
+                    not self.authentication.get(
+                        constants.METRICS_BACKEND_CONFIG_AUTH_INSECURE_SKIP_VERIFY))
+                query_result = requests.get(self.prometheus_url, params=params,
+                                            auth=auth, verify=verify).json()
             else:
-                logger.warning("Unsupported authentication type: %s; trying %s",
-                    auth_type, constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE)
-                query_result = requests.get(self.prometheus_url, params=params).json()
+                logger.warning(
+                    "Unsupported authentication type: %s; trying %s",
+                    auth_type,
+                    constants.METRICS_BACKEND_CONFIG_AUTH_TYPE_NONE)
+                query_result = requests.get(
+                    self.prometheus_url, params=params).json()
             logger.debug("query result -- raw")
             logger.debug(query_result)
         except Exception as exp:
             logger.error("Error while attempting to connect to prometheus")
-            raise HTTPException(status_code=422, \
+            raise HTTPException(
+                status_code=422,
                 detail="Error while attempting to connect to prometheus.") from exp
         return self.post_process(query_result, current_time)
 
@@ -321,13 +334,16 @@ class PrometheusMetricQuery():
         """
         prom_result = {}
         if raw_query_result["status"] != "success":
-            raise HTTPException(status_code=422, \
+            raise HTTPException(
+                status_code=422,
                 detail="Query did not succeed. Check your query template.")
         if "data" not in raw_query_result:
-            return HTTPException(status_code=422, \
+            return HTTPException(
+                status_code=422,
                 detail="Query did not succeed. Prometheus returned without data.")
         if raw_query_result["data"]['resultType'] != 'vector':
-            return HTTPException(status_code=422, \
+            return HTTPException(
+                status_code=422,
                 detail="Query succeeded but returned with a non-vector result. \
                     Check your query template.")
         # query succeeded and we have some proper data to work with
@@ -335,8 +351,8 @@ class PrometheusMetricQuery():
         for result in results:
             version_ids = self.get_version_ids(result['metric'])
             for version_id in version_ids:
-                prom_result[version_id] = \
-                    self.result_value_to_data_point(result['value'][1], time_stamp)
+                prom_result[version_id] = self.result_value_to_data_point(
+                    result['value'][1], time_stamp)
 
         return prom_result
 
@@ -355,7 +371,8 @@ class PrometheusMetricQuery():
         Returns:
             version_id (str): id of the corresponding version
         """
-        return self.version_labels_to_id.get(frozenset(version_labels.items()), None)
+        return self.version_labels_to_id.get(
+            frozenset(version_labels.items()), None)
 
     def get_version_ids(self, version_labels):
         """Get version ids from version labels.
@@ -366,13 +383,14 @@ class PrometheusMetricQuery():
         Returns:
             version_ids (str): ids of versions with matching version labels
         """
-        return [version.id for version in self.versions if \
-            frozenset(version_labels.items()) == version.version_labels.items()]
+        return [version.id for version in self.versions if frozenset(
+            version_labels.items()) == version.version_labels.items()]
 
 
 class PrometheusCounterMetricQuery(PrometheusMetricQuery):
     """Derived class for querying prometheus for counter metric.
     """
+
     def get_query(self, query_args):
         """Extrapolate query from counter query spec and query_args
 
@@ -403,13 +421,15 @@ class PrometheusCounterMetricQuery(PrometheusMetricQuery):
         result_float = float(result_value)
         assert not math.isnan(result_float)
         return CounterDataPoint(
-            value = result_float,
-            timestamp = time_stamp)
+            value=result_float,
+            timestamp=time_stamp)
         # Counter data point can never have a None value
+
 
 class PrometheusRatioMetricQuery(PrometheusMetricQuery):
     """Derived class for querying prometheus for counter metric.
     """
+
     def get_query(self, query_args):
         """Extrapolate query from ratio query spec and query_args
 
@@ -440,10 +460,10 @@ class PrometheusRatioMetricQuery(PrometheusMetricQuery):
 
         result_float = float(result_value)
         return RatioDataPoint(
-            value = None,
-            timestamp = time_stamp,
-            status = StatusEnum.nan_value
+            value=None,
+            timestamp=time_stamp,
+            status=StatusEnum.nan_value
         ) if math.isnan(result_float) or math.isinf(result_float) else RatioDataPoint(
-            value = result_float,
-            timestamp = time_stamp
+            value=result_float,
+            timestamp=time_stamp
         )
