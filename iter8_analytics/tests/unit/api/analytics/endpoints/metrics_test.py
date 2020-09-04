@@ -21,30 +21,31 @@ if not logger.hasHandlers():
 metrics_backend_url = env_config[constants.METRICS_BACKEND_CONFIG_URL]
 metrics_endpoint = f'{metrics_backend_url}/api/v1/query'
 
+
 class TestMetrics:
     def test_prometheus_counter_metric_query(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 
-            'prometheus_sample_response.json')
+            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+                                     'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
             versions = [Version(
-                id = "reviews-v1", 
-                version_labels = {
+                id="reviews-v1",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v1"
                 }), Version(
-                id = "reviews-v2", 
-                version_labels = {
+                id="reviews-v2",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v2"
                 })
             ]
 
             query_spec = CounterQuerySpec(
-                version_label_keys = versions[0].version_labels.keys(),
-                query_template = "sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
-                start_time = datetime.now(timezone.utc) - timedelta(hours = 1)
+                version_label_keys=versions[0].version_labels.keys(),
+                query_template="sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
+                start_time=datetime.now(timezone.utc) - timedelta(hours=1)
             )
             pcmq = PrometheusCounterMetricQuery(query_spec, versions)
             res = pcmq.query_from_spec(datetime.now(timezone.utc))
@@ -55,33 +56,33 @@ class TestMetrics:
 
     def test_prometheus_ratio_metric_query(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 
-            'prometheus_sample_response.json')
+            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+                                     'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
             versions = [Version(
-                id = "reviews-v1", 
-                version_labels = {
+                id="reviews-v1",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v1"
                 }), Version(
-                id = "reviews-v2", 
-                version_labels = {
+                id="reviews-v2",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v2"
                 }), Version(
-                id = "reviews-v3", 
-                version_labels = {
+                id="reviews-v3",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v3"
                 })
             ]
 
             query_spec = RatioQuerySpec(
-                version_label_keys = versions[0].version_labels.keys(),
-                numerator_template = "sum(increase(istio_requests_total_duration_sec{reporter='source'}[$interval])) by ($version_labels)",
-                denominator_template = "sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
-                start_time = datetime.now(timezone.utc) - timedelta(hours = 1)
+                version_label_keys=versions[0].version_labels.keys(),
+                numerator_template="sum(increase(istio_requests_total_duration_sec{reporter='source'}[$interval])) by ($version_labels)",
+                denominator_template="sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
+                start_time=datetime.now(timezone.utc) - timedelta(hours=1)
             )
             pcmq = PrometheusRatioMetricQuery(query_spec, versions)
             res = pcmq.query_from_spec(datetime.now(timezone.utc))
@@ -89,7 +90,7 @@ class TestMetrics:
             assert res['reviews-v1'].value is not None
             assert res['reviews-v2'].value is not None
             assert res['reviews-v3'].value is not None
-    
+
     def test_get_counter_metrics(self):
         counter_metric_specs = {
             "iter8_request_count":  CounterMetricSpec(** {
@@ -130,14 +131,14 @@ class TestMetrics:
         ]
 
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 
-            'prometheus_sample_response.json')
+            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+                                     'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
             cm = get_counter_metrics(
-                counter_metric_specs, 
-                versions, 
-                datetime.now(timezone.utc) - timedelta(hours = 1)
+                counter_metric_specs,
+                versions,
+                datetime.now(timezone.utc) - timedelta(hours=1)
             )
 
             assert len(cm) == 3
@@ -220,26 +221,30 @@ class TestMetrics:
             return not ("newsletter_signups" in req.path_url and "istio_requests_total" in req.path_url)
 
         with requests_mock.mock(real_http=True) as m:
-            file_path_resp = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 'prometheus_sample_response.json')
+            file_path_resp = os.path.join(os.path.dirname(
+                __file__), '../../../data/prom_responses', 'prometheus_sample_response.json')
 
-            file_path_no_resp = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses', 'prometheus_no_data_response.json')
+            file_path_no_resp = os.path.join(os.path.dirname(
+                __file__), '../../../data/prom_responses', 'prometheus_no_data_response.json')
 
-            m.register_uri('GET', metrics_endpoint, json=json.load(open(file_path_resp)), additional_matcher = match_non_newsletter_query)
+            m.register_uri('GET', metrics_endpoint, json=json.load(
+                open(file_path_resp)), additional_matcher=match_non_newsletter_query)
 
-            m.register_uri('GET', metrics_endpoint, json=json.load(open(file_path_no_resp)), additional_matcher = match_newsletter_query)
+            m.register_uri('GET', metrics_endpoint, json=json.load(
+                open(file_path_no_resp)), additional_matcher=match_newsletter_query)
 
             cm = get_counter_metrics(
-                counter_metric_specs, 
-                versions, 
-                datetime.now(timezone.utc) - timedelta(hours = 1)
+                counter_metric_specs,
+                versions,
+                datetime.now(timezone.utc) - timedelta(hours=1)
             )
 
             rm = get_ratio_metrics(
                 ratio_metric_specs,
-                counter_metric_specs, 
-                cm, 
-                versions, 
-                datetime.now(timezone.utc) - timedelta(hours = 1)
+                counter_metric_specs,
+                cm,
+                versions,
+                datetime.now(timezone.utc) - timedelta(hours=1)
             )
 
             assert len(rm) == 4
@@ -254,28 +259,28 @@ class TestMetrics:
 
     def test_prom_exception(self):
         def bad_json(request, context):
-            raise HTTPException(status_code=422, detail = "Bad JSON")
+            raise HTTPException(status_code=422, detail="Bad JSON")
 
         with requests_mock.mock(real_http=True) as m:
             m.get(metrics_endpoint, json=bad_json)
 
             versions = [Version(
-                id = "reviews-v1", 
-                version_labels = {
+                id="reviews-v1",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v1"
                 }), Version(
-                id = "reviews-v2", 
-                version_labels = {
+                id="reviews-v2",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v2"
                 })
             ]
 
             query_spec = CounterQuerySpec(
-                version_label_keys = versions[0].version_labels.keys(),
-                query_template = "sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
-                start_time = datetime.now(timezone.utc) - timedelta(hours = 1)
+                version_label_keys=versions[0].version_labels.keys(),
+                query_template="sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
+                start_time=datetime.now(timezone.utc) - timedelta(hours=1)
             )
             try:
                 pcmq = PrometheusCounterMetricQuery(query_spec, versions)
@@ -290,22 +295,22 @@ class TestMetrics:
             })
 
             versions = [Version(
-                id = "reviews-v1", 
-                version_labels = {
+                id="reviews-v1",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v1"
                 }), Version(
-                id = "reviews-v2", 
-                version_labels = {
+                id="reviews-v2",
+                version_labels={
                     "destination_service_namespace": "default",
                     "destination_workload": "reviews-v2"
                 })
             ]
 
             query_spec = CounterQuerySpec(
-                version_label_keys = versions[0].version_labels.keys(),
-                query_template = "sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
-                start_time = datetime.now(timezone.utc) - timedelta(hours = 1)
+                version_label_keys=versions[0].version_labels.keys(),
+                query_template="sum(increase(istio_requests_total{reporter='source'}[$interval])) by ($version_labels)",
+                start_time=datetime.now(timezone.utc) - timedelta(hours=1)
             )
 
             try:
@@ -348,6 +353,6 @@ class TestMetrics:
         nrmm = new_ratio_max_min(metric_id_to_list_of_values)
         logger.debug(nrmm)
         assert len(nrmm) == 3
-        assert nrmm["metric1"] == RatioMaxMin(minimum = 0.1, maximum = 0.3)
-        assert nrmm["metric2"] == RatioMaxMin(minimum = 0.2, maximum = 0.2)
+        assert nrmm["metric1"] == RatioMaxMin(minimum=0.1, maximum=0.3)
+        assert nrmm["metric2"] == RatioMaxMin(minimum=0.2, maximum=0.2)
         assert nrmm["metric3"] == RatioMaxMin()

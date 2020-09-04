@@ -17,12 +17,14 @@ from iter8_analytics.api.analytics.detailedmetric import *
 
 logger = logging.getLogger('iter8_analytics')
 
+
 class DetailedCriterion():
     """Base class for a detailed criterion.
 
     Attributes:
         spec (CriterionSpec): criterion spec
     """
+
     def __init__(self, criterion_spec, detailed_version):
         """Initialize detailed criterion object.
 
@@ -43,18 +45,18 @@ class DetailedCriterion():
 
     def create_assessment(self):
         self.assessment = CriterionAssessment(
-            id = self.id,
-            metric_id = self.metric_id,
-            statistics = self.create_statistics(),
-            threshold_assessment = self.create_threshold_assessment()
+            id=self.id,
+            metric_id=self.metric_id,
+            statistics=self.create_statistics(),
+            threshold_assessment=self.create_threshold_assessment()
         )
 
     def create_statistics(self):
         if self.is_counter:
-            return Statistics(value = self.detailed_version.metrics["counter_metrics"][self.metric_id].aggregated_metric.value)
-        else: # criterion.metric_id is ratio
-            return Statistics(value = self.detailed_version.metrics["ratio_metrics"][self.metric_id].aggregated_metric.value, 
-            ratio_statistics = self.get_ratio_statistics())
+            return Statistics(value=self.detailed_version.metrics["counter_metrics"][self.metric_id].aggregated_metric.value)
+        else:  # criterion.metric_id is ratio
+            return Statistics(value=self.detailed_version.metrics["ratio_metrics"][self.metric_id].aggregated_metric.value,
+                              ratio_statistics=self.get_ratio_statistics())
 
     def get_ratio_statistics(self):
         rm = self.detailed_version.metrics["ratio_metrics"][self.metric_id]
@@ -69,21 +71,24 @@ class DetailedCriterion():
         if np.min(ms) == np.max(ms):
             return None
         # compute credible interval based on sample
-        gap = (1.0 - AdvancedParameters.posterior_probability_for_credible_intervals)*100.0
+        gap = (
+            1.0 - AdvancedParameters.posterior_probability_for_credible_intervals)*100.0
         cilp = gap / 2.0
-        ciup = (gap/2.0) + AdvancedParameters.posterior_probability_for_credible_intervals*100.0
+        ciup = (
+            gap/2.0) + AdvancedParameters.posterior_probability_for_credible_intervals*100.0
         ci = Interval(
-            lower = max(0.0, np.percentile(ms, cilp)), 
-            upper = max(0.0, np.percentile(ms, ciup))) # don't allow negative values
+            lower=max(0.0, np.percentile(ms, cilp)),
+            upper=max(0.0, np.percentile(ms, ciup)))  # don't allow negative values
         # else, get samples of this metric for baseline, and all other candidates
         # compute the relevant statistics and return ratio metrics
         # tbd
-        return RatioStatistics(credible_interval = ci)
+        return RatioStatistics(credible_interval=ci)
 
     def get_criterion_mask(self):
         ms = self.detailed_metric.metric_spec
         if not self.spec.threshold:
-            logger.debug(f"No threshold for {ms.id} for {self.detailed_version.id}")
+            logger.debug(
+                f"No threshold for {ms.id} for {self.detailed_version.id}")
             logger.debug("Returning ones")
             return np.ones((Belief.sample_size, )).astype(np.float)
         else:
@@ -93,8 +98,6 @@ class DetailedCriterion():
             if p is None:
                 return np.zeros((Belief.sample_size, )).astype(np.float)
             return np.random.binomial(1, p, (Belief.sample_size, )).astype(np.float)
-
-
 
             # if self.is_counter: # counter metric. lower is preferred.
             #     if ms.preferred_direction == DirectionEnum.lower:
@@ -109,7 +112,7 @@ class DetailedCriterion():
             #     else: # ms.preferred_direction == DirectionEnum.higher:
             #         if self.detailed_metric.aggregated_metric.value >= self.spec.threshold.value:
             #             logger.debug(f"Counter metric {ms.id} within threshold for {self.detailed_version.id}")
-            #             logger.debug("Returning ones")                        
+            #             logger.debug("Returning ones")
             #             return np.ones((Belief.sample_size, )).astype(np.float)
             #         else:
             #             logger.debug(f"Counter metric {ms.id} violating threshold for {self.detailed_version.id}")
@@ -120,13 +123,13 @@ class DetailedCriterion():
             #     b = rm.belief
             #     if b.status == StatusEnum.uninitialized_belief:
             #         logger.debug(f"Uninitialized belief for metric {ms.id} for {self.detailed_version.id}")
-            #         logger.debug("Returning zeros")                  
+            #         logger.debug("Returning zeros")
             #         return np.zeros((Belief.sample_size, )).astype(np.float) # nothing is known about this version
             #     # if samples for this metric are all nans, return None
             #     sample = b.sample_posterior()
             #     if np.any(np.isnan(sample)):
             #         logger.debug(f"Nan values in  metric sample {ms.id} for {self.detailed_version.id}")
-            #         logger.debug("Returning zeros")                  
+            #         logger.debug("Returning zeros")
             #         return np.zeros((Belief.sample_size, )).astype(np.float) # can't use nan values
             #     else:
             #         logger.debug(f"Returning posterior indicators for metric {ms.id} for {self.detailed_version.id}")
@@ -137,7 +140,7 @@ class DetailedCriterion():
             #                 return (sample >= self.spec.threshold.value).astype(np.float)
             #         else: # relative threshold
             #             baseline = self.detailed_version.experiment.detailed_baseline_version
-            #             if self.detailed_version.id == baseline.id: 
+            #             if self.detailed_version.id == baseline.id:
             #                 # baseline is always assumed to satisfy relative thresholds
             #                 logger.debug(f"Relative thresholds for metric {ms.id} for baseline version {self.detailed_version.id}")
             #                 logger.debug("Returning ones as criteria mask")
@@ -158,8 +161,6 @@ class DetailedCriterion():
             #                 return (sample <= baseline_sample * self.spec.threshold.value).astype(np.float)
             #             else:
             #                 return (sample >= baseline_sample * self.spec.threshold.value).astype(np.float)
-
-                
 
     def get_assessment(self):
         return self.assessment
@@ -187,7 +188,7 @@ class DetailedCriterion():
             """
             assert(data_point.value is not None)
             assert(limit is not None)
-                
+
             if preferred_direction == DirectionEnum.lower:
                 return data_point.value > limit
             elif preferred_direction == DirectionEnum.higher:
@@ -214,70 +215,81 @@ class DetailedCriterion():
 
         ms = self.detailed_metric.metric_spec
         if not self.spec.threshold:
-            logger.debug(f"No threshold for {ms.id} for {self.detailed_version.id}")
+            logger.debug(
+                f"No threshold for {ms.id} for {self.detailed_version.id}")
             self.threshold_assessment = None
             return None
-        else: # there is a threshold specified
+        else:  # there is a threshold specified
             if self.detailed_metric.aggregated_metric.value is None:
-                self.threshold_assessment = None # nothing to check
+                self.threshold_assessment = None  # nothing to check
                 return None
 
             if self.spec.threshold.threshold_type == ThresholdEnum.absolute:
                 # well defined value for this metric
-                breach = check_breach(self.detailed_metric.aggregated_metric, self.spec.threshold.value, ms.preferred_direction)
+                breach = check_breach(self.detailed_metric.aggregated_metric,
+                                      self.spec.threshold.value, ms.preferred_direction)
                 # got breach. As soon as we get post, we can return...
                 if self.is_counter:
                     self.threshold_assessment = ThresholdAssessment(
-                        threshold_breached = breach, 
-                        probability_of_satisfying_threshold = 1.0 - float(breach)
+                        threshold_breached=breach,
+                        probability_of_satisfying_threshold=1.0 - float(breach)
                     )
                     return self.threshold_assessment
-                else: # ratio metric. got breach. trying to get post
+                else:  # ratio metric. got breach. trying to get post
                     b = self.detailed_metric.belief
                     if bad_belief(b):
-                        logger.debug(f"Uninitialized belief of belief with nans for metric {ms.id} for {self.detailed_version.id}")
+                        logger.debug(
+                            f"Uninitialized belief of belief with nans for metric {ms.id} for {self.detailed_version.id}")
                         self.threshold_assessment = ThresholdAssessment(
-                            threshold_breached = breach, 
-                            probability_of_satisfying_threshold = None
+                            threshold_breached=breach,
+                            probability_of_satisfying_threshold=None
                         )
                         return self.threshold_assessment
-                    else: # posterior sampling is possible. Good sample
+                    else:  # posterior sampling is possible. Good sample
                         # if samples for this metric are all nans, return None
-                        logger.debug(f"Returning posterior indicators for metric {ms.id} for {self.detailed_version.id}")
+                        logger.debug(
+                            f"Returning posterior indicators for metric {ms.id} for {self.detailed_version.id}")
                         self.threshold_assessment = ThresholdAssessment(
-                            threshold_breached = breach, 
-                            probability_of_satisfying_threshold = compute_probability_of_satisfying_threshold(b.sample_posterior(), self.spec.threshold.value, ms.preferred_direction)
+                            threshold_breached=breach,
+                            probability_of_satisfying_threshold=compute_probability_of_satisfying_threshold(
+                                b.sample_posterior(), self.spec.threshold.value, ms.preferred_direction)
                         )
                         return self.threshold_assessment
 
-            else: # relative threshold. Defined only for ratio metrics.
+            else:  # relative threshold. Defined only for ratio metrics.
                 baseline = self.detailed_version.experiment.detailed_baseline_version
-                if self.detailed_version.id == baseline.id: # this is the baseline
+                if self.detailed_version.id == baseline.id:  # this is the baseline
                     self.threshold_assessment = None
                     return None
-                else: # this is a candidate version
-                    bdm = baseline.metrics["ratio_metrics"][self.metric_id] # baseline detailed metric
-                    if bdm.aggregated_metric.value is None: # nothing to compare against
+                else:  # this is a candidate version
+                    # baseline detailed metric
+                    bdm = baseline.metrics["ratio_metrics"][self.metric_id]
+                    if bdm.aggregated_metric.value is None:  # nothing to compare against
                         self.threshold_assessment = None
                         return None
-                    else: # well defined baseline value
-                        breach = check_breach(self.detailed_metric.aggregated_metric, bdm.aggregated_metric.value * self.spec.threshold.value, ms.preferred_direction)
+                    else:  # well defined baseline value
+                        breach = check_breach(self.detailed_metric.aggregated_metric,
+                                              bdm.aggregated_metric.value * self.spec.threshold.value, ms.preferred_direction)
 
                         b = self.detailed_metric.belief
                         if bad_belief(b) or bad_belief(bdm.belief):
                             self.threshold_assessment = ThresholdAssessment(
-                                threshold_breached = breach, 
-                                probability_of_satisfying_threshold = None
+                                threshold_breached=breach,
+                                probability_of_satisfying_threshold=None
                             )
                             return self.threshold_assessment
-                        else: # baseline sample also looks good
-                            logger.debug(f"Comparing candidate {self.detailed_version.id} with baseline {baseline.id} for metric {self.metric_id} with relative threshold of {self.spec.threshold.value}")
-                            logger.debug(f"Candidate's posterior: {b.sample_posterior()}")
-                            logger.debug(f"Baseline's posterior: {bdm.belief.sample_posterior()}")
-                            post = compute_probability_of_satisfying_threshold(b.sample_posterior(), bdm.belief.sample_posterior() * self.spec.threshold.value, ms.preferred_direction)
+                        else:  # baseline sample also looks good
+                            logger.debug(
+                                f"Comparing candidate {self.detailed_version.id} with baseline {baseline.id} for metric {self.metric_id} with relative threshold of {self.spec.threshold.value}")
+                            logger.debug(
+                                f"Candidate's posterior: {b.sample_posterior()}")
+                            logger.debug(
+                                f"Baseline's posterior: {bdm.belief.sample_posterior()}")
+                            post = compute_probability_of_satisfying_threshold(b.sample_posterior(
+                            ), bdm.belief.sample_posterior() * self.spec.threshold.value, ms.preferred_direction)
                             logger.debug(f"post looks good: {post}")
                             self.threshold_assessment = ThresholdAssessment(
-                                threshold_breached = breach,
-                                probability_of_satisfying_threshold = post
+                                threshold_breached=breach,
+                                probability_of_satisfying_threshold=post
                             )
                             return self.threshold_assessment

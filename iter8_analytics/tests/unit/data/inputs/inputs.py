@@ -220,7 +220,6 @@ reviews_example = {
 }
 
 
-
 last_state = {
     "aggregated_counter_metrics": {
         "reviews_candidate": {
@@ -1181,4 +1180,3 @@ reviews_example_aa = {
         }
     ]
 }
-

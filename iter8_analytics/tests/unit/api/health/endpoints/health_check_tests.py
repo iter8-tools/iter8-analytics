@@ -1,9 +1,11 @@
 
+from iter8_analytics import fastapi_app
+from fastapi.testclient import TestClient
 import unittest
 import logging
 log = logging.getLogger(__name__)
-from fastapi.testclient import TestClient
-from iter8_analytics import fastapi_app
+
+
 class TestHealthCheckAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -22,4 +24,4 @@ class TestHealthCheckAPI(unittest.TestCase):
 
         # Call the FastAPI endpoint via the test client
         resp = self.client.get(endpoint)
-        self.assertEqual(resp.status_code, 200, msg = "Successful request")
+        self.assertEqual(resp.status_code, 200, msg="Successful request")

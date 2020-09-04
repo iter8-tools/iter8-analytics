@@ -22,6 +22,7 @@ if not logger.hasHandlers():
 metrics_backend_url = env_config[constants.METRICS_BACKEND_CONFIG_URL]
 metrics_endpoint = f'{metrics_backend_url}/api/v1/query'
 
+
 class TestDetailedMetrics:
     def test_non_zero_to_one_belief_update(self):
         eip = ExperimentIterationParameters(** eip_with_percentile)
@@ -30,14 +31,17 @@ class TestDetailedMetrics:
         rm = DetailedRatioMetric(eip.metric_specs.ratio_metrics[0], dv)
 
         exp.ratio_max_mins = {
-            rm.metric_id: RatioMaxMin(minimum = 5.7, maximum = 8.9)
+            rm.metric_id: RatioMaxMin(minimum=5.7, maximum=8.9)
         }
 
-        rm.aggregated_metric = AggregatedRatioDataPoint(value = 6.2, timestamp = datetime.now(timezone.utc))
+        rm.aggregated_metric = AggregatedRatioDataPoint(
+            value=6.2, timestamp=datetime.now(timezone.utc))
 
         denominator_id = rm.metric_spec.denominator
-        rm.detailed_version.metrics["counter_metrics"][denominator_id] = DetailedCounterMetric(eip.metric_specs.ratio_metrics[0], dv)
-        rm.detailed_version.metrics["counter_metrics"][denominator_id].aggregated_metric = AggregatedCounterDataPoint(value = 6.3, timestamp = datetime.now(timezone.utc))
+        rm.detailed_version.metrics["counter_metrics"][denominator_id] = DetailedCounterMetric(
+            eip.metric_specs.ratio_metrics[0], dv)
+        rm.detailed_version.metrics["counter_metrics"][denominator_id].aggregated_metric = AggregatedCounterDataPoint(
+            value=6.3, timestamp=datetime.now(timezone.utc))
         rm.update_belief()
 
     def test_bad_zero_to_one_belief_update(self):
@@ -51,14 +55,17 @@ class TestDetailedMetrics:
         rm = DetailedRatioMetric(eip.metric_specs.ratio_metrics[0], dv)
 
         exp.ratio_max_mins = {
-            rm.metric_id: RatioMaxMin(minimum = 5.7, maximum = 8.9)
+            rm.metric_id: RatioMaxMin(minimum=5.7, maximum=8.9)
         }
 
-        rm.aggregated_metric = AggregatedRatioDataPoint(value = 6.2, timestamp = datetime.now(timezone.utc))
+        rm.aggregated_metric = AggregatedRatioDataPoint(
+            value=6.2, timestamp=datetime.now(timezone.utc))
 
         denominator_id = rm.metric_spec.denominator
-        rm.detailed_version.metrics["counter_metrics"][denominator_id] = DetailedCounterMetric(eip.metric_specs.ratio_metrics[0], dv)
-        rm.detailed_version.metrics["counter_metrics"][denominator_id].aggregated_metric = AggregatedCounterDataPoint(value = 6.3, timestamp = datetime.now(timezone.utc))
+        rm.detailed_version.metrics["counter_metrics"][denominator_id] = DetailedCounterMetric(
+            eip.metric_specs.ratio_metrics[0], dv)
+        rm.detailed_version.metrics["counter_metrics"][denominator_id].aggregated_metric = AggregatedCounterDataPoint(
+            value=6.3, timestamp=datetime.now(timezone.utc))
 
         try:
             rm.update_belief()
@@ -73,15 +80,16 @@ class TestDetailedMetrics:
         rm = DetailedRatioMetric(eip.metric_specs.ratio_metrics[3], dv)
 
         exp.ratio_max_mins = {
-            rm.metric_id: RatioMaxMin(minimum = 0.3, maximum = 1.0)
+            rm.metric_id: RatioMaxMin(minimum=0.3, maximum=1.0)
         }
 
-        rm.aggregated_metric = AggregatedRatioDataPoint(value = 0.993, timestamp = datetime.now(timezone.utc))
+        rm.aggregated_metric = AggregatedRatioDataPoint(
+            value=0.993, timestamp=datetime.now(timezone.utc))
 
         denominator_id = rm.metric_spec.denominator
-        rm.detailed_version.metrics["counter_metrics"][denominator_id] = DetailedCounterMetric(eip.metric_specs.ratio_metrics[0], dv)
-        rm.detailed_version.metrics["counter_metrics"][denominator_id].aggregated_metric = AggregatedCounterDataPoint(value = 13, timestamp = datetime.now(timezone.utc))
+        rm.detailed_version.metrics["counter_metrics"][denominator_id] = DetailedCounterMetric(
+            eip.metric_specs.ratio_metrics[0], dv)
+        rm.detailed_version.metrics["counter_metrics"][denominator_id].aggregated_metric = AggregatedCounterDataPoint(
+            value=13, timestamp=datetime.now(timezone.utc))
 
         rm.update_belief()
-
-

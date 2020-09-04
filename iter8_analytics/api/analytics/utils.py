@@ -9,6 +9,8 @@ from random import random
 # round a sequence of weights into a sequence of integer weights so that they sum up to Math.floor(total)
 # further, rounded values equal the original values in expectation
 # assumption: all inputs are non-negative
+
+
 def gen_round(weights, total):
     """Given float weights, round them to int weights so that they sum up to a given value
 
@@ -23,7 +25,8 @@ def gen_round(weights, total):
     total = math.floor(total)
 
     #  randomized rounding of float 'a' to its ceiling or floor
-    def fix(a): return math.ceil(a) if random() < a - math.floor(a) else math.floor(a)
+    def fix(a): return math.ceil(a) if random() < a - \
+        math.floor(a) else math.floor(a)
 
     def normalize(weights):
         """Maintain the invariate that weights sum up to 'total'
@@ -35,7 +38,8 @@ def gen_round(weights, total):
             a sequence (Sequence[int]): A sequence of ints summing up to total
         """
         if sum(weights) == 0:
-            weights = [1 for x in weights]  # weights summing up now to a value > 0
+            # weights summing up now to a value > 0
+            weights = [1 for x in weights]
         weightSum = sum(weights)
         return [x*total / weightSum for x in weights]
 
