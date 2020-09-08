@@ -6,7 +6,7 @@ set -e
 ISTIO_NAMESPACE=istio-system
 
 DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1; pwd -P )"
-source "$DIR/../../../iter8-controller/test/e2e/library.sh"
+source "$DIR/../../../iter8/test/e2e/library.sh"
 
 echo "Istio namespace: $ISTIO_NAMESPACE"
 MIXER_DISABLED=`kubectl -n $ISTIO_NAMESPACE get cm istio -o json | jq .data.mesh | grep -o 'disableMixerHttpReports: [A-Za-z]\+' | cut -d ' ' -f2`
