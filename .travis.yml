@@ -12,12 +12,12 @@ stages:
 _end_to_end_script: &end_to_end_script
   if: (type = pull_request) AND (head_branch != master) AND (head_branch !~ /^v[0-9]+\.[0-9]+$/)
   script:
-    - git clone https://github.com/iter8-tools/iter8-controller.git
-    - iter8-controller/test/e2e/install-minikube.sh
-    - iter8-controller/test/e2e/sanity-check.sh
-    - iter8-controller/test/e2e/install-istio.sh
-    - tests/e2e/install-iter8.sh
-    - tests/e2e/e2e-test.sh
+    - git clone https://github.com/iter8-tools/iter8.git
+    - iter8/test/e2e/install-minikube.sh
+    - iter8/test/e2e/sanity-check.sh
+    - iter8/test/e2e/install-istio.sh
+    - iter8_analytics/tests/e2e/install-iter8.sh
+    - iter8_analytics/tests/e2e/e2e-test.sh
 
 jobs:
   include:
@@ -33,20 +33,20 @@ jobs:
         - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
       script:
         - make test # Run unit tests
-    # - stage: "end-to-end tests"
-    #   env: KUBE_VERSION=v1.15.10 ISTIO_VERSION=1.4.3
-    #   <<: *end_to_end_script
-    # - env: KUBE_VERSION=v1.15.10 ISTIO_VERSION=1.4.6
-    #   <<: *end_to_end_script
-    # - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.3
-    #   <<: *end_to_end_script
-    # - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.6
-    #   <<: *end_to_end_script
+    - stage: "end-to-end tests"
+      env: KUBE_VERSION=v1.15.10 ISTIO_VERSION=1.4.3
+      <<: *end_to_end_script
+    - env: KUBE_VERSION=v1.15.10 ISTIO_VERSION=1.4.6
+      <<: *end_to_end_script
+    - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.3
+      <<: *end_to_end_script
+    - env: KUBE_VERSION=v1.16.0 ISTIO_VERSION=1.4.6
+      <<: *end_to_end_script
     - stage: "build image"
       # only build images for master and release branches + tagged releases
       if: (type = push) AND (branch = master OR branch =~ /^v[0-9]+\.[0-9]+(\.[0-9]+)*.*$/)
       script:
-        - tests/e2e/build-image.sh
+        - iter8_analytics/tests/e2e/build-image.sh
     - stage: "release"
       script: skip
       # only do release for tagged releases
