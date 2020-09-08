@@ -16,8 +16,8 @@ _end_to_end_script: &end_to_end_script
     - iter8-controller/test/e2e/install-minikube.sh
     - iter8-controller/test/e2e/sanity-check.sh
     - iter8-controller/test/e2e/install-istio.sh
-    - tests/e2e/install-iter8.sh
-    - tests/e2e/e2e-test.sh
+    - iter8_analytics/tests/e2e/install-iter8.sh
+    - iter8_analytics/tests/e2e/e2e-test.sh
 
 jobs:
   include:
@@ -44,7 +44,7 @@ jobs:
       # only build images for master and release branches + tagged releases
       if: (type = push) AND (branch = master OR branch =~ /^v[0-9]+\.[0-9]+(\.[0-9]+)*.*$/)
       script:
-        - tests/e2e/build-image.sh
+        - iter8_analytics/tests/e2e/build-image.sh
     - stage: "release"
       script: skip
       # only do release for tagged releases
