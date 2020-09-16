@@ -349,20 +349,21 @@ class Experiment:
         """
         # get the fraction of the time a particular version emerged as the
         # winner
-        logger.info("Utilities")
-        logger.info(self.utilities.shape)
-        logger.info((self.utilities > 0.0).head())
+        logger.debug("Utilities")
+        logger.debug(self.utilities.shape)
+        logger.debug((self.utilities > 0.0).head())
         rank_df = self.utilities.rank(axis=1, method='min', ascending=False)
-        logger.info("rank_df")
-        logger.info(rank_df.shape)
-        logger.info(rank_df.head())
+        logger.debug("rank_df")
+        logger.debug(rank_df.shape)
+        logger.debug(rank_df.head())
         # check if version has low rank and non-zero utility through elementwise logical and
         low_rank = (rank_df <= 1) & (self.utilities > 0.0)
-        logger.info("low_rank")
-        logger.info(low_rank.shape)
-        logger.info(low_rank.head())
+        logger.debug("low_rank")
+        logger.debug(low_rank.shape)
+        logger.debug(low_rank.head())
 
         self.win_probababilities = low_rank.sum() / low_rank.sum().sum()
+        self.win_probababilities = self.win_probababilities.fillna(0.0)
 
     def create_traffic_recommendations(self):
         """Create traffic recommendations for individual algorithms.
@@ -491,7 +492,7 @@ class Experiment:
 
         wvf = False
         current_best_version = None
-        probability_of_winning_for_best_version = np.nan
+        probability_of_winning_for_best_version = 0.0
 
         if not self.win_probababilities.isna().any():
             current_best_version = self.win_probababilities.index[np.argmax(

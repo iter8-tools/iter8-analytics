@@ -90,7 +90,7 @@ class DetailedCriterion:
             return np.ones((Belief.sample_size, )).astype(np.float)
         else:
             if self.threshold_assessment is None:
-                logger.info("No threshold assessment. Returning zeroed criterion mask.")
+                logger.debug("No threshold assessment. Returning zeroed criterion mask.")
                 return np.zeros((Belief.sample_size, )).astype(np.float)
             p = self.threshold_assessment.probability_of_satisfying_threshold
             if p is None:
@@ -157,7 +157,7 @@ class DetailedCriterion:
         else:  # there is a threshold specified
             if self.detailed_metric.aggregated_metric.value is None:
                 self.threshold_assessment = None  # nothing to check
-                logger.info("No aggregated metric value. Returning none.")
+                logger.debug("No aggregated metric value. Returning none.")
                 return None
 
             if self.spec.threshold.threshold_type == ThresholdEnum.absolute:

@@ -45,6 +45,6 @@ class TestConvergence:
                     initial_candidate_percent = resp.last_state['traffic_split_recommendation']['progressive']['reviews_candidate']
                 eip.last_state = LastState(**resp.last_state)
                 exp = Experiment(eip)
-            assert np.isnan(resp.baseline_assessment.win_probability)
-            assert np.isnan(resp.candidate_assessments[0].win_probability)
+            assert resp.baseline_assessment.win_probability == 0.0
+            assert resp.candidate_assessments[0].win_probability == 0.0
             assert resp.last_state['traffic_split_recommendation']['progressive']['reviews_candidate'] in [np.ceil(AdvancedParameters.exploration_traffic_percentage / (len(eip.candidates) + 1)), np.floor(AdvancedParameters.exploration_traffic_percentage / (len(eip.candidates) + 1))]
