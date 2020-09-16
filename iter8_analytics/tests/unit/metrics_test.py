@@ -8,10 +8,10 @@ from datetime import timedelta
 
 # iter8 stuff
 from iter8_analytics import fastapi_app
-from iter8_analytics.api.analytics.types import *
+from iter8_analytics.api.types import *
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
-from iter8_analytics.api.analytics.metrics import *
+from iter8_analytics.api.metrics import *
 
 env_config = config.get_env_config()
 logger = logging.getLogger('iter8_analytics')
@@ -25,7 +25,7 @@ metrics_endpoint = f'{metrics_backend_url}/api/v1/query'
 class TestMetrics:
     def test_prometheus_counter_metric_query(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -56,7 +56,7 @@ class TestMetrics:
 
     def test_prometheus_ratio_metric_query(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -131,7 +131,7 @@ class TestMetrics:
         ]
 
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -222,10 +222,10 @@ class TestMetrics:
 
         with requests_mock.mock(real_http=True) as m:
             file_path_resp = os.path.join(os.path.dirname(
-                __file__), '../../../data/prom_responses', 'prometheus_sample_response.json')
+                __file__), 'data/prom_responses', 'prometheus_sample_response.json')
 
             file_path_no_resp = os.path.join(os.path.dirname(
-                __file__), '../../../data/prom_responses', 'prometheus_no_data_response.json')
+                __file__), 'data/prom_responses', 'prometheus_no_data_response.json')
 
             m.register_uri('GET', metrics_endpoint, json=json.load(
                 open(file_path_resp)), additional_matcher=match_non_newsletter_query)

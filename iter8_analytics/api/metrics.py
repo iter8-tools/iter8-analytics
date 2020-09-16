@@ -13,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 from fastapi import HTTPException
 
 # iter8 dependencies
-from iter8_analytics.api.analytics.types import RatioMaxMin, \
+from iter8_analytics.api.types import RatioMaxMin, \
     CounterDataPoint, CounterQuerySpec, \
     StatusEnum, RatioDataPoint, RatioQuerySpec
 import iter8_analytics.constants as constants

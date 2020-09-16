@@ -286,9 +286,9 @@ class WinnerAssessment(BaseModel):
     winning_version_found: bool = Field(
         ..., description="Indicates whether or not a clear winner has emerged. This is currently computed based on Bayesian estimation and uses posterior_probability_for_winner from the iteration parameters")
     current_best_version: str = Field(
-        ..., description="ID of the current best version with the maximum probability of winning. This is currently computed based on Bayesian estimation")
+        None, description="ID of the current best version with the maximum probability of winning. This is currently computed based on Bayesian estimation")
     probability_of_winning_for_best_version: float = Field(
-        ..., description="Posterior probability of the current best version. This is currently computed based on Bayesian estimation")
+        None, description="Posterior probability of the current best version. This is currently computed based on Bayesian estimation")
    # coming soon
     # safe_to_rollforward: bool = Field(False, description = "True if it is now safe to terminate the experiment early and rollforward to the winner")
 
@@ -326,15 +326,3 @@ class Iter8AssessmentAndRecommendation(BaseModel):
         description="Human-friendly interpretations of the status codes returned by the analytics service")  # the index of an interpretation corresponds to the corresponding status enum
     last_state: Dict[str, Any] = Field(
         None, description="Last recorded state from analytics service")
-
-# These are not pydantic models, simply advanced iter8 parameters defined globally
-
-
-class AdvancedParameters:
-    # 5% of traffic always used for exploration
-    exploration_traffic_percentage = 5.0
-    posterior_probability_for_credible_intervals = 0.95
-    # no winner until iter8 is 99% confident
-    min_posterior_probability_for_winner = 0.99
-    # a higher value of this factor encourages greater exploration
-    variance_boost_factor = 1.0

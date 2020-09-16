@@ -9,12 +9,13 @@ import numpy as np
 from fastapi import HTTPException
 
 # iter8 dependencies
-from iter8_analytics.api.analytics.types import *
+from iter8_analytics.api.types import *
+from iter8_analytics.advancedparams import AdvancedParameters
 
 logger = logging.getLogger('iter8_analytics')
 
 
-class Belief():
+class Belief:
     """Base class for belief probability distributions.
     """
     sample_size = 10000  # hardcoded for now. super ugly!
@@ -63,7 +64,7 @@ class ConstantBelief(Belief):
         self.sample = np.full((self.sample_size, ), np.float(self.value))
 
 
-class DetailedMetric():
+class DetailedMetric:
     """Base class for a detailed metric.
 
     Attributes:

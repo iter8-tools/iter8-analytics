@@ -12,10 +12,10 @@ from fastapi import HTTPException
 
 # iter8 stuff
 from iter8_analytics import fastapi_app
-from iter8_analytics.api.analytics.types import *
+from iter8_analytics.api.types import *
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
-from iter8_analytics.api.analytics.experiment import Experiment
+from iter8_analytics.api.experiment import Experiment
 from iter8_analytics.tests.unit.data.inputs.inputs import *
 
 env_config = config.get_env_config()
@@ -61,7 +61,7 @@ class TestExperiment:
 
     def test_counter_metric_as_reward(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -80,7 +80,7 @@ class TestExperiment:
 
     def test_delta_criterion_with_counter_metric(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -101,7 +101,7 @@ class TestExperiment:
 
     def test_multiple_ratio_metrics_as_reward(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -134,7 +134,7 @@ class TestExperiment:
 
     def test_get_ratio_max_min(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -159,7 +159,7 @@ class TestExperiment:
 
     def test_start_time_with_current_time(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -172,7 +172,7 @@ class TestExperiment:
 class TestAAExperiment:
     def test_aa_experiment(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -213,7 +213,7 @@ class TestDetailedVersion:
 class TestAssessmentsAndLastState:
     def test_assessment(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_no_data_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -229,7 +229,7 @@ class TestAssessmentsAndLastState:
 
     def test_relative_threshold(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_no_data_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -258,7 +258,7 @@ class TestAssessmentsAndLastState:
 
     def test_relative_win_probability_and_threshold_assessment(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_no_data_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 
@@ -278,7 +278,7 @@ class TestAssessmentsAndLastState:
 
     def test_absolute_threshold_with_books(self):
         with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), '../../../data/prom_responses',
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_no_data_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
 

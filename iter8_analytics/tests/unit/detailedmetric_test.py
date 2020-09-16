@@ -6,13 +6,13 @@ import json
 
 # iter8 stuff
 from iter8_analytics import fastapi_app
-from iter8_analytics.api.analytics.types import *
+from iter8_analytics.api.types import *
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
-from iter8_analytics.api.analytics.detailedmetric import *
+from iter8_analytics.api.detailedmetric import *
 from iter8_analytics.tests.unit.data.inputs.inputs import *
-from iter8_analytics.api.analytics.detailedversion import *
-from iter8_analytics.api.analytics.experiment import *
+from iter8_analytics.api.detailedversion import *
+from iter8_analytics.api.experiment import *
 
 env_config = config.get_env_config()
 logger = logging.getLogger('iter8_analytics')

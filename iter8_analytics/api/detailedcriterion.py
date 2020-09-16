@@ -9,16 +9,13 @@ import logging
 import numpy as np
 
 # iter8 dependencies
-from iter8_analytics.api.analytics.types import *
-# from iter8_analytics.api.analytics.metrics import *
-# from iter8_analytics.api.analytics.utils import *
-from iter8_analytics.api.analytics.detailedmetric import *
-# from iter8_analytics.api.analytics.detailedcriterion import *
+from iter8_analytics.api.types import *
+from iter8_analytics.api.detailedmetric import *
+from iter8_analytics.advancedparams import AdvancedParameters
 
 logger = logging.getLogger('iter8_analytics')
 
-
-class DetailedCriterion():
+class DetailedCriterion:
     """Base class for a detailed criterion.
 
     Attributes:
@@ -93,74 +90,12 @@ class DetailedCriterion():
             return np.ones((Belief.sample_size, )).astype(np.float)
         else:
             if self.threshold_assessment is None:
+                logger.info("No threshold assessment. Returning zeroed criterion mask.")
                 return np.zeros((Belief.sample_size, )).astype(np.float)
             p = self.threshold_assessment.probability_of_satisfying_threshold
             if p is None:
                 return np.zeros((Belief.sample_size, )).astype(np.float)
             return np.random.binomial(1, p, (Belief.sample_size, )).astype(np.float)
-
-            # if self.is_counter: # counter metric. lower is preferred.
-            #     if ms.preferred_direction == DirectionEnum.lower:
-            #         if self.detailed_metric.aggregated_metric.value <= self.spec.threshold.value:
-            #             logger.debug(f"Counter metric {ms.id} within threshold for {self.detailed_version.id}")
-            #             logger.debug("Returning ones")
-            #             return np.ones((Belief.sample_size, )).astype(np.float)
-            #         else:
-            #             logger.debug(f"Counter metric {ms.id} violating threshold for {self.detailed_version.id}")
-            #             logger.debug("Returning zeros")
-            #             return np.zeros((Belief.sample_size, )).astype(np.float)
-            #     else: # ms.preferred_direction == DirectionEnum.higher:
-            #         if self.detailed_metric.aggregated_metric.value >= self.spec.threshold.value:
-            #             logger.debug(f"Counter metric {ms.id} within threshold for {self.detailed_version.id}")
-            #             logger.debug("Returning ones")
-            #             return np.ones((Belief.sample_size, )).astype(np.float)
-            #         else:
-            #             logger.debug(f"Counter metric {ms.id} violating threshold for {self.detailed_version.id}")
-            #             logger.debug("Returning zeros")
-            #             return np.zeros((Belief.sample_size, )).astype(np.float)
-            # else: # self.is_counter == False. Ratio metric.
-            #     rm = self.detailed_version.metrics["ratio_metrics"][self.metric_id]
-            #     b = rm.belief
-            #     if b.status == StatusEnum.uninitialized_belief:
-            #         logger.debug(f"Uninitialized belief for metric {ms.id} for {self.detailed_version.id}")
-            #         logger.debug("Returning zeros")
-            #         return np.zeros((Belief.sample_size, )).astype(np.float) # nothing is known about this version
-            #     # if samples for this metric are all nans, return None
-            #     sample = b.sample_posterior()
-            #     if np.any(np.isnan(sample)):
-            #         logger.debug(f"Nan values in  metric sample {ms.id} for {self.detailed_version.id}")
-            #         logger.debug("Returning zeros")
-            #         return np.zeros((Belief.sample_size, )).astype(np.float) # can't use nan values
-            #     else:
-            #         logger.debug(f"Returning posterior indicators for metric {ms.id} for {self.detailed_version.id}")
-            #         if self.spec.threshold.threshold_type == ThresholdEnum.absolute:
-            #             if ms.preferred_direction == DirectionEnum.lower:
-            #                 return (sample <= self.spec.threshold.value).astype(np.float)
-            #             else:
-            #                 return (sample >= self.spec.threshold.value).astype(np.float)
-            #         else: # relative threshold
-            #             baseline = self.detailed_version.experiment.detailed_baseline_version
-            #             if self.detailed_version.id == baseline.id:
-            #                 # baseline is always assumed to satisfy relative thresholds
-            #                 logger.debug(f"Relative thresholds for metric {ms.id} for baseline version {self.detailed_version.id}")
-            #                 logger.debug("Returning ones as criteria mask")
-            #                 return np.ones((Belief.sample_size, )).astype(np.float)
-
-            #             baseline_belief = baseline.metrics["ratio_metrics"][self.metric_id].belief
-            #             if baseline_belief.status == StatusEnum.uninitialized_belief:
-            #                 logger.debug(f"Uninitialized baseline belief for metric {ms.id} for {self.detailed_version.id}")
-            #                 logger.debug("Returning zeros as criteria mask")
-            #                 return np.zeros((Belief.sample_size, )).astype(np.float) # nothing is known about this version
-
-            #             baseline_sample = baseline_belief.sample_posterior() # go to the baseline and get its sample for this ratio metric
-            #             if ms.preferred_direction == DirectionEnum.lower:
-            #                 logger.debug(f"Computing criteria mask with relative threshold: {self.detailed_version.id}")
-            #                 logger.debug(f"sample: {sample}")
-            #                 logger.debug(f"sample: {baseline_sample}")
-            #                 logger.debug(f"{(sample <= baseline_sample * self.spec.threshold.value).astype(np.float)}")
-            #                 return (sample <= baseline_sample * self.spec.threshold.value).astype(np.float)
-            #             else:
-            #                 return (sample >= baseline_sample * self.spec.threshold.value).astype(np.float)
 
     def get_assessment(self):
         return self.assessment
@@ -222,6 +157,7 @@ class DetailedCriterion():
         else:  # there is a threshold specified
             if self.detailed_metric.aggregated_metric.value is None:
                 self.threshold_assessment = None  # nothing to check
+                logger.info("No aggregated metric value. Returning none.")
                 return None
 
             if self.spec.threshold.threshold_type == ThresholdEnum.absolute:
