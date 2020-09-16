@@ -1,5 +1,7 @@
 IMG ?= iter8-analytics:latest
 
+BASEIMG ?= iter8/iter8-analytics-base:latest
+
 ITER8_ANALYTICS_METRICS_BACKEND_URL ?= http://localhost:9090
 ITER8_ANALYTICS_DEBUG_ENV ?= false
 
@@ -29,8 +31,14 @@ docker-run: docker-cleanup docker-build
 docker-build: clean-pyc
 	docker build . -t ${IMG}
 
+docker-build-base: clean-pyc
+	docker build . -f Dockerfile.base.img -t ${BASEIMG}
+
 docker-push:
 	docker push ${IMG}
+
+docker-push-base:
+	docker push ${BASEIMG}
 
 docker-cleanup:
 	docker rm -f iter8-analytics 2>/dev/null || true
