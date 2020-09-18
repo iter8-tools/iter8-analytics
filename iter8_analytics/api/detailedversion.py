@@ -9,11 +9,11 @@ from typing import Dict
 import numpy as np
 
 # iter8 dependencies
-from iter8_analytics.api.analytics.types import *
-from iter8_analytics.api.analytics.metrics import *
-from iter8_analytics.api.analytics.utils import *
-from iter8_analytics.api.analytics.detailedmetric import *
-from iter8_analytics.api.analytics.detailedcriterion import *
+from iter8_analytics.api.types import *
+from iter8_analytics.api.metrics import *
+from iter8_analytics.api.utils import *
+from iter8_analytics.api.detailedmetric import *
+from iter8_analytics.api.detailedcriterion import *
 
 from iter8_analytics.constants import ITER8_REQUEST_COUNT
 

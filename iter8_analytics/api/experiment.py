@@ -11,25 +11,24 @@ import numpy as np
 import pandas as pd
 from fastapi import HTTPException
 
-import iter8_analytics.api.analytics.detailedversion
-from iter8_analytics.api.analytics.metrics import get_counter_metrics, \
+import iter8_analytics.api.detailedversion
+from iter8_analytics.api.metrics import get_counter_metrics, \
     get_ratio_metrics, new_ratio_max_min
-from iter8_analytics.api.analytics.types import ThresholdEnum, \
+from iter8_analytics.api.types import ThresholdEnum, \
     ExperimentIterationParameters, DirectionEnum, TrafficSplitStrategy, VersionAssessment, \
-    CandidateVersionAssessment, WinnerAssessment, AdvancedParameters, \
-    Iter8AssessmentAndRecommendation
-from iter8_analytics.api.analytics.utils import gen_round
+    CandidateVersionAssessment, WinnerAssessment, Iter8AssessmentAndRecommendation
+from iter8_analytics.api.utils import gen_round
 from iter8_analytics.constants import ITER8_REQUEST_COUNT
+from iter8_analytics.advancedparams import AdvancedParameters
 
 # type aliases
-DetailedVersion = iter8_analytics.api.analytics.detailedversion.DetailedVersion
-DetailedBaselineVersion = iter8_analytics.api.analytics.detailedversion.DetailedBaselineVersion
-DetailedCandidateVersion = iter8_analytics.api.analytics.detailedversion.DetailedCandidateVersion
+DetailedVersion = iter8_analytics.api.detailedversion.DetailedVersion
+DetailedBaselineVersion = iter8_analytics.api.detailedversion.DetailedBaselineVersion
+DetailedCandidateVersion = iter8_analytics.api.detailedversion.DetailedCandidateVersion
 
 logger = logging.getLogger('iter8_analytics')
 
-
-class Experiment():
+class Experiment:
     """The experiment class which provides necessary methods
     for running a single iteration of an iter8 experiment
     """
@@ -250,7 +249,7 @@ class Experiment():
         logger.debug(self.utilities.head())
 
         self.create_winner_assessments()
-        # self.add_baseline_bias()
+        self.add_baseline_bias()
         self.create_traffic_recommendations()
         return self.assemble_assessment_and_recommendations()
 
@@ -350,9 +349,21 @@ class Experiment():
         """
         # get the fraction of the time a particular version emerged as the
         # winner
+        logger.debug("Utilities")
+        logger.debug(self.utilities.shape)
+        logger.debug((self.utilities > 0.0).head())
         rank_df = self.utilities.rank(axis=1, method='min', ascending=False)
-        low_rank = rank_df <= 1
+        logger.debug("rank_df")
+        logger.debug(rank_df.shape)
+        logger.debug(rank_df.head())
+        # check if version has low rank and non-zero utility through elementwise logical and
+        low_rank = (rank_df <= 1) & (self.utilities > 0.0)
+        logger.debug("low_rank")
+        logger.debug(low_rank.shape)
+        logger.debug(low_rank.head())
+
         self.win_probababilities = low_rank.sum() / low_rank.sum().sum()
+        self.win_probababilities = self.win_probababilities.fillna(0.0)
 
     def create_traffic_recommendations(self):
         """Create traffic recommendations for individual algorithms.
@@ -480,10 +491,13 @@ class Experiment():
         # get winner assessments
 
         wvf = False
+        current_best_version = None
+        probability_of_winning_for_best_version = 0.0
 
-        current_best_version = self.win_probababilities.index[np.argmax(
-            self.win_probababilities)]
-        probability_of_winning_for_best_version = self.win_probababilities[current_best_version]
+        if not self.win_probababilities.isna().any():
+            current_best_version = self.win_probababilities.index[np.argmax(
+                self.win_probababilities)]
+            probability_of_winning_for_best_version = self.win_probababilities[current_best_version]
 
         if probability_of_winning_for_best_version > \
                 AdvancedParameters.min_posterior_probability_for_winner:

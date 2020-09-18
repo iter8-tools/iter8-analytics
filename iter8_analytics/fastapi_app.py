@@ -8,11 +8,11 @@ from fastapi import FastAPI, Body
 import uvicorn
 
 # iter8 dependencies
-from iter8_analytics.api.analytics.types import \
+from iter8_analytics.api.types import \
     ExperimentIterationParameters, Iter8AssessmentAndRecommendation
 #from iter8_analytics.api.analytics.experiment import Experiment
-import iter8_analytics.api.analytics.experiment as experiment
-from iter8_analytics.api.analytics.endpoints.examples import eip_example
+import iter8_analytics.api.experiment as experiment
+from iter8_analytics.api.examples import eip_example
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
 

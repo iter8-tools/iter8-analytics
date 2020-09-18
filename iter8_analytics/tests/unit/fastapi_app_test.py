@@ -10,7 +10,7 @@ import iter8_analytics.constants as constants
 from iter8_analytics import fastapi_app
 import iter8_analytics.config as config
 
-from iter8_analytics.api.analytics.types import *
+from iter8_analytics.api.types import *
 from iter8_analytics.tests.unit.data.inputs.inputs import eip_example
 
 env_config = config.get_env_config()
