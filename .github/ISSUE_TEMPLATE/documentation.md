@@ -17,7 +17,7 @@ assignees: 'sriumcp'
   Please provide as much detail as possible about your issue,
   please refrain from asking for solutions to specific problems
   with your code. This template is to report issues with the
-  official Emotion documentation.
+  official iter8 documentation.
 -->
 
 **Documentation links:**
