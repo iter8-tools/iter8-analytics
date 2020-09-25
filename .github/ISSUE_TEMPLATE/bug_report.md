@@ -23,8 +23,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Kubernetes + Istio environment (if applicable, please provide the following information):**
- - k8s environment: Minikube / Docker Desktop / ...; k8s version.
+**Kubernetes + Istio environment (please provide the following information):**
+ - k8s environment: Minikube / Docker Desktop / ...
+ - k8s version
  - Istio version
 
 **Additional context**
