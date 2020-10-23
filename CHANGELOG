@@ -1,5 +1,6 @@
-v1.0.0-rc3
-- New analytics
+v1.0.0
+- Rewrite of analytics engine
+- Support for A/B/n tests
 ==========================
 v0.2.1
 - Minor changes
