@@ -16,6 +16,15 @@ from iter8_analytics.api.examples import eip_example
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
 
+# v2 imports
+from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
+    ExperimentResource, Iter8v2AggregatedMetrics, Iter8v2VersionAssessments, \
+    Iter8v2WinnerAssessment, Iter8v2Weights, Iter8v2AnalyticsResults
+from iter8_analytics.api.v2.examples import ermr_example, er_example
+from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
+     get_weights, get_analytics_results
+from iter8_analytics.api.v2.metrics import get_aggregated_metrics
+
 # main FastAPI app
 app = FastAPI()
 
@@ -24,7 +33,9 @@ app = FastAPI()
 def provide_assessment_for_this_experiment_iteration(
         eip: ExperimentIterationParameters = Body(..., example=eip_example)):
     """
-    POST iter8 experiment iteration data and obtain assessment of how the versions are performing and recommendations on how to split traffic based on multiple strategies.
+    POST iter8 experiment iteration data and obtain assessment of how
+    the versions are performing and recommendations on how to split traffic
+    based on multiple strategies.
     \f
     :body eip: ExperimentIterationParameters
     """
@@ -37,6 +48,65 @@ def provide_iter8_analytics_health():
     """Get iter8 analytics health status"""
     return {"status": "Ok"}
 
+@app.post("/v2/aggregated_metrics", response_model=Iter8v2AggregatedMetrics, \
+    response_model_exclude_unset=True)
+def provide_aggregated_metrics(
+    ermr: ExperimentResourceAndMetricResources = Body(..., example=ermr_example)):
+    """
+    POST iter8 2.0 experiment resource and metric resources and obtain aggregated metrics.
+    \f
+    :body ermr: ExperimentResourceAndMetricResources
+    """
+    aggregated_metrics = get_aggregated_metrics(ermr)
+    return aggregated_metrics
+
+@app.post("/v2/version_assessments", response_model=Iter8v2VersionAssessments)
+def provide_version_assessments(
+    experiment_resource: ExperimentResource = Body(..., example=er_example)):
+    """
+    POST iter8 2.0 experiment resource, whose status includes aggregated metrics,
+    and obtain version assessments.
+    \f
+    :body er: ExperimentResource
+    """
+    version_assessments = get_version_assessments(experiment_resource)
+    return version_assessments
+
+@app.post("/v2/winner_assessment", response_model=Iter8v2WinnerAssessment)
+def provide_winner_assessment(
+    experiment_resource: ExperimentResource = Body(..., example=er_example)):
+    """
+    POST iter8 2.0 experiment resource, whose status includes
+    aggregated metrics/version_assessments, and obtain winner assessment.
+    \f
+    :body er: ExperimentResource
+    """
+    winner_assessment = get_winner_assessment(experiment_resource)
+    return winner_assessment
+
+@app.post("/v2/weights", response_model=Iter8v2Weights)
+def provide_weights(
+    experiment_resource: ExperimentResource = Body(..., example=er_example)):
+    """
+    POST iter8 2.0 experiment resource, whose status includes
+    aggregated metrics/version_assessments/winner assessment,
+    and obtain weights.
+    \f
+    :body er: ExperimentResource
+    """
+    weights = get_weights(experiment_resource)
+    return weights
+
+@app.post("/v2/analytics_results", response_model=Iter8v2AnalyticsResults)
+def provide_analytics_results(
+    ermr: ExperimentResourceAndMetricResources = Body(..., example=ermr_example)):
+    """
+    POST iter8 2.0 experiment resource and metric resources and get analytics results.
+    \f
+    :body er: ExperimentResourceAndMetricResources
+    """
+    analytics_results = get_analytics_results(ermr)
+    return analytics_results
 
 def config_logger(log_level="debug"):
     """Configures the global logger
