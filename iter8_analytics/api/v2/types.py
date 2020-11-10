@@ -58,7 +58,8 @@ class MetricSpec(BaseModel):
     """
     Pydantic model for metric spec subresource
     """
-    params: Dict[str, str] = Field(None, description = "Parameters to be used as part of the REST query for this metric")
+    params: Dict[str, str] = Field(None, description = "Parameters to be used \
+        as part of the REST query for this metric")
     provider: str = Field(..., description = "Identifier for the metrics backend")
 
 class MetricResource(BaseModel):
@@ -81,10 +82,14 @@ class VersionMetric(BaseModel):
     Metrics object for a version
     """
     name: str = Field(..., description = "version name")
-    max: float = Field(None, description = "maximum observed value for this metric for this version")
-    min: float = Field(None, description = "minimum observed value for this metric for this version")
-    value: float = Field(None, description = "last observed value for this metric for this version")
-    sample_size: float = Field(None, description = "last observed value for the sample_size metric for this version; this is none if sample_size is not specified")
+    max: float = Field(None, description = "maximum observed value \
+        for this metric for this version")
+    min: float = Field(None, description = "minimum observed value \
+        for this metric for this version")
+    value: float = Field(None, description = "last observed value \
+        for this metric for this version")
+    sample_size: float = Field(None, description = "last observed value \
+        for the sample_size metric for this version; this is none if sample_size is not specified")
 
 class AggregatedMetric(BaseModel):
     """
@@ -94,13 +99,15 @@ class AggregatedMetric(BaseModel):
     max: float = Field(None, description = "maximum observed value for this metric")
     min: float = Field(None, description = "minimum observed value for this metric")
     # min_items == 1 since at least one version (baseline) will be present
-    versions: conlist(VersionMetric, min_items = 1) = Field(..., description = "a sequence of metrics objects, one for each version")
+    versions: conlist(VersionMetric, min_items = 1) = Field(..., \
+        description = "a sequence of metrics objects, one for each version")
 
 class Iter8v2AggregatedMetrics(BaseModel):
     """
     Pydantic model for aggregated metrics response
     """
-    data: Sequence[AggregatedMetric] = Field(..., description = "Sequence of AggregatedMetric objects")
+    data: Sequence[AggregatedMetric] = Field(..., \
+    description = "Sequence of AggregatedMetric objects")
     message: str = Field(None, description = "Human-readable description of aggregated metrics")
 
 class Iter8v2VersionAssessments(BaseModel):
