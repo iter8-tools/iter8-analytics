@@ -18,9 +18,9 @@ import iter8_analytics.config as config
 
 # v2 imports
 from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
-    ExperimentResource, Iter8v2AggregatedMetrics, Iter8v2VersionAssessments, \
-    Iter8v2WinnerAssessment, Iter8v2Weights, Iter8v2AnalyticsResults
-from iter8_analytics.api.v2.examples import ermr_example, er_example
+    ExperimentResource, AggregatedMetrics, VersionAssessments, \
+    WinnerAssessment, Weights, Analysis
+from iter8_analytics.api.v2.examples import ermr_example, er_example, er_example_step1
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
      get_weights, get_analytics_results
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
@@ -48,7 +48,7 @@ def provide_iter8_analytics_health():
     """Get iter8 analytics health status"""
     return {"status": "Ok"}
 
-@app.post("/v2/aggregated_metrics", response_model=Iter8v2AggregatedMetrics, \
+@app.post("/v2/aggregated_metrics", response_model=AggregatedMetrics, \
     response_model_exclude_unset=True)
 def provide_aggregated_metrics(
     ermr: ExperimentResourceAndMetricResources = Body(..., example=ermr_example)):
@@ -60,9 +60,9 @@ def provide_aggregated_metrics(
     aggregated_metrics = get_aggregated_metrics(ermr)
     return aggregated_metrics
 
-@app.post("/v2/version_assessments", response_model=Iter8v2VersionAssessments)
+@app.post("/v2/version_assessments", response_model=VersionAssessments)
 def provide_version_assessments(
-    experiment_resource: ExperimentResource = Body(..., example=er_example)):
+    experiment_resource: ExperimentResource = Body(..., example=er_example_step1)):
     """
     POST iter8 2.0 experiment resource, whose status includes aggregated metrics,
     and obtain version assessments.
@@ -72,7 +72,7 @@ def provide_version_assessments(
     version_assessments = get_version_assessments(experiment_resource)
     return version_assessments
 
-@app.post("/v2/winner_assessment", response_model=Iter8v2WinnerAssessment)
+@app.post("/v2/winner_assessment", response_model=WinnerAssessment)
 def provide_winner_assessment(
     experiment_resource: ExperimentResource = Body(..., example=er_example)):
     """
@@ -84,7 +84,7 @@ def provide_winner_assessment(
     winner_assessment = get_winner_assessment(experiment_resource)
     return winner_assessment
 
-@app.post("/v2/weights", response_model=Iter8v2Weights)
+@app.post("/v2/weights", response_model=Weights)
 def provide_weights(
     experiment_resource: ExperimentResource = Body(..., example=er_example)):
     """
@@ -97,7 +97,7 @@ def provide_weights(
     weights = get_weights(experiment_resource)
     return weights
 
-@app.post("/v2/analytics_results", response_model=Iter8v2AnalyticsResults)
+@app.post("/v2/analytics_results", response_model=Analysis)
 def provide_analytics_results(
     ermr: ExperimentResourceAndMetricResources = Body(..., example=ermr_example)):
     """

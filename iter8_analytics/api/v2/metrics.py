@@ -15,7 +15,7 @@ import jq
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
-    Iter8v2AggregatedMetrics, MetricResource, Version, AggregatedMetric, VersionMetric
+    AggregatedMetrics, MetricResource, Version, AggregatedMetric, VersionMetric
 import iter8_analytics.constants as constants
 from iter8_analytics.config import env_config
 
@@ -38,7 +38,6 @@ def extrapolate(template: str, version: Version, start_time: datetime):
     args["name"] = version.name
     for key, value in version.tags.items():
         args[key] = value
-    args["tags"] = version.tags
     args["interval"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
     args["interval"] = str(args["interval"]) + 's'
     templ = Template(template)
@@ -118,9 +117,13 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     """
     url_template = get_metrics_url_template(metric_resource)
     url = extrapolate(url_template, version, start_time)
+    # example for prometheus; 
+    # metric_resource.spec.params now: {"query": "your prometheus query template"}
     params = {}
     for pt_key, pt_value in metric_resource.spec.params.items():
         params[pt_key] = extrapolate(pt_value, version, start_time)
+    # continuing the above example...
+    # params now: {"query": "your prometheus query"}
     (value, err) = (None, None)
     try:
         response = requests.get(url, params=params).json()
@@ -137,10 +140,11 @@ def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
     versions = [ermr.experimentResource.spec.versionInfo.baseline]
     versions += ermr.experimentResource.spec.versionInfo.candidates
 
+    # keys are metric names; values are list of version metrics
     metric_values = {}
-    errors = []
+    warnings = []
 
-    iam = Iter8v2AggregatedMetrics(data = [])
+    iam = AggregatedMetrics(data = [])
 
     for metric_resource in ermr.metricResources:
         metric_values[metric_resource.metadata.name] = {}
@@ -151,11 +155,13 @@ def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
             if err is None:
                 version_metrics.append(VersionMetric(name = version.name, value = val))
             else:
-                errors.append(err)
+                warnings.append(err)
                 logger.error(err)
         agg_met = AggregatedMetric(name = metric_resource.metadata.name, \
             versions = version_metrics)
         iam.data.append(agg_met)
-    if errors:
-        iam.message = "Errors found: " + ', '.join(map(lambda err: err.message, errors))
+    if warnings:
+        iam.message = "Warnings: " + ', '.join(map(lambda warning: warning.message, warnings))
+    else:
+        iam.message = "All ok"
     return iam

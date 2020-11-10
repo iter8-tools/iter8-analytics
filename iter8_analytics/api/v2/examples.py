@@ -65,3 +65,49 @@ ermr_example = {
     'experimentResource': er_example,
     'metricResources': mr_example
 }
+
+am_response = {
+    "data": [
+        {
+            "name": "request-count",
+            "versions": [
+              {
+                  "name": "default",
+                  "value": 27.022790513225264
+              },
+                {
+                  "name": "canary",
+                  "value": 21.010280639806354
+              }
+            ]
+        },
+        {
+            "name": "mean-latency",
+            "versions": [
+                {
+                    "name": "default",
+                    "value": 347.93841371662717
+                },
+                {
+                    "name": "canary",
+                    "value": 526.3333333333333
+                }
+            ]
+        }
+    ]
+}
+
+er_example_step1 = {
+    "spec": er_example["spec"],
+    "status": {
+        "startTime": "2020-04-03T12:55:50.568Z",
+        "analysis": {
+            "aggregatedMetrics": am_response
+        }
+    }
+}
+
+ermr_example_step1 = {
+    'experimentResource': er_example_step1,
+    'metricResources': mr_example
+}
