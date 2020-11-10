@@ -4,9 +4,6 @@ import os
 import sys
 import yaml
 
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
-
 import iter8_analytics.constants as constants
 
 # def get_env_config():
@@ -153,13 +150,13 @@ def get_env_config():
         logging.getLogger(__name__).info(
             f"Set url from env as: {config[constants.METRICS_BACKEND_CONFIG_URL]}")
     # validate
-    val = URLValidator()
-    try:
-        val(config[constants.METRICS_BACKEND_CONFIG_URL])
-    except ValidationError as e:
-        logging.getLogger('iter8_analytics').critical(
-            f'Prometheus URL {config[constants.METRICS_BACKEND_CONFIG_URL]} is invalid', e)
-        sys.exit(1)
+    # val = URLValidator()
+    # try:
+    #     val(config[constants.METRICS_BACKEND_CONFIG_URL])
+    # except ValidationError as e:
+    #     logging.getLogger('iter8_analytics').critical(
+    #         f'Prometheus URL {config[constants.METRICS_BACKEND_CONFIG_URL]} is invalid', e)
+    #     sys.exit(1)
     # log result
     logging.getLogger(__name__).info(
         f"The backend metrics server is {config[constants.METRICS_BACKEND_CONFIG_URL]}")

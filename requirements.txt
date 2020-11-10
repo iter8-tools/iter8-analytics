@@ -3,7 +3,6 @@ attrs==19.1.0
 Click==7.0
 certifi==2019.3.9
 chardet==3.0.4
-Django==3.0.7
 fastapi==0.60.1
 Flask==1.0.2
 flask-restplus==0.12.1
@@ -13,7 +12,7 @@ Jinja2==2.10.1
 jq==1.1.1
 jsonschema==3.0.1
 MarkupSafe==1.1.1
-pandas==1.0.5
+pandas==1.1.4
 pyrsistent==0.14.11
 python-dateutil==2.8.0
 pytz==2019.1
@@ -22,6 +21,6 @@ six==1.12.0
 strict-rfc3339==0.7
 urllib3==1.24.3
 uvicorn==0.11.7
-numpy==1.17.4
+numpy==1.19.4
 Werkzeug==0.15.3
 pyyaml==5.3
