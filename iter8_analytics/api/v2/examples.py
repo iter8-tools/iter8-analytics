@@ -20,6 +20,12 @@ er_example = {
                     }
                 }
             ]
+        },
+        "criteria": {
+            "objectives": [{
+                "metric": "mean-latency",
+                "upperLimit": 420.0
+            }]
         }
     },
     "status": {
@@ -67,34 +73,29 @@ ermr_example = {
 }
 
 am_response = {
-    "data": [
-        {
-            "name": "request-count",
-            "versions": [
-              {
-                  "name": "default",
-                  "value": 27.022790513225264
-              },
-                {
-                  "name": "canary",
-                  "value": 21.010280639806354
-              }
-            ]
+  "data": {
+    "request-count": {
+      "data": {
+        "default": {
+          "value": 148.0405378277749
         },
-        {
-            "name": "mean-latency",
-            "versions": [
-                {
-                    "name": "default",
-                    "value": 347.93841371662717
-                },
-                {
-                    "name": "canary",
-                    "value": 526.3333333333333
-                }
-            ]
+        "canary": {
+          "value": 143.03538837774244
         }
-    ]
+      }
+    },
+    "mean-latency": {
+      "data": {
+        "default": {
+          "value": 419.2027282381035
+        },
+        "canary": {
+          "value": 426.9510489510489
+        }
+      }
+    }
+  },
+  "message": "All ok"
 }
 
 er_example_step1 = {

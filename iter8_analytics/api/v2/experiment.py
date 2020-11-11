@@ -34,17 +34,22 @@ def get_version_assessments(experiment_resource: ExperimentResource):
 
     aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
 
-    satisfies_objectives = {}
-    for version in versions:
-        satisfies_objectives[version.name] = [False] * len(experiment_resource.criteria.objectives)
+    version_assessments = VersionAssessments(data = {}, message = None)
 
-    for ind, obj in enumerate(experiment_resource.criteria.objectives):
+    if experiment_resource.spec.criteria is None:
+        return version_assessments
+
+    for version in versions:
+        version_assessments.data[version.name] = [False] * \
+            len(experiment_resource.spec.criteria.objectives)
+
+    for ind, obj in enumerate(experiment_resource.spec.criteria.objectives):
         if obj.metric in aggregated_metric_data:
-            versions_metric_data = aggregated_metric_data[obj.metric]
+            versions_metric_data = aggregated_metric_data[obj.metric].data
             for version in versions:
                 if version.name in versions_metric_data:
                     if versions_metric_data[version.name].value is not None:
-                        satisfies_objectives[version.name][ind] = \
+                        version_assessments.data[version.name][ind] = \
                             check_limits(obj, versions_metric_data[version.name].value)
                     else:
                         collect_messages_and_log(f"Value for \
@@ -56,7 +61,6 @@ def get_version_assessments(experiment_resource: ExperimentResource):
             collect_messages_and_log(f"Aggregated metric object for {obj.metric} \
                 metric is unavailable.")
 
-    version_assessments = VersionAssessments(data = data, message = None)
     if messages:
         version_assessments.message = "Warnings: " + ', '.join(messages)
     else:
@@ -67,13 +71,21 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
     """
     Get winner assessment using experiment resource.
     """
-    winner_assessment = WinnerAssessment(dummy = 2)
+    logger.debug(experiment_resource)
+    winner_assessment = WinnerAssessment()
+
+    versions = [experiment_resource.spec.versionInfo.baseline]
+    versions += experiment_resource.spec.versionInfo.candidates
+
+    # feasible_versions = filter(lambda version: \
+    # all(experiment_resource.status.analysis.versionAssessments.data[version.name]), versions)
     return winner_assessment
 
 def get_weights(experiment_resource: ExperimentResource):
     """
     Get weights using experiment resource.
     """
+    logger.debug(experiment_resource)
     weights = Weights(dummy = 2)
     return weights
 

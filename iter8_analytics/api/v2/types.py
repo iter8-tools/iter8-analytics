@@ -66,9 +66,8 @@ class MetricResource(BaseModel):
 
 class VersionMetric(BaseModel):
     """
-    Metrics object for a version
+    Pydantic model for a version metric object
     """
-    name: str = Field(..., description = "version name")
     max: float = Field(None, description = "maximum observed value \
         for this metric for this version")
     min: float = Field(None, description = "minimum observed value \
@@ -80,45 +79,36 @@ class VersionMetric(BaseModel):
 
 class AggregatedMetric(BaseModel):
     """
-    Pydantic model for an aggregated metric
+    Pydantic model for an aggregated metric object
     """
-    name: str = Field(..., description = "metric name")
     max: float = Field(None, description = "maximum observed value for this metric")
     min: float = Field(None, description = "minimum observed value for this metric")
     # min_items == 1 since at least one version (baseline) will be present
-    versions: conlist(VersionMetric, min_items = 1) = Field(..., \
-        description = "a sequence of metrics objects, one for each version")
+    data: Dict[str, VersionMetric] = Field(..., \
+        description = "dictionary with version names as keys and VersionMetric objects as values")
 
 class AggregatedMetrics(BaseModel):
     """
     Pydantic model for aggregated metrics response
     """
-    data: Sequence[AggregatedMetric] = Field(..., \
-    description = "sequence of AggregatedMetric objects")
+    data: Dict[str, AggregatedMetric] = Field(..., \
+    description = "dictionary with metric names as keys and AggregatedMetric objects as values")
     message: str = Field(None, description = "human-readable description of aggregated metrics")
-
-class VersionAssessment(BaseModel):
-    """
-    Pydantic model for a version assessment
-    """
-    name: str = Field(..., description = "version name")
-    satisfiesObjectives: Sequence[bool] = Field(..., description = \
-        "sequence of booleans, each corresponding to whether the version satisfies \
-        the corresponding objective.")
 
 class VersionAssessments(BaseModel):
     """
     Pydantic model for version assessments returned by iter8 analytics v2
     """
-    data: Sequence[VersionAssessment] = Field(..., \
-    description = "sequence of VersionAssessment objects")
+    data: Dict[str, Sequence[bool]] = Field(..., \
+    description = "dictionary with version name as key and sequence of booleans as value; each element of the sequence indicates if the version satisfies the corresponding objective.")
     message: str = Field(None, description = "human-readable description of version assessments")
 
 class WinnerAssessment(BaseModel):
     """
-    Pydantic model for winner assessment returned by iter8 analytics v2
+    Pydantic model for winner assessment
     """
-    dummy: int
+    winnerFound: bool = Field(False, description = "boolean value indicating if winner is found")
+    winner: str = Field(None, description = "winning version; None if winner not found")
 
 class Weights(BaseModel):
     """
