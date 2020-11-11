@@ -140,28 +140,27 @@ def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
     versions = [ermr.experimentResource.spec.versionInfo.baseline]
     versions += ermr.experimentResource.spec.versionInfo.candidates
 
-    # keys are metric names; values are list of version metrics
-    metric_values = {}
-    warnings = []
+    messages = []
 
-    iam = AggregatedMetrics(data = [])
+    def collect_messages_and_log(message: str):
+        messages.append(message)
+        logger.error(message)
+
+    iam = AggregatedMetrics(data = {})
 
     for metric_resource in ermr.metricResources:
-        metric_values[metric_resource.metadata.name] = {}
-        version_metrics = []
+        iam.data[metric_resource.metadata.name] = AggregatedMetric(data = {})
         for version in versions:
+            iam.data[metric_resource.metadata.name].data[version.name] = VersionMetric()
             val, err = get_metric_value(metric_resource, version, \
             ermr.experimentResource.status.startTime)
             if err is None:
-                version_metrics.append(VersionMetric(name = version.name, value = val))
+                iam.data[metric_resource.metadata.name].data[version.name].value = val
             else:
-                warnings.append(err)
-                logger.error(err)
-        agg_met = AggregatedMetric(name = metric_resource.metadata.name, \
-            versions = version_metrics)
-        iam.data.append(agg_met)
-    if warnings:
-        iam.message = "Warnings: " + ', '.join(map(lambda warning: warning.message, warnings))
+                collect_messages_and_log(err.message)
+    if messages:
+        iam.message = "Warnings: " + ', '.join(messages)
     else:
         iam.message = "All ok"
+    logger.info(iam)
     return iam
