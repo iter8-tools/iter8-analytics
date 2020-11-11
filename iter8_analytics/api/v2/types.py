@@ -4,6 +4,7 @@ Module containing pydantic data models for iter8 v2
 # core python dependencies
 from typing import Sequence, Dict
 from datetime import datetime
+from enum import Enum
 
 # external module dependencies
 from pydantic import BaseModel, Field, conlist
@@ -36,10 +37,48 @@ class Criteria(BaseModel):
     """
     objectives: Sequence[Objective] = Field(None, description = "sequence of objectives")
 
+class ExperimentType(str, Enum):
+    """
+    Experiment types
+    """
+    canary = "canary"
+    ab = "A/B"
+    performance = "performance"
+    bluegreen = "BlueGreen"
+
+class WeightAlgorithm(str, Enum):
+    """
+    Algorithm types
+    """
+    progressive = "progressive"
+    fixed = "fixed-split"
+
+class WeightsConfig(BaseModel):
+    """
+    Pydantic model for weights configuration in experiment spec
+    """
+    maxCandidateWeight: int = Field(100, description = "units = percent; \
+        candidate weight never exceeds this value", le = 100, ge = 0)
+    maxCandidateWeightIncrement: int = Field(5, description = "units = percent; \
+        candidate weight increment never exceeds this value", le = 100, ge = 0)
+    algorithm: WeightAlgorithm = Field(WeightAlgorithm.progressive, description = \
+        "weight computation algorithm")
+
+class ExperimentStrategy(BaseModel):
+    """
+    Experiment strategy
+    """
+    type: ExperimentType = Field(..., \
+        description="indicates preference for metric values -- lower, higher, or None (default)")
+    weights: WeightsConfig = Field(None, \
+        description = "weights configuration")
+
 class ExperimentSpec(BaseModel):
     """
     Pydantic model for experiment spec subresource
     """
+    strategy: ExperimentStrategy = Field(..., \
+        description = "experiment strategy")
     versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
     criteria: Criteria = Field(None, description = "experiment criteria")
 
@@ -97,24 +136,42 @@ class AggregatedMetrics(BaseModel):
 
 class VersionAssessments(BaseModel):
     """
-    Pydantic model for version assessments returned by iter8 analytics v2
+    Pydantic model for version assessments
     """
     data: Dict[str, Sequence[bool]] = Field(..., \
     description = "dictionary with version name as key and sequence of booleans as value; each element of the sequence indicates if the version satisfies the corresponding objective.")
     message: str = Field(None, description = "human-readable description of version assessments")
 
-class WinnerAssessment(BaseModel):
+class WinnerAssessmentData(BaseModel):
     """
-    Pydantic model for winner assessment
+    Pydantic model for winner assessment data
     """
     winnerFound: bool = Field(False, description = "boolean value indicating if winner is found")
     winner: str = Field(None, description = "winning version; None if winner not found")
 
+class WinnerAssessment(BaseModel):
+    """
+    Pydantic model for winner assessment
+    """
+    data: WinnerAssessmentData = Field(WinnerAssessmentData(), description = \
+        "winner assessment data")
+    message: str = Field(None, description = "explanation for winning version")
+
+class VersionWeight(BaseModel):
+    """
+    Pydantic model for version weight
+    """
+    name: str = Field(..., description = "version name")
+    value: float = Field(..., description = "weight for a version", ge = 0.0)
+
 class Weights(BaseModel):
     """
-    Pydantic model for weights returned by iter8 analytics v2
+    Pydantic model for weight object
     """
-    dummy: int
+    # number of entries in data equals number of versions in the experiment
+    data: Sequence[VersionWeight] = Field(..., description = \
+        "weights for versions")
+    message: str = Field(None, description = "human-readable description for weights")
 
 class Analysis(BaseModel):
     """

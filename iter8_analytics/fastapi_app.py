@@ -20,7 +20,8 @@ import iter8_analytics.config as config
 from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
     ExperimentResource, AggregatedMetrics, VersionAssessments, \
     WinnerAssessment, Weights, Analysis
-from iter8_analytics.api.v2.examples import ermr_example, er_example, er_example_step1
+from iter8_analytics.api.v2.examples import ermr_example, er_example, er_example_step1, \
+    er_example_step2, er_example_step3
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
      get_weights, get_analytics_results
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
@@ -74,7 +75,7 @@ def provide_version_assessments(
 
 @app.post("/v2/winner_assessment", response_model=WinnerAssessment)
 def provide_winner_assessment(
-    experiment_resource: ExperimentResource = Body(..., example=er_example)):
+    experiment_resource: ExperimentResource = Body(..., example=er_example_step2)):
     """
     POST iter8 2.0 experiment resource, whose status includes
     aggregated metrics/version_assessments, and obtain winner assessment.
@@ -86,7 +87,7 @@ def provide_winner_assessment(
 
 @app.post("/v2/weights", response_model=Weights)
 def provide_weights(
-    experiment_resource: ExperimentResource = Body(..., example=er_example)):
+    experiment_resource: ExperimentResource = Body(..., example=er_example_step3)):
     """
     POST iter8 2.0 experiment resource, whose status includes
     aggregated metrics/version_assessments/winner assessment,
