@@ -6,8 +6,9 @@ import logging
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
-    ExperimentResourceAndMetricResources, VersionAssessments, \
-    WinnerAssessment, Weights, Analysis, Objective
+    ExperimentResourceAndMetricResources, VersionAssessments, VersionWeight, \
+    WinnerAssessment, WinnerAssessmentData, Weights, Analysis, Objective, ExperimentType
+from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 
 logger = logging.getLogger('iter8_analytics')
 
@@ -18,7 +19,6 @@ def get_version_assessments(experiment_resource: ExperimentResource):
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
 
-    data = []
     messages = []
 
     def collect_messages_and_log(message: str):
@@ -62,36 +62,69 @@ def get_version_assessments(experiment_resource: ExperimentResource):
                 metric is unavailable.")
 
     if messages:
-        version_assessments.message = "Warnings: " + ', '.join(messages)
+        version_assessments.message = "warnings: " + ', '.join(messages)
     else:
-        version_assessments.message = "All ok"
+        version_assessments.message = "computed version assessments"
     return version_assessments
 
 def get_winner_assessment(experiment_resource: ExperimentResource):
     """
     Get winner assessment using experiment resource.
     """
-    logger.debug(experiment_resource)
-    winner_assessment = WinnerAssessment()
+    if experiment_resource.spec.strategy.type == ExperimentType.performance:
+        was = WinnerAssessment()
+        was.message = "performance tests have no winner assessments"
+        return was
 
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
 
-    # feasible_versions = filter(lambda version: \
-    # all(experiment_resource.status.analysis.versionAssessments.data[version.name]), versions)
-    return winner_assessment
+    feasible_versions = list(filter(lambda version: \
+    all(experiment_resource.status.analysis.versionAssessments.data[version.name]), versions))
+
+    # names of feasible versions
+    fvn = list(map(lambda version: version.name, feasible_versions))
+
+    if (experiment_resource.spec.strategy.type == ExperimentType.canary) or \
+        (experiment_resource.spec.strategy.type == ExperimentType.bluegreen):
+        was = WinnerAssessment()
+        was.message = "no version satisfies all objectives"
+        if versions[1].name in fvn:
+            was.data = WinnerAssessmentData(winnerFound = True, winner = versions[1].name)
+            was.message = "candidate satisfies all objectives"
+        elif versions[0].name in fvn:
+            was.data = WinnerAssessmentData(winnerFound = True, winner = versions[0].name)
+            was.message = "baseline satisfies all objectives; candidate does not"
+        return was
+
+    if experiment_resource.spec.strategy.type == ExperimentType.ab:
+        pass
+        # check rewards and return winner
+    return WinnerAssessment()
 
 def get_weights(experiment_resource: ExperimentResource):
     """
     Get weights using experiment resource.
     """
-    logger.debug(experiment_resource)
-    weights = Weights(dummy = 2)
-    return weights
+    if experiment_resource.spec.strategy.type == ExperimentType.performance:
+        return Weights(data = [], \
+            message = "weight computation is not applicable to a performance experiment")
+
+    versions = [experiment_resource.spec.versionInfo.baseline]
+    versions += experiment_resource.spec.versionInfo.candidates
+
+    # stubbing with dummy values for now
+    return Weights(data = [VersionWeight(name = versions[0].name, value = 25), \
+        VersionWeight(name = versions[1].name, value = 75)], message = "dummy values")
 
 def get_analytics_results(ermr: ExperimentResourceAndMetricResources):
     """
-    Get analytics results using experiment resource and metric resources.
+    Get analysis results using experiment resource and metric resources.
     """
-    analytics_results = Analysis(dummy = 2)
-    return analytics_results
+    exp_res = ermr.experimentResource
+    exp_res.status.analysis = Analysis()
+    exp_res.status.analysis.aggregatedMetrics = get_aggregated_metrics(ermr)
+    exp_res.status.analysis.versionAssessments = get_version_assessments(exp_res)
+    exp_res.status.analysis.winnerAssessment = get_winner_assessment(exp_res)
+    exp_res.status.analysis.weights = get_weights(exp_res)
+    return exp_res.status.analysis

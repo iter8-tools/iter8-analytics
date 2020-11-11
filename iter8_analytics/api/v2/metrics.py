@@ -159,8 +159,8 @@ def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
             else:
                 collect_messages_and_log(err.message)
     if messages:
-        iam.message = "Warnings: " + ', '.join(messages)
+        iam.message = "warnings: " + ', '.join(messages)
     else:
-        iam.message = "All ok"
+        iam.message = "all ok"
     logger.info(iam)
     return iam
