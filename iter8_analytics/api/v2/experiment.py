@@ -7,7 +7,7 @@ import logging
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
     ExperimentResourceAndMetricResources, VersionAssessments, \
-    WinnerAssessment, Weights, Analysis
+    WinnerAssessment, Weights, Analysis, Objective
 
 logger = logging.getLogger('iter8_analytics')
 
@@ -19,37 +19,46 @@ def get_version_assessments(experiment_resource: ExperimentResource):
     versions += experiment_resource.spec.versionInfo.candidates
 
     data = []
-    warnings = []
+    messages = []
 
-    # available_metrics = map(lambda am: am.name, \
-    #     experiment_resource.status.analysis.aggregatedMetrics.data)
+    def collect_messages_and_log(message: str):
+        messages.append(message)
+        logger.error(message)
 
-    # satisfiesObjectives = {}
-    # for version in versions:
-    #     satisfiesObjectives[version.name] = [False] * len(experiment_resource.criteria.objectives)
+    def check_limits(obj: Objective, value: float):
+        if (obj.upperLimit is not None) and (value > obj.upperLimit):
+            return False
+        if (obj.lowerLimit is not None) and (value < obj.lowerLimit):
+            return False
+        return True
 
-    # for ind, obj in enumerate(experiment_resource.criteria.objectives):
-    #     if obj.metric in available_metrics:
-    #         for version in versions:
-    #             # check if metric object is available for this version
-    #             # if available:
-    #                 # check if metric value is none
-    #                 # if not none
-    #                     # check limits
-    #                     # update satisfiesObjectives array
-    #                 # else
-    #                     # does not satisfy; update satisfiesObjectives array
-    #                     # warnings.append and logger.error; this version does not satisfy this objective.
-    #             # else: warnings.append and logger.error; this version does not satisfy this objective.
-    #     else:
-    #         warnings.append(ValueError(f"Values for {obj.metric} metric is unavailable."))
-    #         logger.error(f"Values for {obj.metric} metric is unavailable.")
-    #     # check if metric object is available as part of aggregated metrics
+    aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
+
+    satisfies_objectives = {}
+    for version in versions:
+        satisfies_objectives[version.name] = [False] * len(experiment_resource.criteria.objectives)
+
+    for ind, obj in enumerate(experiment_resource.criteria.objectives):
+        if obj.metric in aggregated_metric_data:
+            versions_metric_data = aggregated_metric_data[obj.metric]
+            for version in versions:
+                if version.name in versions_metric_data:
+                    if versions_metric_data[version.name].value is not None:
+                        satisfies_objectives[version.name][ind] = \
+                            check_limits(obj, versions_metric_data[version.name].value)
+                    else:
+                        collect_messages_and_log(f"Value for \
+                            {obj.metric} metric and {version.name} version is None.")
+                else:
+                    collect_messages_and_log(f"Value for \
+                        {obj.metric} metric and {version.name} version is unavailable.")
+        else:
+            collect_messages_and_log(f"Aggregated metric object for {obj.metric} \
+                metric is unavailable.")
 
     version_assessments = VersionAssessments(data = data, message = None)
-    if warnings:
-        version_assessments.message = "Warnings: " + \
-            ', '.join(map(lambda warning: warning.message, warnings))
+    if messages:
+        version_assessments.message = "Warnings: " + ', '.join(messages)
     else:
         version_assessments.message = "All ok"
     return version_assessments
