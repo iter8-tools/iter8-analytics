@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import logging
 from string import Template
 import numbers
+import numpy as np
 
 # external module dependencies
 import requests
@@ -17,6 +18,7 @@ import jq
 from iter8_analytics.api.v2.types import AggregatedMetrics, ExperimentResource, \
     MetricResource, Version, AggregatedMetric, VersionMetric
 import iter8_analytics.constants as constants
+from iter8_analytics.api.v2.utils import collect_messages_and_log
 from iter8_analytics.config import env_config
 
 logger = logging.getLogger('iter8_analytics')
@@ -102,7 +104,7 @@ def unmarshal(response, provider):
         logger.info(f"Validated response: {response}")
         try:
             num = jq.compile(".data.result[0].value[1] | tonumber").input(response).first()
-            if isinstance(num, numbers.Number):
+            if isinstance(num, numbers.Number) and not np.isnan(num):
                 return num, None
             return None, ValueError("Metrics response did not yield a number")
         except Exception as err:
@@ -147,7 +149,19 @@ def get_aggregated_metrics(er: ExperimentResource):
         logger.error(message)
 
     iam = AggregatedMetrics(data = {})
-    
+
+    def construct_message():
+        if messages:
+            iam.message = "warnings: " + ', '.join(messages)
+        else:
+            iam.message = "all ok"
+
+    #check if start time is greater than now
+    if er.status.startTime > (datetime.now(timezone.utc)):
+        messages.append("Invalid startTime: greater than current time")
+        construct_message()
+        return iam
+
     for metric_name, metric_resource in er.spec.metrics.items():
         iam.data[metric_name] = AggregatedMetric(data = {})
         for version in versions:
@@ -158,9 +172,9 @@ def get_aggregated_metrics(er: ExperimentResource):
                 iam.data[metric_name].data[version.name].value = val
             else:
                 collect_messages_and_log(str(err))
-    if messages:
-        iam.message = "warnings: " + ', '.join(messages)
-    else:
-        iam.message = "all ok"
+
+    #construct a message string for all metric resources
+    construct_message()
+
     logger.info(iam)
     return iam
