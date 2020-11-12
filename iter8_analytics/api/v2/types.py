@@ -41,17 +41,17 @@ class ExperimentType(str, Enum):
     """
     Experiment types
     """
-    canary = "canary"
+    canary = "Canary"
     ab = "A/B"
-    performance = "performance"
+    performance = "Performance"
     bluegreen = "BlueGreen"
 
 class WeightAlgorithm(str, Enum):
     """
     Algorithm types
     """
-    progressive = "progressive"
-    fixed = "fixed-split"
+    progressive = "Progressive"
+    fixed = "FixedSplit"
 
 class WeightsConfig(BaseModel):
     """
@@ -81,12 +81,20 @@ class MetricSpec(BaseModel):
         as part of the REST query for this metric")
     provider: str = Field(..., description = "identifier for the metrics backend")
 
-class MetricResource(BaseModel):
+class MetricObject(BaseModel):
     """
     Pydantic model for metric resource
     """
     spec: MetricSpec = Field(..., description = "metrics resource spec")
 
+
+class MetricResource(BaseModel):
+    """
+    Pydantic model for metric resource
+    """
+    name: str = Field(..., description= "name of the metric")
+    metricObj: MetricObject = Field(..., description = "metric obj resource")
+    
 class ExperimentSpec(BaseModel):
     """
     Pydantic model for experiment spec subresource
@@ -95,8 +103,8 @@ class ExperimentSpec(BaseModel):
         description = "experiment strategy")
     versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
     criteria: Criteria = Field(None, description = "experiment criteria")
-    metrics: Dict[str, MetricResource] = Field(None, description = "dictionary with \
-        metric names as keys and MetricResource objects as values")
+    metrics: Sequence[MetricResource] = Field(None, description = "Sequence of \
+        MetricResource objects")
 
 class VersionMetric(BaseModel):
     """

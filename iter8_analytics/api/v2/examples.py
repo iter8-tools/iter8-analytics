@@ -2,8 +2,9 @@
 Examples used in FastAPI/Swagger documentation of iter8 analytics v2 APIs.
 Examples used in tests of iter8 analytics v2 APIs.
 """
-mr_example = {
-    "request-count" : {
+mr_example = [{
+    "name": "request-count",
+    "metricObj": {
         "apiVersion": "core.iter8.tools/v1alpha3",
         "kind": "Metric",
         "metadata": {
@@ -17,8 +18,10 @@ mr_example = {
             "type": "counter",
             "provider": "prometheus"
         }
-    },
-    "mean-latency": {
+    }},
+    {
+    "name":"mean-latency",
+    "metricObj": {
         "apiVersion": "core.iter8.tools/v1alpha3",
         "kind": "Metric",
         "metadata": {
@@ -36,13 +39,13 @@ mr_example = {
             },
             "provider": "prometheus"
         }
-    }
-    }
+    }}
+]
     
 er_example = {
     "spec": {
         "strategy": {
-            "type": "canary"
+            "type": "Canary"
         },
         "versionInfo": {
             "baseline": {

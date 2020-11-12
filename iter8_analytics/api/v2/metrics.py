@@ -18,7 +18,6 @@ import jq
 from iter8_analytics.api.v2.types import AggregatedMetrics, ExperimentResource, \
     MetricResource, Version, AggregatedMetric, VersionMetric
 import iter8_analytics.constants as constants
-from iter8_analytics.api.v2.utils import collect_messages_and_log
 from iter8_analytics.config import env_config
 
 logger = logging.getLogger('iter8_analytics')
@@ -162,14 +161,14 @@ def get_aggregated_metrics(er: ExperimentResource):
         construct_message()
         return iam
 
-    for metric_name, metric_resource in er.spec.metrics.items():
-        iam.data[metric_name] = AggregatedMetric(data = {})
+    for metric_resource in er.spec.metrics:
+        iam.data[metric_resource.name] = AggregatedMetric(data = {})
         for version in versions:
-            iam.data[metric_name].data[version.name] = VersionMetric()
-            val, err = get_metric_value(metric_resource, version, \
+            iam.data[metric_resource.name].data[version.name] = VersionMetric()
+            val, err = get_metric_value(metric_resource.metricObj, version, \
             er.status.startTime)
             if err is None:
-                iam.data[metric_name].data[version.name].value = val
+                iam.data[metric_resource.name].data[version.name].value = val
             else:
                 collect_messages_and_log(str(err))
 
