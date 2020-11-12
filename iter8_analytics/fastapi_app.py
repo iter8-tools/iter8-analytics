@@ -17,10 +17,10 @@ import iter8_analytics.constants as constants
 import iter8_analytics.config as config
 
 # v2 imports
-from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
-    ExperimentResource, AggregatedMetrics, VersionAssessments, \
+from iter8_analytics.api.v2.types import  ExperimentResource, \
+    AggregatedMetrics, VersionAssessments, \
     WinnerAssessment, Weights, Analysis
-from iter8_analytics.api.v2.examples import ermr_example, er_example, er_example_step1, \
+from iter8_analytics.api.v2.examples import er_example, er_example_step1, \
     er_example_step2, er_example_step3
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
      get_weights, get_analytics_results
@@ -52,13 +52,13 @@ def provide_iter8_analytics_health():
 @app.post("/v2/aggregated_metrics", response_model=AggregatedMetrics, \
     response_model_exclude_unset=True)
 def provide_aggregated_metrics(
-    ermr: ExperimentResourceAndMetricResources = Body(..., example=ermr_example)):
+    er: ExperimentResource = Body(..., example=er_example)):
     """
     POST iter8 2.0 experiment resource and metric resources and obtain aggregated metrics.
     \f
-    :body ermr: ExperimentResourceAndMetricResources
+    :body er: ExperimentResource
     """
-    aggregated_metrics = get_aggregated_metrics(ermr)
+    aggregated_metrics = get_aggregated_metrics(er)
     return aggregated_metrics
 
 @app.post("/v2/version_assessments", response_model=VersionAssessments)
@@ -100,13 +100,13 @@ def provide_weights(
 
 @app.post("/v2/analytics_results", response_model=Analysis)
 def provide_analytics_results(
-    ermr: ExperimentResourceAndMetricResources = Body(..., example=ermr_example)):
+    er: ExperimentResource = Body(..., example=er_example)):
     """
     POST iter8 2.0 experiment resource and metric resources and get analytics results.
     \f
     :body er: ExperimentResourceAndMetricResources
     """
-    analytics_results = get_analytics_results(ermr)
+    analytics_results = get_analytics_results(er)
     return analytics_results
 
 def config_logger(log_level="debug"):

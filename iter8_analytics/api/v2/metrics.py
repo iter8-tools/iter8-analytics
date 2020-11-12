@@ -14,8 +14,8 @@ from jsonschema.exceptions import ValidationError
 import jq
 
 # iter8 dependencies
-from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
-    AggregatedMetrics, MetricResource, Version, AggregatedMetric, VersionMetric
+from iter8_analytics.api.v2.types import AggregatedMetrics, ExperimentResource, \
+    MetricResource, Version, AggregatedMetric, VersionMetric
 import iter8_analytics.constants as constants
 from iter8_analytics.config import env_config
 
@@ -133,12 +133,12 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     value, err = unmarshal(response, metric_resource.spec.provider)
     return value, err
 
-def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
+def get_aggregated_metrics(er: ExperimentResource):
     """
     Get aggregated metrics from experiment resource and metric resources.
     """
-    versions = [ermr.experimentResource.spec.versionInfo.baseline]
-    versions += ermr.experimentResource.spec.versionInfo.candidates
+    versions = [er.spec.versionInfo.baseline]
+    versions += er.spec.versionInfo.candidates
 
     messages = []
 
@@ -147,17 +147,17 @@ def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
         logger.error(message)
 
     iam = AggregatedMetrics(data = {})
-
-    for metric_resource in ermr.metricResources:
-        iam.data[metric_resource.metadata.name] = AggregatedMetric(data = {})
+    
+    for metric_name, metric_resource in er.spec.metrics.items():
+        iam.data[metric_name] = AggregatedMetric(data = {})
         for version in versions:
-            iam.data[metric_resource.metadata.name].data[version.name] = VersionMetric()
+            iam.data[metric_name].data[version.name] = VersionMetric()
             val, err = get_metric_value(metric_resource, version, \
-            ermr.experimentResource.status.startTime)
+            er.status.startTime)
             if err is None:
-                iam.data[metric_resource.metadata.name].data[version.name].value = val
+                iam.data[metric_name].data[version.name].value = val
             else:
-                collect_messages_and_log(err.message)
+                collect_messages_and_log(str(err))
     if messages:
         iam.message = "warnings: " + ', '.join(messages)
     else:

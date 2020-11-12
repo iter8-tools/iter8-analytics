@@ -73,21 +73,6 @@ class ExperimentStrategy(BaseModel):
     weights: WeightsConfig = Field(None, \
         description = "weights configuration")
 
-class ExperimentSpec(BaseModel):
-    """
-    Pydantic model for experiment spec subresource
-    """
-    strategy: ExperimentStrategy = Field(..., \
-        description = "experiment strategy")
-    versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
-    criteria: Criteria = Field(None, description = "experiment criteria")
-
-class ObjectMeta(BaseModel):
-    """
-    Pydantic model for k8s object meta
-    """
-    name: str = Field(..., description = "name of the k8s resource")
-
 class MetricSpec(BaseModel):
     """
     Pydantic model for metric spec subresource
@@ -100,8 +85,18 @@ class MetricResource(BaseModel):
     """
     Pydantic model for metric resource
     """
-    metadata: ObjectMeta = Field(..., description = "metrics resource metadata")
     spec: MetricSpec = Field(..., description = "metrics resource spec")
+
+class ExperimentSpec(BaseModel):
+    """
+    Pydantic model for experiment spec subresource
+    """
+    strategy: ExperimentStrategy = Field(..., \
+        description = "experiment strategy")
+    versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
+    criteria: Criteria = Field(None, description = "experiment criteria")
+    metrics: Dict[str, MetricResource] = Field(None, description = "dictionary with \
+        metric names as keys and MetricResource objects as values")
 
 class VersionMetric(BaseModel):
     """
@@ -198,11 +193,4 @@ class ExperimentResource(BaseModel):
     """
     spec: ExperimentSpec = Field(..., description = "experiment spec subresource")
     status: ExperimentStatus = Field(..., description = "experiment status subresource")
-
-class ExperimentResourceAndMetricResources(BaseModel):
-    """
-    Pydantic model that encapsulates experiment resource and a list of metric resources
-    """
-    experimentResource: ExperimentResource = Field(..., description="experiment resource")
-    metricResources: Sequence[MetricResource] = Field(..., \
-        description="a sequence of metric resources")
+    

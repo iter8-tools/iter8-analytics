@@ -6,7 +6,7 @@ import logging
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
-    ExperimentResourceAndMetricResources, VersionAssessments, VersionWeight, \
+    VersionAssessments, VersionWeight, \
     WinnerAssessment, WinnerAssessmentData, Weights, Analysis, Objective, ExperimentType
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 
@@ -117,13 +117,13 @@ def get_weights(experiment_resource: ExperimentResource):
     return Weights(data = [VersionWeight(name = versions[0].name, value = 25), \
         VersionWeight(name = versions[1].name, value = 75)], message = "dummy values")
 
-def get_analytics_results(ermr: ExperimentResourceAndMetricResources):
+def get_analytics_results(er: ExperimentResource):
     """
     Get analysis results using experiment resource and metric resources.
     """
-    exp_res = ermr.experimentResource
+    exp_res = er
     exp_res.status.analysis = Analysis()
-    exp_res.status.analysis.aggregatedMetrics = get_aggregated_metrics(ermr)
+    exp_res.status.analysis.aggregatedMetrics = get_aggregated_metrics(er)
     exp_res.status.analysis.versionAssessments = get_version_assessments(exp_res)
     exp_res.status.analysis.winnerAssessment = get_winner_assessment(exp_res)
     exp_res.status.analysis.weights = get_weights(exp_res)
