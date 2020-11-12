@@ -104,7 +104,7 @@ def provide_analytics_results(
     """
     POST iter8 2.0 experiment resource and metric resources and get analytics results.
     \f
-    :body er: ExperimentResourceAndMetricResources
+    :body er: ExperimentResource
     """
     analytics_results = get_analytics_results(er)
     return analytics_results

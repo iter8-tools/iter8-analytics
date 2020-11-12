@@ -83,7 +83,7 @@ class MetricSpec(BaseModel):
 
 class MetricObject(BaseModel):
     """
-    Pydantic model for metric resource
+    Pydantic model for metricObj subresource
     """
     spec: MetricSpec = Field(..., description = "metrics resource spec")
 
