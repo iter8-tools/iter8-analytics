@@ -52,14 +52,11 @@ def get_version_assessments(experiment_resource: ExperimentResource):
                         version_assessments.data[version.name][ind] = \
                             check_limits(obj, versions_metric_data[version.name].value)
                     else:
-                        collect_messages_and_log(f"Value for \
-                            {obj.metric} metric and {version.name} version is None.")
+                        collect_messages_and_log(f"Value for {obj.metric} metric and {version.name} version is None.")
                 else:
-                    collect_messages_and_log(f"Value for \
-                        {obj.metric} metric and {version.name} version is unavailable.")
+                    collect_messages_and_log(f"Value for {obj.metric} metric and {version.name} version is unavailable.")
         else:
-            collect_messages_and_log(f"Aggregated metric object for {obj.metric} \
-                metric is unavailable.")
+            collect_messages_and_log(f"Aggregated metric object for {obj.metric} metric is unavailable.")
 
     if messages:
         version_assessments.message = "warnings: " + ', '.join(messages)
