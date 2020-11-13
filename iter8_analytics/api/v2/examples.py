@@ -2,11 +2,50 @@
 Examples used in FastAPI/Swagger documentation of iter8 analytics v2 APIs.
 Examples used in tests of iter8 analytics v2 APIs.
 """
-
+mr_example = [{
+    "name": "request-count",
+    "metricObj": {
+        "apiVersion": "core.iter8.tools/v1alpha3",
+        "kind": "Metric",
+        "metadata": {
+            "name": "request-count"
+        },
+        "spec": {
+            "params": {
+                "query": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
+            },
+            "description": "Number of requests",
+            "type": "counter",
+            "provider": "prometheus"
+        }
+    }},
+    {
+    "name":"mean-latency",
+    "metricObj": {
+        "apiVersion": "core.iter8.tools/v1alpha3",
+        "kind": "Metric",
+        "metadata": {
+            "name": "mean-latency"
+        },
+        "spec": {
+            "description": "Mean latency",
+            "units": "milliseconds",
+            "params": {
+                "query": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+            },
+            "type": "gauge",
+            "sample_size": {
+                "name": "request-count"
+            },
+            "provider": "prometheus"
+        }
+    }}
+]
+    
 er_example = {
     "spec": {
         "strategy": {
-            "type": "canary"
+            "type": "Canary"
         },
         "versionInfo": {
             "baseline": {
@@ -29,50 +68,13 @@ er_example = {
                 "metric": "mean-latency",
                 "upperLimit": 420.0
             }]
-        }
+        },
+        "metrics": mr_example
     },
     "status": {
         "startTime": "2020-04-03T12:55:50.568Z"
-    }
-}
-
-mr_example = [{
-    "apiVersion": "core.iter8.tools/v1alpha3",
-    "kind": "Metric",
-    "metadata": {
-        "name": "request-count"
     },
-    "spec": {
-        "params": {
-            "query": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
-        },
-        "description": "Number of requests",
-        "type": "counter",
-        "provider": "prometheus"
-    }
-}, {
-    "apiVersion": "core.iter8.tools/v1alpha3",
-    "kind": "Metric",
-    "metadata": {
-        "name": "mean-latency"
-    },
-    "spec": {
-        "description": "Mean latency",
-        "units": "milliseconds",
-        "params": {
-            "query": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
-        },
-        "type": "gauge",
-        "sample_size": {
-            "name": "request-count"
-        },
-        "provider": "prometheus"
-    }
-}]
-
-ermr_example = {
-    'experimentResource': er_example,
-    'metricResources': mr_example
+    
 }
 
 am_response = {
@@ -129,11 +131,6 @@ er_example_step1 = {
             "aggregatedMetrics": am_response
         }
     }
-}
-
-ermr_example_step1 = {
-    'experimentResource': er_example_step1,
-    'metricResources': mr_example
 }
 
 er_example_step2 = {

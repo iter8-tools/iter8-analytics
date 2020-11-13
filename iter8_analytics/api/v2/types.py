@@ -41,17 +41,17 @@ class ExperimentType(str, Enum):
     """
     Experiment types
     """
-    canary = "canary"
+    canary = "Canary"
     ab = "A/B"
-    performance = "performance"
+    performance = "Performance"
     bluegreen = "BlueGreen"
 
 class WeightAlgorithm(str, Enum):
     """
     Algorithm types
     """
-    progressive = "progressive"
-    fixed = "fixed-split"
+    progressive = "Progressive"
+    fixed = "FixedSplit"
 
 class WeightsConfig(BaseModel):
     """
@@ -73,21 +73,6 @@ class ExperimentStrategy(BaseModel):
     weights: WeightsConfig = Field(None, \
         description = "weights configuration")
 
-class ExperimentSpec(BaseModel):
-    """
-    Pydantic model for experiment spec subresource
-    """
-    strategy: ExperimentStrategy = Field(..., \
-        description = "experiment strategy")
-    versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
-    criteria: Criteria = Field(None, description = "experiment criteria")
-
-class ObjectMeta(BaseModel):
-    """
-    Pydantic model for k8s object meta
-    """
-    name: str = Field(..., description = "name of the k8s resource")
-
 class MetricSpec(BaseModel):
     """
     Pydantic model for metric spec subresource
@@ -96,12 +81,30 @@ class MetricSpec(BaseModel):
         as part of the REST query for this metric")
     provider: str = Field(..., description = "identifier for the metrics backend")
 
+class MetricObject(BaseModel):
+    """
+    Pydantic model for metricObj subresource
+    """
+    spec: MetricSpec = Field(..., description = "metrics resource spec")
+
+
 class MetricResource(BaseModel):
     """
     Pydantic model for metric resource
     """
-    metadata: ObjectMeta = Field(..., description = "metrics resource metadata")
-    spec: MetricSpec = Field(..., description = "metrics resource spec")
+    name: str = Field(..., description= "name of the metric")
+    metricObj: MetricObject = Field(..., description = "metric obj resource")
+    
+class ExperimentSpec(BaseModel):
+    """
+    Pydantic model for experiment spec subresource
+    """
+    strategy: ExperimentStrategy = Field(..., \
+        description = "experiment strategy")
+    versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
+    criteria: Criteria = Field(None, description = "experiment criteria")
+    metrics: Sequence[MetricResource] = Field(None, description = "Sequence of \
+        MetricResource objects")
 
 class VersionMetric(BaseModel):
     """
@@ -198,11 +201,4 @@ class ExperimentResource(BaseModel):
     """
     spec: ExperimentSpec = Field(..., description = "experiment spec subresource")
     status: ExperimentStatus = Field(..., description = "experiment status subresource")
-
-class ExperimentResourceAndMetricResources(BaseModel):
-    """
-    Pydantic model that encapsulates experiment resource and a list of metric resources
-    """
-    experimentResource: ExperimentResource = Field(..., description="experiment resource")
-    metricResources: Sequence[MetricResource] = Field(..., \
-        description="a sequence of metric resources")
+    

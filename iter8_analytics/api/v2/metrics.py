@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import logging
 from string import Template
 import numbers
+import numpy as np
 
 # external module dependencies
 import requests
@@ -14,8 +15,8 @@ from jsonschema.exceptions import ValidationError
 import jq
 
 # iter8 dependencies
-from iter8_analytics.api.v2.types import ExperimentResourceAndMetricResources, \
-    AggregatedMetrics, MetricResource, Version, AggregatedMetric, VersionMetric
+from iter8_analytics.api.v2.types import AggregatedMetrics, ExperimentResource, \
+    MetricResource, Version, AggregatedMetric, VersionMetric
 import iter8_analytics.constants as constants
 from iter8_analytics.config import env_config
 
@@ -102,7 +103,7 @@ def unmarshal(response, provider):
         logger.info(f"Validated response: {response}")
         try:
             num = jq.compile(".data.result[0].value[1] | tonumber").input(response).first()
-            if isinstance(num, numbers.Number):
+            if isinstance(num, numbers.Number) and not np.isnan(num):
                 return num, None
             return None, ValueError("Metrics response did not yield a number")
         except Exception as err:
@@ -133,12 +134,12 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     value, err = unmarshal(response, metric_resource.spec.provider)
     return value, err
 
-def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
+def get_aggregated_metrics(er: ExperimentResource):
     """
     Get aggregated metrics from experiment resource and metric resources.
     """
-    versions = [ermr.experimentResource.spec.versionInfo.baseline]
-    versions += ermr.experimentResource.spec.versionInfo.candidates
+    versions = [er.spec.versionInfo.baseline]
+    versions += er.spec.versionInfo.candidates
 
     messages = []
 
@@ -148,19 +149,31 @@ def get_aggregated_metrics(ermr: ExperimentResourceAndMetricResources):
 
     iam = AggregatedMetrics(data = {})
 
-    for metric_resource in ermr.metricResources:
-        iam.data[metric_resource.metadata.name] = AggregatedMetric(data = {})
+    def construct_message():
+        if messages:
+            iam.message = "warnings: " + ', '.join(messages)
+        else:
+            iam.message = "all ok"
+
+    #check if start time is greater than now
+    if er.status.startTime > (datetime.now(timezone.utc)):
+        messages.append("Invalid startTime: greater than current time")
+        construct_message()
+        return iam
+
+    for metric_resource in er.spec.metrics:
+        iam.data[metric_resource.name] = AggregatedMetric(data = {})
         for version in versions:
-            iam.data[metric_resource.metadata.name].data[version.name] = VersionMetric()
-            val, err = get_metric_value(metric_resource, version, \
-            ermr.experimentResource.status.startTime)
+            iam.data[metric_resource.name].data[version.name] = VersionMetric()
+            val, err = get_metric_value(metric_resource.metricObj, version, \
+            er.status.startTime)
             if err is None:
-                iam.data[metric_resource.metadata.name].data[version.name].value = val
+                iam.data[metric_resource.name].data[version.name].value = val
             else:
-                collect_messages_and_log(err.message)
-    if messages:
-        iam.message = "warnings: " + ', '.join(messages)
-    else:
-        iam.message = "all ok"
+                collect_messages_and_log(str(err))
+
+    #construct a message string for all metric resources
+    construct_message()
+
     logger.info(iam)
     return iam
