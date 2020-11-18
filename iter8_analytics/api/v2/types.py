@@ -2,12 +2,18 @@
 Module containing pydantic data models for iter8 v2
 """
 # core python dependencies
-from typing import Sequence, Dict
+from typing import Sequence, Dict, Union
 from datetime import datetime
 from enum import Enum
+from decimal import Decimal
 
 # external module dependencies
 from pydantic import BaseModel, Field, conlist
+
+# iter8 dependencies
+from iter8_analytics.api.utils import convert_to_float, convert_to_quantity
+
+PolymorphicQuantity = Union[int, str, float]
 
 class Version(BaseModel):
     """
@@ -23,19 +29,67 @@ class VersionInfo(BaseModel):
     baseline: Version = Field(..., description = "baseline version")
     candidates: Sequence[Version] = Field(None, description = "a list of candidate versions")
 
+class PreferredDirection(str, Enum):
+    """
+    Preferred directions for a metric
+    """
+    high = "High"
+    low = "Low"
+
+class Reward(BaseModel):
+    """
+    Pydantic model for reward metric
+    """
+    metric: str = Field(..., description = "name of the reward metric", min_length = 1)
+    preferredDirection: PreferredDirection = Field(..., \
+        description = "preferred direction for this metric")
+
 class Objective(BaseModel):
     """
     Pydantic model for experiment objective
     """
     metric: str = Field(..., description = "metric name")
-    upperLimit: float = Field(None, description = "upper limit for the metric")
-    lowerLimit: float = Field(None, description = "lower limit for the metric")
+    upperLimit: PolymorphicQuantity = Field(None, description = "upper limit for the metric")
+    lowerLimit: PolymorphicQuantity = Field(None, description = "lower limit for the metric")
+
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on upper and lower limits
+        """
+        self.upperLimit = convert_to_float(self.upperLimit)
+        self.lowerLimit = convert_to_float(self.lowerLimit)
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantity on upper and lower limits
+        """
+        self.upperLimit = convert_to_quantity(self.upperLimit)
+        self.lowerLimit = convert_to_quantity(self.lowerLimit)
+        return self
 
 class Criteria(BaseModel):
     """
     Pydantic model for Criteria field in experiment spec
     """
+    reward: Reward = Field(None, description = "reward metric")
     objectives: Sequence[Objective] = Field(None, description = "sequence of objectives")
+
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on objectives
+        """
+        if self.objectives is not None:
+            self.objectives = [obj.convert_to_float() for obj in self.objectives]
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on objectives
+        """
+        if self.objectives is not None:
+            self.objectives = [obj.convert_to_quantity() for obj in self.objectives]
+        return self
 
 class ExperimentType(str, Enum):
     """
@@ -43,6 +97,7 @@ class ExperimentType(str, Enum):
     """
     canary = "Canary"
     ab = "A/B"
+    abn = "A/B/N"
     performance = "Performance"
     bluegreen = "BlueGreen"
 
@@ -106,28 +161,84 @@ class ExperimentSpec(BaseModel):
     metrics: Sequence[MetricResource] = Field(None, description = "Sequence of \
         MetricResource objects")
 
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on criteria
+        """
+        if self.criteria is not None:
+            self.criteria = self.criteria.convert_to_float()
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on criteria
+        """
+        if self.criteria is not None:
+            self.criteria = self.criteria.convert_to_quantity()
+        return self
+
 class VersionMetric(BaseModel):
     """
     Pydantic model for a version metric object
     """
-    max: float = Field(None, description = "maximum observed value \
+    max: PolymorphicQuantity = Field(None, description = "maximum observed value \
         for this metric for this version")
-    min: float = Field(None, description = "minimum observed value \
+    min: PolymorphicQuantity = Field(None, description = "minimum observed value \
         for this metric for this version")
-    value: float = Field(None, description = "last observed value \
+    value: PolymorphicQuantity = Field(None, description = "last observed value \
         for this metric for this version")
-    sample_size: float = Field(None, description = "last observed value \
+    sample_size: PolymorphicQuantity = Field(None, description = "last observed value \
         for the sample_size metric for this version; this is none if sample_size is not specified")
+
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on all fields
+        """
+        self.max = convert_to_float(self.max)
+        self.min = convert_to_float(self.min)
+        self.value = convert_to_float(self.value)
+        self.sample_size = convert_to_float(self.sample_size)
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on all fields
+        """
+        self.max = convert_to_quantity(self.max)
+        self.min = convert_to_quantity(self.min)
+        self.value = convert_to_quantity(self.value)
+        self.sample_size = convert_to_quantity(self.sample_size)
+        return self
 
 class AggregatedMetric(BaseModel):
     """
     Pydantic model for an aggregated metric object
     """
-    max: float = Field(None, description = "maximum observed value for this metric")
-    min: float = Field(None, description = "minimum observed value for this metric")
+    max: PolymorphicQuantity = Field(None, description = "maximum observed value for this metric")
+    min: PolymorphicQuantity = Field(None, description = "minimum observed value for this metric")
     # min_items == 1 since at least one version (baseline) will be present
     data: Dict[str, VersionMetric] = Field(..., \
         description = "dictionary with version names as keys and VersionMetric objects as values")
+
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on min, max, and each version metric
+        """
+        self.max = convert_to_float(self.max)
+        self.min = convert_to_float(self.min)
+        for key, value in self.data.items():
+            self.data[key] = value.convert_to_float()
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on min, max, and each version metric
+        """
+        self.max = convert_to_quantity(self.max)
+        self.min = convert_to_quantity(self.min)
+        for key, value in self.data.items():
+            self.data[key] = value.convert_to_quantity()
+        return self
 
 class AggregatedMetrics(BaseModel):
     """
@@ -136,6 +247,22 @@ class AggregatedMetrics(BaseModel):
     data: Dict[str, AggregatedMetric] = Field(..., \
     description = "dictionary with metric names as keys and AggregatedMetric objects as values")
     message: str = Field(None, description = "human-readable description of aggregated metrics")
+
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on each aggregated metric
+        """
+        for key, value in self.data.items():
+            self.data[key] = value.convert_to_float()
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on each aggregated metric
+        """
+        for key, value in self.data.items():
+            self.data[key] = value.convert_to_quantity()
+        return self
 
 class VersionAssessments(BaseModel):
     """
@@ -151,6 +278,7 @@ class WinnerAssessmentData(BaseModel):
     """
     winnerFound: bool = Field(False, description = "boolean value indicating if winner is found")
     winner: str = Field(None, description = "winning version; None if winner not found")
+    bestVersions: Sequence[str] = Field([], description = "this field is populated when there is no unique winner but multiple best versions")
 
 class WinnerAssessment(BaseModel):
     """
@@ -165,7 +293,7 @@ class VersionWeight(BaseModel):
     Pydantic model for version weight
     """
     name: str = Field(..., description = "version name")
-    value: float = Field(..., description = "weight for a version", ge = 0.0)
+    value: int = Field(..., description = "weight for a version", ge = 0)
 
 class Weights(BaseModel):
     """
@@ -188,6 +316,22 @@ class Analysis(BaseModel):
         description = "winner assessment")
     weights: Weights = Field(None, description = "weight recommendations")
 
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on aggregatedMetric
+        """
+        if self.aggregatedMetrics is not None:
+            self.aggregatedMetrics = self.aggregatedMetrics.convert_to_float()
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on aggregatedMetric
+        """
+        if self.aggregatedMetrics is not None:
+            self.aggregatedMetrics = self.aggregatedMetrics.convert_to_quantity()
+        return self
+
 class ExperimentStatus(BaseModel):
     """
     Pydantic model for experiment status subresource
@@ -195,10 +339,41 @@ class ExperimentStatus(BaseModel):
     startTime: datetime = Field(..., description = "starttime of the experiment")
     analysis: Analysis = Field(None, description = "currently available analysis")
 
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on spec and status
+        """
+        if self.analysis is not None:
+            self.analysis = self.analysis.convert_to_float()
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on spec and status
+        """
+        if self.analysis is not None:
+            self.analysis = self.analysis.convert_to_quantity()
+        return self
+
 class ExperimentResource(BaseModel):
     """
     Pydantic model for experiment resource
     """
     spec: ExperimentSpec = Field(..., description = "experiment spec subresource")
     status: ExperimentStatus = Field(..., description = "experiment status subresource")
-    
+
+    def convert_to_float(self):
+        """
+        Apply convert_to_float on spec and status
+        """
+        self.spec = self.spec.convert_to_float()
+        self.status = self.status.convert_to_float()
+        return self
+
+    def convert_to_quantity(self):
+        """
+        Apply convert_to_quantiy on spec and status
+        """
+        self.spec = self.spec.convert_to_quantity()
+        self.status = self.status.convert_to_quantity()
+        return self
