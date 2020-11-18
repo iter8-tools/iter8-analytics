@@ -19,6 +19,7 @@ from iter8_analytics.api.v2.types import AggregatedMetrics, ExperimentResource, 
     MetricResource, Version, AggregatedMetric, VersionMetric
 import iter8_analytics.constants as constants
 from iter8_analytics.config import env_config
+from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
 
@@ -28,6 +29,7 @@ def get_metrics_url_template(metric_resource):
     """
     assert metric_resource.spec.provider == "prometheus"
     prometheus_url_template = env_config[constants.METRICS_BACKEND_CONFIG_URL]
+    logger.info("Prometheus url template: %s", prometheus_url_template)
     return prometheus_url_template + "/api/v1/query"
 
 def extrapolate(template: str, version: Version, start_time: datetime):
@@ -127,8 +129,9 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     # params now: {"query": "your prometheus query"}
     (value, err) = (None, None)
     try:
-        response = requests.get(url, params=params).json()
-    except Exception as exp:
+        logger.info("Invoking requests get with url %s and params: %s", url, params)
+        response = requests.get(url, params=params, timeout=2.0).json()
+    except requests.exceptions.RequestException as exp:
         logger.error("Error while attempting to connect to metrics backend")
         return value, exp
     value, err = unmarshal(response, metric_resource.spec.provider)
@@ -143,22 +146,12 @@ def get_aggregated_metrics(er: ExperimentResource):
 
     messages = []
 
-    def collect_messages_and_log(message: str):
-        messages.append(message)
-        logger.error(message)
-
     iam = AggregatedMetrics(data = {})
-
-    def construct_message():
-        if messages:
-            iam.message = "warnings: " + ', '.join(messages)
-        else:
-            iam.message = "all ok"
 
     #check if start time is greater than now
     if er.status.startTime > (datetime.now(timezone.utc)):
-        messages.append("Invalid startTime: greater than current time")
-        construct_message()
+        messages.append(Message(MessageLevel.error, "Invalid startTime: greater than current time"))
+        iam.message = Message.join_messages(messages)
         return iam
 
     for metric_resource in er.spec.metrics:
@@ -170,10 +163,8 @@ def get_aggregated_metrics(er: ExperimentResource):
             if err is None:
                 iam.data[metric_resource.name].data[version.name].value = val
             else:
-                collect_messages_and_log(str(err))
+                messages.append(Message(MessageLevel.error, "Error connecting to metrics backend"))
 
-    #construct a message string for all metric resources
-    construct_message()
-
+    iam.message = Message.join_messages(messages)
     logger.info(iam)
     return iam

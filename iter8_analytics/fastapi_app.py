@@ -26,6 +26,8 @@ from iter8_analytics.api.v2.experiment import get_version_assessments, get_winne
      get_weights, get_analytics_results
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 
+logger = logging.getLogger('iter8_analytics')
+
 # main FastAPI app
 app = FastAPI()
 
@@ -58,8 +60,7 @@ def provide_aggregated_metrics(
     \f
     :body er: ExperimentResource
     """
-    aggregated_metrics = get_aggregated_metrics(er)
-    return aggregated_metrics
+    return get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
 
 @app.post("/v2/version_assessments", response_model=VersionAssessments)
 def provide_version_assessments(
@@ -70,8 +71,7 @@ def provide_version_assessments(
     \f
     :body er: ExperimentResource
     """
-    version_assessments = get_version_assessments(experiment_resource)
-    return version_assessments
+    return get_version_assessments(experiment_resource.convert_to_float())
 
 @app.post("/v2/winner_assessment", response_model=WinnerAssessment)
 def provide_winner_assessment(
@@ -82,8 +82,8 @@ def provide_winner_assessment(
     \f
     :body er: ExperimentResource
     """
-    winner_assessment = get_winner_assessment(experiment_resource)
-    return winner_assessment
+    
+    return get_winner_assessment(experiment_resource.convert_to_float())
 
 @app.post("/v2/weights", response_model=Weights)
 def provide_weights(
@@ -95,8 +95,7 @@ def provide_weights(
     \f
     :body er: ExperimentResource
     """
-    weights = get_weights(experiment_resource)
-    return weights
+    return get_weights(experiment_resource.convert_to_float())
 
 @app.post("/v2/analytics_results", response_model=Analysis)
 def provide_analytics_results(
@@ -106,8 +105,7 @@ def provide_analytics_results(
     \f
     :body er: ExperimentResource
     """
-    analytics_results = get_analytics_results(er)
-    return analytics_results
+    return get_analytics_results(er.convert_to_float()).convert_to_quantity()
 
 def config_logger(log_level="debug"):
     """Configures the global logger
