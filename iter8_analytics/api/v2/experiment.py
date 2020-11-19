@@ -4,6 +4,7 @@
 # core python dependencies
 import logging
 import math
+import pprint
 
 # external dependencies
 import numpy as np
@@ -66,6 +67,7 @@ def get_version_assessments(experiment_resource: ExperimentResource):
                 f"Aggregated metric object for {obj.metric} metric is unavailable."))
 
     version_assessments.message = Message.join_messages(messages)
+    logger.debug("version assessments: %s", pprint.PrettyPrinter().pformat(version_assessments))
     return version_assessments
 
 def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
@@ -280,6 +282,9 @@ def get_weights(experiment_resource: ExperimentResource):
             old_weights = list(map(lambda x: x.value, \
                 experiment_resource.status.currentWeightDistribution))
 
+        logger.debug("Old weights: %s", old_weights)
+        logger.debug("Input weights: %s", input_weights)
+
         constrained_weights = input_weights.copy()
         if experiment_resource.spec.strategy.weights is not None:
             for i in range(len(versions)):
@@ -294,6 +299,8 @@ def get_weights(experiment_resource: ExperimentResource):
                 # cap candidate weight and add the excess to baseline
                 constrained_weights[i] -= excess
                 constrained_weights[0] += excess
+
+        logger.debug("Constrained weights: %s", constrained_weights)
 
         return constrained_weights
 
@@ -316,21 +323,21 @@ def get_weights(experiment_resource: ExperimentResource):
     constrained_weights = get_constrained_weights(mix_weights)
 
     # perform rounding of weights, so that they sum up to 100
-    integral_weights = gen_round(mix_weights, 100)
+    integral_weights = gen_round(constrained_weights, 100)
     data = []
     for version in versions:
         data.append(VersionWeight(name = version.name, value = next(integral_weights)))
     _weights = Weights(data = data)
     _weights.message = Message.join_messages([Message(MessageLevel.info, "all ok")])
+    logger.debug("weights: %s", pprint.PrettyPrinter().pformat(_weights))
     return _weights
 
-def get_analytics_results(er: ExperimentResource):
+def get_analytics_results(exp_res: ExperimentResource):
     """
     Get analysis results using experiment resource and metric resources.
     """
-    exp_res = er
     exp_res.status.analysis = Analysis()
-    exp_res.status.analysis.aggregatedMetrics = get_aggregated_metrics(er)
+    exp_res.status.analysis.aggregatedMetrics = get_aggregated_metrics(exp_res)
     exp_res.status.analysis.versionAssessments = get_version_assessments(exp_res)
     exp_res.status.analysis.winnerAssessment = get_winner_assessment(exp_res)
     exp_res.status.analysis.weights = get_weights(exp_res)
