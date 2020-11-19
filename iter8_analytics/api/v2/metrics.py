@@ -6,12 +6,13 @@ from datetime import datetime, timezone
 import logging
 from string import Template
 import numbers
-import numpy as np
+import pprint
 
 # external module dependencies
 import requests
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
+import numpy as np
 import jq
 
 # iter8 dependencies
@@ -29,7 +30,7 @@ def get_metrics_url_template(metric_resource):
     """
     assert metric_resource.spec.provider == "prometheus"
     prometheus_url_template = env_config[constants.METRICS_BACKEND_CONFIG_URL]
-    logger.info("Prometheus url template: %s", prometheus_url_template)
+    logger.debug("Prometheus url template: %s", prometheus_url_template)
     return prometheus_url_template + "/api/v1/query"
 
 def extrapolate(template: str, version: Version, start_time: datetime):
@@ -103,7 +104,7 @@ def unmarshal(response, provider):
     }
     try:
         validate(instance = response, schema = schema)
-        logger.info(f"Validated response: {response}")
+        logger.debug("Validated response: %s", pprint.PrettyPrinter().pformat(response))
         try:
             num = jq.compile(".data.result[0].value[1] | tonumber").input(response).first()
             if isinstance(num, numbers.Number) and not np.isnan(num):
@@ -130,7 +131,8 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     # params now: {"query": "your prometheus query"}
     (value, err) = (None, None)
     try:
-        logger.info("Invoking requests get with url %s and params: %s", url, params)
+        logger.debug("Invoking requests get with url %s and params: %s", \
+            url, pprint.PrettyPrinter().pformat(params))
         response = requests.get(url, params=params, timeout=2.0).json()
     except requests.exceptions.RequestException as exp:
         logger.error("Error while attempting to connect to metrics backend")
@@ -167,5 +169,5 @@ def get_aggregated_metrics(er: ExperimentResource):
                 messages.append(Message(MessageLevel.error, "Error connecting to metrics backend"))
 
     iam.message = Message.join_messages(messages)
-    logger.info(iam)
+    logger.debug(pprint.PrettyPrinter().pformat(iam))
     return iam
