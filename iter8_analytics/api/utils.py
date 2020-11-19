@@ -6,8 +6,6 @@ Module containing utilities used by iter8
 import math
 from random import random
 from enum import Enum
-from typing import Sequence
-from decimal import Decimal
 import logging
 
 # external dependencies
@@ -35,9 +33,9 @@ def convert_to_quantity(value):
         return None
 
     if isinstance(value, int):
-        return int
+        return value
 
-    return str(Decimal(value))
+    return str(value)
 
 def gen_round(weights, total):
     """Given float weights, round them to int weights so that they sum up to a given value.
