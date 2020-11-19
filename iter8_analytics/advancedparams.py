@@ -3,7 +3,7 @@
 class AdvancedParameters:
     """Globally defined constants for experiment"""
     # 5% of traffic always used for exploration
-    exploration_traffic_percentage = 5.0
+    exploration_traffic_percentage = 10.0
     posterior_probability_for_credible_intervals = 0.95
     # no winner until iter8 is 99% confident
     min_posterior_probability_for_winner = 0.99

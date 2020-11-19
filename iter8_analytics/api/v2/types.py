@@ -278,7 +278,7 @@ class WinnerAssessmentData(BaseModel):
     """
     winnerFound: bool = Field(False, description = "boolean value indicating if winner is found")
     winner: str = Field(None, description = "winning version; None if winner not found")
-    bestVersions: Sequence[str] = Field([], description = "this field is populated when there is no unique winner but multiple best versions")
+    bestVersions: Sequence[str] = Field([], description = "the list of best versions found; if this list is a singleton, then winnerFound = true and winner is the only element of the list")
 
 class WinnerAssessment(BaseModel):
     """
@@ -338,6 +338,8 @@ class ExperimentStatus(BaseModel):
     """
     startTime: datetime = Field(..., description = "starttime of the experiment")
     analysis: Analysis = Field(None, description = "currently available analysis")
+    currentWeightDistribution: Sequence[VersionWeight] = Field(None, \
+        description = "current weight distribution for versions")
 
     def convert_to_float(self):
         """

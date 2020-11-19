@@ -16,6 +16,7 @@ from iter8_analytics.api.v2.types import ExperimentResource, \
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 from iter8_analytics.api.utils import gen_round
 from iter8_analytics.api.utils import Message, MessageLevel
+from iter8_analytics.advancedparams import AdvancedParameters
 
 logger = logging.getLogger('iter8_analytics')
 
@@ -83,11 +84,13 @@ def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
     fvn = list(map(lambda version: version.name, feasible_versions))
 
     if versions[1].name in fvn:
-        was.data = WinnerAssessmentData(winnerFound = True, winner = versions[1].name)
+        was.data = WinnerAssessmentData(winnerFound = True, winner = versions[1].name, \
+            bestVersions = [versions[1].name])
         was.message = Message.join_messages([Message(MessageLevel.info, \
             "candidate satisfies all objectives")])
     elif versions[0].name in fvn:
-        was.data = WinnerAssessmentData(winnerFound = True, winner = versions[0].name)
+        was.data = WinnerAssessmentData(winnerFound = True, winner = versions[0].name, \
+            bestVersions = [versions[0].name])
         was.message = Message.join_messages([Message(MessageLevel.info, \
             "baseline satisfies all objectives; candidate does not")])
     return was
@@ -126,7 +129,6 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
             return (first > second), None
         return (first < second), None
 
-
     aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
     if experiment_resource.spec.criteria.reward is not None:
         reward_metric = experiment_resource.spec.criteria.reward.metric
@@ -162,9 +164,8 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
                         messages.append(Message(MessageLevel.warning, \
                             f"reward value for feasible version {fver} is not available"))
                 else: # found a feasible version without reward value
-                    message = f"reward value for feasible version {fver} is not available"
-                    logger.warning(message)
-                    messages.append(message)
+                    messages.append(Message(MessageLevel.warning, \
+                        f"reward value for feasible version {fver} is not available"))
 
             was.data.bestVersions = best_versions
 
@@ -209,7 +210,7 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
 
 def get_weights(experiment_resource: ExperimentResource):
     """
-    Get weights using experiment resource.
+    Get weights using experiment resource. All weight values in the output will be integers.
     """
     if experiment_resource.spec.strategy.type == ExperimentType.performance:
         return Weights(data = [], \
@@ -218,16 +219,102 @@ def get_weights(experiment_resource: ExperimentResource):
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
 
-    # note: all weight fields in yamls need to be integers
+    messages = []
 
     # create exploration weights; in fraction
+    # if there are three versions:
+    #   exploration_weights = [1/3, 1/3, 1/3]
     exploration_weights = np.full((len(versions), ), 1.0 / len(versions))
-    # create exploitation weights; in fraction
+
+    def get_exploitation_weights():
+        """Create exploitation weights; in fraction
+        if there are three versions:
+          if there are no best versions:
+              exploitation_weights = [1.0, 0, 0], i.e., baseline gets to be exploited
+          if there is a single best version, say, the 2nd version:
+              exploitation_weights = [0, 1.0, 0], i.e., the best version gets exploited
+          if there are two best versions, say, the 2nd and 3rd versions:
+              exploitation_weights = [0, 0.5, 0.5], i.e., best versions get exploited evenly
+        """
+        exploitation_weights = np.full((len(versions), ), 0)
+        exploitation_weights[0] = 1.0
+        try:
+            bvs = experiment_resource.status.analysis.winnerAssessment.data.bestVersions
+            assert len(bvs) > 0
+            messages.append(Message(MessageLevel.info, "found best version(s)"))
+            for i, version in enumerate(versions):
+                if version.name in bvs:
+                    exploitation_weights[i] = 1/len(bvs)
+                else:
+                    exploitation_weights[0] = 0.0
+        except (KeyError, AssertionError):
+            messages.append(Message(MessageLevel.info, "no best version(s) found"))
+        return exploitation_weights
+
+    exploitation_weights = get_exploitation_weights()
+
+    def get_constrained_weights(input_weights):
+        """
+        Take input weights in percentage. 
+        Apply weight constraints and return modified weights.
+
+        Example illustrating the inner workings of this function:
+            old_weights = [20, 40, 40]
+            input_weights = [20, 30, 50]
+            maxCandidateWeightIncrement = 10
+            maxCandidateWeight = 40
+            after i = 0, constrained_weights = [20, 30, 50]
+            during i = 1
+                increase = -10
+                excess = max(0, -10 - 10, 30 - 40) = max(0, -20, -10) = 0
+            after i = 1, constrained_weights = [20, 30, 50]
+            during i = 2
+                increase = 10
+                excess = max(0, 10 - 10, 50 - 40) = 10
+            after i = 2, constrained_weights = [30, 30, 40]
+        """
+        # Suppose there are 3 versions. old_weights initialized to [100, 0, 0]
+        old_weights = [100] + ([0]*(len(versions) - 1))
+        # and then, old_weights are updated to currentWeightDistribution, e.g., [5, 25, 70]
+        if experiment_resource.status.currentWeightDistribution is not None:
+            old_weights = list(map(lambda x: x.value, \
+                experiment_resource.status.currentWeightDistribution))
+
+        constrained_weights = input_weights.copy()
+        if experiment_resource.spec.strategy.weights is not None:
+            for i in range(len(versions)):
+                if i == 0:
+                    continue
+                # for each candidate, compute excess
+                increase = input_weights[i] - old_weights[i]
+                excess = max(0, \
+                    increase - \
+                    experiment_resource.spec.strategy.weights.maxCandidateWeightIncrement, \
+                    input_weights[i] - experiment_resource.spec.strategy.weights.maxCandidateWeight)
+                # cap candidate weight and add the excess to baseline
+                constrained_weights[i] -= excess
+                constrained_weights[0] += excess
+
+        return constrained_weights
+
     # create mix-weight: in fraction
-    mix_weights = exploration_weights
+    ewf = AdvancedParameters.exploration_traffic_percentage / 100.0
+    # Suppose, ewf = 0.1 (i.e., exploration_traffic_percentage = 10%)
+    # Let exploration_weights = [1/3, 1/3, 1/3]
+    # Let exploitation_weights = [0, 0.5, 0.5]
+    # Then, mix_weights = 0.1 * exploration_weights + 0.9 * exploitation_weights
+    #                   = 0.1 * [1/3, 1/3, 1/3] + 0.9 * [0, 0.5, 0.5]
+    #                   = [0.033333, 0.033333, 0.033333] + [0.0, 0.45, 0.45]
+    #                   = [0.033333, 0.483333, 0.483333]
+    mix_weights = (exploration_weights * ewf) + (exploitation_weights * (1 - ewf))
+
     # create mix-weight: in percent
+    # in the above example, we have mix_weights (in percent) = [3.3333, 48.3333, 48.3333]
     mix_weights *= 100.0
-    # apply weight constraints; max candidate and max iteration constraints
+
+    # apply weight constraints
+    constrained_weights = get_constrained_weights(mix_weights)
+
     # perform rounding of weights, so that they sum up to 100
     integral_weights = gen_round(mix_weights, 100)
     data = []
