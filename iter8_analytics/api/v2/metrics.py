@@ -166,7 +166,7 @@ def get_aggregated_metrics(er: ExperimentResource):
             if err is None:
                 iam.data[metric_resource.name].data[version.name].value = val
             else:
-                messages.append(Message(MessageLevel.error, "Error connecting to metrics backend"))
+                messages.append(Message(MessageLevel.error, f"Error from metrics backend for {metric_resource.name} and version {version.name"))
 
     iam.message = Message.join_messages(messages)
     logger.debug(pprint.PrettyPrinter().pformat(iam))
