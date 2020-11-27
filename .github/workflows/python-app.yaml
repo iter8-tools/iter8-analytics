@@ -36,10 +36,10 @@ jobs:
         pip install -r requirements.txt
         pip install -r test-requirements.txt
         pip install -e .
-    - name: Lint with pylint
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        pylint iter8_analytics --reports=y
+    # - name: Lint with pylint
+    #   run: |
+    #     # stop the build if there are Python syntax errors or undefined names
+    #     pylint iter8_analytics --reports=y
     - name: Test with pytest
       run: |
         pytest
