@@ -1,13 +1,27 @@
-FROM iter8/iter8-analytics-base:latest
+FROM python:3.9-slim AS builder
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends build-essential gcc
 
-ENV PYTHONPATH=/
+RUN python -m venv /opt/venv
+# Make sure we use the virtualenv:
+ENV PATH="/opt/venv/bin:$PATH"
 
-WORKDIR ${PYTHONPATH}
+RUN mkdir /iter8-analytics
+WORKDIR /iter8-analytics
 
 COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY setup.py .
+COPY iter8_analytics/ ./iter8_analytics/
+RUN pip install -e .
 
-COPY iter8_analytics /iter8_analytics
+FROM python:3.9-slim AS build-image
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /iter8-analytics /iter8-analytics
 
-CMD [ "python", "iter8_analytics/fastapi_app.py"]
+WORKDIR /iter8-analytics/iter8_analytics
+
+# Make sure we use the virtualenv:
+ENV PATH="/opt/venv/bin:$PATH"
+CMD ["python", "fastapi_app.py"]
