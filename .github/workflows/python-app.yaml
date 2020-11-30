@@ -72,7 +72,7 @@ jobs:
           # Strip "v" prefix from tagref
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
             env.VERSION=$(echo $tarref | sed -e 's/^v//')
-          else if [[ "${{ github.ref }}" == *"master" ]]; then
+          elif [[ "${{ github.ref }}" == *"master" ]]; then
             env.VERSION=latest
           fi
 
