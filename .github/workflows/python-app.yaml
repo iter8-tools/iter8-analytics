@@ -71,11 +71,11 @@ jobs:
           tarref=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           # Strip "v" prefix from tagref
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            env.VERSION=$(echo $tarref | sed -e 's/^v//')
+            echo "VERSION=$(echo $tarref | sed -e 's/^v//')" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == *"master" ]]; then
-            env.VERSION=latest
+            echo "VERSION=latest" >> $GITHUB_ENV
           fi
-
+          
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
