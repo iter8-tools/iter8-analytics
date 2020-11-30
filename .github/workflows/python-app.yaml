@@ -40,9 +40,8 @@ jobs:
     #   run: |
     #     # stop the build if there are Python syntax errors or undefined names
     #     pylint iter8_analytics --reports=y
-    - name: Test with pytest
-      run: |
-        pytest
+    - name: Test
+      run: make test
 
 # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
