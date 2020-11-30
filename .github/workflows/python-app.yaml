@@ -44,7 +44,7 @@ jobs:
   # See also https://docs.docker.com/docker-hub/builds/
   build-and-push:
     # Ensure test job passes before pushing image.
-    needs: build-and-test
+    # needs: build-and-test
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -70,9 +70,12 @@ jobs:
         run: |
           tarref=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           # Strip "v" prefix from tagref
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && env.VERSION=$(echo $tarref | sed -e 's/^v//')
-          # Use Docker `latest` tag convention
-          [[ "${{ github.ref }}" == *"master" ]] && env.VERSION=latest          
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            env.VERSION=$(echo $tarref | sed -e 's/^v//')
+          fi
+          if [[ "${{ github.ref }}" == *"master" ]]; then
+            env.VERSION=latest
+          fi
 
       - name: Build and push
         id: docker_build
