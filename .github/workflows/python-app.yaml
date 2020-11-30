@@ -49,6 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
+    env:
+      VERSION:
+
     steps:
       # - uses: actions/checkout@v2
       # - name: Build image
@@ -65,11 +68,11 @@ jobs:
 
       - name: Get version
         run: |
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          tarref=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tagref
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && env.VERSION=$(echo $tarref | sed -e 's/^v//')
           # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest       
+          [[ "${{ github.ref }}" == *"master" ]] && env.VERSION=latest          
 
       - name: Build and push
         id: docker_build
