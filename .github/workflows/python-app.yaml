@@ -40,7 +40,6 @@ jobs:
     - name: Test
       run: make test
 
-jobs:
   build-and-push:
     steps:
     - uses: actions/checkout@v2
