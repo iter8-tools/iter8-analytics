@@ -4,7 +4,7 @@ language: minimal
 
 stages:
   - "unit tests"
-  - "end-to-end tests"
+  #- "end-to-end tests"
   - "build image"
   - "release"
 
@@ -17,7 +17,7 @@ _end_to_end_script: &end_to_end_script
     - iter8/test/e2e/sanity-check.sh
     - iter8/test/e2e/install-istio.sh
     - iter8_analytics/tests/e2e/install-iter8.sh
-    - iter8/test/e2e/e2e-test.sh 
+    - iter8/test/e2e/e2e-test.sh
 
 jobs:
   include:
@@ -33,13 +33,13 @@ jobs:
         - ITER8_ANALYTICS_METRICS_BACKEND_URL="http://localhost:9090"
       script:
         - make test # Run unit tests
-    - stage: "end-to-end tests"
-      env: KUBE_VERSION=v1.17.7 ISTIO_VERSION=1.4.6
-      <<: *end_to_end_script
-    - env: KUBE_VERSION=v1.17.7 ISTIO_VERSION=1.5.6
-      <<: *end_to_end_script
-    - env: KUBE_VERSION=v1.18.8 ISTIO_VERSION=1.6.8
-      <<: *end_to_end_script        
+    #- stage: "end-to-end tests"
+    #  env: KUBE_VERSION=v1.17.7 ISTIO_VERSION=1.4.6
+    #  <<: *end_to_end_script
+    #- env: KUBE_VERSION=v1.17.7 ISTIO_VERSION=1.5.6
+    #  <<: *end_to_end_script
+    #- env: KUBE_VERSION=v1.18.8 ISTIO_VERSION=1.6.8
+    #  <<: *end_to_end_script
     - stage: "build image"
       # only build images for master and release branches + tagged releases
       if: (type = push) AND (branch = master OR branch =~ /^v[0-9]+\.[0-9]+(\.[0-9]+)*.*$/)
