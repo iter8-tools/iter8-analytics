@@ -63,8 +63,17 @@ jobs:
         elif [[ "${{ github.ref }}" == *"master" ]]; then
           echo "VERSION=latest" >> $GITHUB_ENV
         fi
+    - name: Get owner and repo
+      run: |
+        ownerrepo=${{ github.repository }}
+        owner=$(echo $ownerrepo | cut -f1 -d/)
+        if [[ "$owner" == "iter8-tools" ]]; then
+          owner=iter8
+        fi
+        echo "OWNER=$owner" >> $GITHUB_ENV
+        echo "REPO=$(echo $ownerrepo | cut -f2 -d/)" >> $GITHUB_ENV
     - uses: docker/build-push-action@v2
       with:
         context: .
-        tags: iter8/iter8-analytics:${{ env.VERSION }}
+        tags: ${{ env.OWNER }}/${{ env.REPO }}:${{ env.VERSION }}
         push: true
