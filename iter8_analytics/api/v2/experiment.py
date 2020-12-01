@@ -238,8 +238,7 @@ def get_weights(experiment_resource: ExperimentResource):
           if there are two best versions, say, the 2nd and 3rd versions:
               exploitation_weights = [0, 0.5, 0.5], i.e., best versions get exploited evenly
         """
-        exploitation_weights = np.full((len(versions), ), 0)
-        exploitation_weights[0] = 1.0
+        exploitation_weights = np.full((len(versions), ), 0.0)
         try:
             bvs = experiment_resource.status.analysis.winnerAssessment.data.bestVersions
             assert len(bvs) > 0
@@ -247,9 +246,9 @@ def get_weights(experiment_resource: ExperimentResource):
             for i, version in enumerate(versions):
                 if version.name in bvs:
                     exploitation_weights[i] = 1/len(bvs)
-                else:
-                    exploitation_weights[0] = 0.0
         except (KeyError, AssertionError):
+            exploitation_weights = np.full((len(versions), ), 0.0)
+            exploitation_weights[0] = 1.0
             messages.append(Message(MessageLevel.info, "no best version(s) found"))
         return exploitation_weights
 
