@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: iter8-analytics
+  name: analytics
   labels:
-    name: iter8-analytics
+    app: iter8-analytics
 spec:
   replicas: 1
   selector:
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: iter8-analytics
-          image: "iter8/iter8-analytics:master"
+          image: "iter8/iter8-analytics:latest"
           imagePullPolicy: Always
           env:
             - name: METRICS_BACKEND_CONFIGFILE
