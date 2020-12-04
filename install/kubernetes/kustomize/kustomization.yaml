@@ -1,6 +1,3 @@
-namePrefix: iter8-
-namespace: iter8-system
-
 resources:
 - service.yaml
 - deployment.yaml
