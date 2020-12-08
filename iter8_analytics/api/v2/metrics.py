@@ -169,5 +169,6 @@ def get_aggregated_metrics(er: ExperimentResource):
                 messages.append(Message(MessageLevel.error, f"Error from metrics backend for metric: {metric_resource.name} and version: {version.name}"))
 
     iam.message = Message.join_messages(messages)
-    logger.debug(iam)
+    logger.debug("Analysis object after metrics collection")
+    logger.debug(pprint.PrettyPrinter().pformat(iam))
     return iam
