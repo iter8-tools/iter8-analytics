@@ -104,7 +104,7 @@ def unmarshal(response, provider):
     }
     try:
         validate(instance = response, schema = schema)
-        logger.debug("Validated response: %s", pprint.PrettyPrinter().pformat(response))
+        logger.debug("Validated response: %s", response)
         try:
             num = jq.compile(".data.result[0].value[1] | tonumber").input(response).first()
             if isinstance(num, numbers.Number) and not np.isnan(num):
@@ -132,7 +132,7 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     (value, err) = (None, None)
     try:
         logger.debug("Invoking requests get with url %s and params: %s", \
-            url, pprint.PrettyPrinter().pformat(params))
+            url, params)
         response = requests.get(url, params=params, timeout=2.0).json()
     except requests.exceptions.RequestException as exp:
         logger.error("Error while attempting to connect to metrics backend")
@@ -169,5 +169,6 @@ def get_aggregated_metrics(er: ExperimentResource):
                 messages.append(Message(MessageLevel.error, f"Error from metrics backend for metric: {metric_resource.name} and version: {version.name}"))
 
     iam.message = Message.join_messages(messages)
+    logger.debug("Analysis object after metrics collection")
     logger.debug(pprint.PrettyPrinter().pformat(iam))
     return iam
