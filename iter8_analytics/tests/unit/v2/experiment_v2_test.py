@@ -103,6 +103,3 @@ class TestExperiment:
         er = ExperimentResource(** er_example_step1)
         resp = get_version_assessments(er.convert_to_float())
         assert(resp.data == {'default': [True], 'canary': [False]})
-
-    def test_v2_canary_is_winner(self):
-        pass
