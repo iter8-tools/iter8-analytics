@@ -103,3 +103,61 @@ class TestExperiment:
         er = ExperimentResource(** er_example_step1)
         resp = get_version_assessments(er.convert_to_float())
         assert(resp.data == {'default': [True], 'canary': [False]})
+
+    def test_v2_canary_is_winner(self):
+        eg = copy.deepcopy(er_example_step2)
+
+        eg['status']['analysis']['versionAssessments'] = {
+            "data": {
+                "default": [
+                    True
+                ],
+                "canary": [
+                    True
+                ]
+            },
+            "message": "All ok"
+        }
+        er = ExperimentResource(** eg)
+        resp = get_winner_assessment(er.convert_to_float())
+        assert(resp.data.winnerFound == wa_response['data']['winnerFound'])
+        assert(resp.data.winner == wa_response['data']['winner'])
+
+    def test_v2_default_is_winner(self):
+        eg = copy.deepcopy(er_example_step2)
+
+        eg['status']['analysis']['versionAssessments'] = {
+            "data": {
+                "default": [
+                    True
+                ],
+                "canary": [
+                    False
+                ]
+            },
+            "message": "All ok"
+        }
+        er = ExperimentResource(** eg)
+        resp = get_winner_assessment(er.convert_to_float())
+
+        assert(resp.data.winnerFound == wa_response['data']['winnerFound'])
+        assert(resp.data.winner == 'default')
+    
+    def test_v2_no_winner(self):
+        eg = copy.deepcopy(er_example_step2)
+
+        eg['status']['analysis']['versionAssessments'] = {
+            "data": {
+                "default": [
+                    False
+                ],
+                "canary": [
+                    False
+                ]
+            },
+            "message": "All ok"
+        }
+        er = ExperimentResource(** eg)
+        resp = get_winner_assessment(er.convert_to_float())
+
+        assert(resp.data.winnerFound == False)
