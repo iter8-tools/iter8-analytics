@@ -1,0 +1,12 @@
+{
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "value": [1556823494.744, "21.7639"]
+        }
+      ]
+    }
+  }
+  
