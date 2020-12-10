@@ -1,24 +1,21 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python application
+name: Build, test and push iter8-analytics
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
     branches:
-      - master
-    # Publish `v1.2.3` tags as releases.
+      - main # Publish `main` as Docker `latest` image.
     tags:
-      - v*
-  # Run tests for any PRs.
-  pull_request:
+      - v* # Publish `v1.2.3` tags as releases.
+  pull_request: # Run tests for any PRs.
 
 jobs:
+  # Ensure tests pass on PRs.
   build-and-test:
-
     runs-on: ubuntu-latest
-
+    if: github.event_name == 'pull_request'
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.9
@@ -31,27 +28,18 @@ jobs:
         pip install -r requirements.txt
         pip install -r test-requirements.txt
         pip install -e .
-    # - name: Lint with pylint
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     pylint iter8_analytics --reports=y
     - name: Test
       run: make test
 
+  # Push iter8-analytics image to DockerHub.
   build-and-push:
-    # Ensure test job passes before pushing image.
-    needs: build-and-test
-
     runs-on: ubuntu-latest
-
     if: github.event_name == 'push'
-
     steps:
     - uses: actions/checkout@v2
     - uses: docker/setup-buildx-action@v1
     - uses: docker/login-action@v1
       with:
-        # registry: ${{ env.REGISTRY }}
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_SECRET }}
     - name: Get version
