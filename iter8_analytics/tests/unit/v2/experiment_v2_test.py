@@ -64,6 +64,15 @@ class TestExperiment:
         er = ExperimentResource(** er_example_step3)
         get_weights(er.convert_to_float())
     
+    def test_v2_analytics_assessment_endpoint(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+
+            er = ExperimentResource(** er_example)
+            get_analytics_results(er.convert_to_float()).convert_to_quantity()
+    
     def test_v2_va_without_am(self):
         er = ExperimentResource(** er_example)
         try:
@@ -84,7 +93,71 @@ class TestExperiment:
             get_weights(er.convert_to_float())
         except AttributeError:
             pass
+
+    def test_v2_no_prometheus_response(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_no_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+
+            er = ExperimentResource(** er_example)
+            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            expected_response = {
+                    "request-count": {
+                        "max": None,
+                        "min": None,
+                        "data": {
+                            "default": {
+                                "max": None,
+                                "min": None,
+                                "sample_size": None,
+                                "value": None
+                            },
+                            "canary": {
+                                "max": None,
+                                "min": None,
+                                "sample_size": None,
+                                "value": None
+                            }
+                        }
+                    },
+                    "mean-latency": {
+                        "max": None,
+                        "min": None,
+                        "data": {
+                            "default": {
+                                "max": None,
+                                "min": None,
+                                "sample_size": None,
+                                "value": None
+                            },
+                            "canary": {
+                                "max": None,
+                                "min": None,
+                                "sample_size": None,
+                                "value": None
+                            }
+                        }
+                    }
+                }
+            assert(resp.data == expected_response)
     
+    def test_v2_va_with_no_metric_value(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_no_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+
+            er = ExperimentResource(** er_example)
+            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+
+            eg = copy.deepcopy(er_example_step1)
+            eg['status']['analysis']["aggregatedMetrics"] = resp
+            er = ExperimentResource(** eg)
+            resp2 = get_version_assessments(er.convert_to_float())
+            
+            assert(resp2.data == {'default': [False], 'canary': [False]})
+                
     def test_v2_va_without_mean_latency_metric(self):
         eg = copy.deepcopy(er_example_step1)
         eg['status']['analysis']['aggregatedMetrics']["data"].pop('mean-latency', None)
@@ -99,11 +172,19 @@ class TestExperiment:
         resp = get_version_assessments(er.convert_to_float())
         assert(resp.data == {'default': [True], 'canary': [True]})
 
-    def test_v2_canary_failing_criteria(self):
+    def test_v2_canary_failing_upperlimit_criteria(self):
         er = ExperimentResource(** er_example_step1)
         resp = get_version_assessments(er.convert_to_float())
         assert(resp.data == {'default': [True], 'canary': [False]})
-
+    
+    def test_v2_canary_failing_lowerlimit_criteria(self):
+        eg = copy.deepcopy(er_example_step1)
+        eg['spec']['criteria']['objectives'][0].pop('upperLimit')
+        eg['spec']['criteria']['objectives'][0]['lowerLimit'] = 500
+        er = ExperimentResource(** eg)
+        resp = get_version_assessments(er.convert_to_float())
+        assert(resp.data == {'default': [False], 'canary': [False]})
+    
     def test_v2_canary_is_winner(self):
         eg = copy.deepcopy(er_example_step2)
 
@@ -161,3 +242,109 @@ class TestExperiment:
         resp = get_winner_assessment(er.convert_to_float())
 
         assert(resp.data.winnerFound == False)
+    
+    def test_v2_weights_with_winner(self):
+        er = ExperimentResource(** er_example_step3)
+        resp = get_weights(er.convert_to_float())  
+
+        expected_resp = [{
+                "name": "default",
+                "value": 5
+
+            },{
+                "name": "canary",
+                "value": 95
+
+            }]      
+        assert(resp.data == expected_resp)
+
+    def test_v2_weights_with_no_winner(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['analysis']['winnerAssessment']['data'] = {
+            "winnerFound": False
+        }
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float()) 
+        assert(resp.data == w_response['data'])
+    
+    def test_v2_inc_old_weights_and_best_versions_and_canary_winner(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['currentWeightDistribution'] = [{
+                "name": "default",
+                "value": 70
+
+            },{
+                "name": "canary",
+                "value": 30
+
+            }]
+        expected_resp = [{
+                "name": "default",
+                "value": 5
+
+            },{
+                "name": "canary",
+                "value": 95
+
+            }]
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float())         
+        assert(resp.data == expected_resp)
+
+    def test_v2_inc_old_weights_and_no_best_versions(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['currentWeightDistribution'] = [{
+                "name": "default",
+                "value": 50
+
+            },{
+                "name": "canary",
+                "value": 50
+
+            }]
+        eg["status"]["analysis"]["winnerAssessment"]["data"] = {
+            "winnerFound": False
+        } 
+        expected_resp = [{
+                "name": "default",
+                "value": 95
+
+            },{
+                "name": "canary",
+                "value": 5
+
+            }]
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float())
+        assert(resp.data == expected_resp)
+    
+    def test_v2_set_weights_config(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['currentWeightDistribution'] = [{
+                "name": "default",
+                "value": 50
+
+            },{
+                "name": "canary",
+                "value": 50
+
+            }]
+
+        eg['spec']['strategy']['weights'] = {
+            "maxCandidateWeight": 53,
+            "maxCandidateWeightIncrement": 2,
+            "algorithm": 'Progressive'
+        }
+
+        expected_resp = [{
+                "name": "default",
+                "value": 48
+
+            },{
+                "name": "canary",
+                "value": 52
+
+            }]
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float())
+        assert(resp.data == expected_resp)
