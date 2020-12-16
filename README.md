@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/iter8-tools/iter8-analytics.svg?branch=master)](https://travis-ci.com/iter8-tools/iter8-analytics)
+[![Build Status](https://travis-ci.com/iter8-tools/iter8-analytics.svg?branch=v1.0)](https://travis-ci.com/iter8-tools/iter8-analytics)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 # iter8-analytics
@@ -42,7 +42,7 @@ In addition,
 
 This section is for iter8 developers and contains documentation on running and testing iter8-analytics locally.
 
-### Running iter8-analytics v1.0.0 locally
+### Running iter8-analytics v1.0.1 locally
 The following instructions have been tested in a Python 3.7.4 virtual environment.
 
 ```
@@ -56,7 +56,7 @@ The following instructions have been tested in a Python 3.7.4 virtual environmen
 ```
 Navigate to http://localhost:5555/docs on your browser. You can interact with the iter8-analytics service and read its API documentation here. When you `POST` a request to iter8-analytics, it interacts with Prometheus -- make sure your Prometheus URL in step 5 is accessible if you want the `POST` to work.
 
-### Running unit tests for iter8-analytics v1.0.0 locally
+### Running unit tests for iter8-analytics v1.0.1 locally
 The following instructions have been tested in a Python 3.7.4 virtual environment.
 
 ```
