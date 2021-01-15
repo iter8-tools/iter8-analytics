@@ -26,7 +26,8 @@ def get_version_assessments(experiment_resource: ExperimentResource):
     Get version assessments using experiment resource.
     """
     versions = [experiment_resource.spec.versionInfo.baseline]
-    versions += experiment_resource.spec.versionInfo.candidates
+    if experiment_resource.spec.versionInfo.candidates is not None:
+        versions += experiment_resource.spec.versionInfo.candidates
 
     messages = []
 

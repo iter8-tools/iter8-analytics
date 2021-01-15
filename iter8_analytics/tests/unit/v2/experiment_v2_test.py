@@ -73,6 +73,28 @@ class TestExperiment:
             er = ExperimentResource(** er_example)
             get_analytics_results(er.convert_to_float()).convert_to_quantity()
     
+    def test_v2_am_without_candidates(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            eg = copy.deepcopy(er_example)
+            del(eg['spec']['versionInfo']['candidates'])
+            er = ExperimentResource(** eg)
+            get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+    
+    def test_v2_analytics_assessment_performance(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+
+            eg = copy.deepcopy(er_example)
+            del(eg['spec']['versionInfo']['candidates'])
+            eg['spec']['strategy']['type'] = 'Performance'
+            er = ExperimentResource(** eg)
+            ans = get_analytics_results(er.convert_to_float()).convert_to_quantity()
+
     def test_v2_va_without_am(self):
         er = ExperimentResource(** er_example)
         try:

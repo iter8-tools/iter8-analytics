@@ -145,7 +145,8 @@ def get_aggregated_metrics(er: ExperimentResource):
     Get aggregated metrics from experiment resource and metric resources.
     """
     versions = [er.spec.versionInfo.baseline]
-    versions += er.spec.versionInfo.candidates
+    if er.spec.versionInfo.candidates is not None:
+        versions += er.spec.versionInfo.candidates
 
     messages = []
 
