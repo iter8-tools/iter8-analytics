@@ -98,7 +98,7 @@ class TestExperiment:
             resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
             assert("Error from metrics backend for metric" in resp.message)
     
-    def test_v2_analytics_assessment_performance(self):
+    def test_v2_analytics_assessment_conformance(self):
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
@@ -106,7 +106,7 @@ class TestExperiment:
 
             eg = copy.deepcopy(er_example)
             del(eg['spec']['versionInfo']['candidates'])
-            eg['spec']['strategy']['type'] = 'Performance'
+            eg['spec']['strategy']['type'] = 'Conformance'
             er = ExperimentResource(** eg)
             ans = get_analytics_results(er.convert_to_float()).convert_to_quantity()
 

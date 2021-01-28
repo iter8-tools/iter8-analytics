@@ -197,10 +197,10 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
     Get winner assessment using experiment resource.
     """
 
-    if experiment_resource.spec.strategy.type == ExperimentType.performance:
+    if experiment_resource.spec.strategy.type == ExperimentType.conformance:
         was = WinnerAssessment()
         was.message = Message.join_messages([Message(MessageLevel.error, \
-            "performance tests cannot have winner assessments")])
+            "conformance tests cannot have winner assessments")])
         return was
 
     elif (experiment_resource.spec.strategy.type == ExperimentType.canary) or \
@@ -215,9 +215,9 @@ def get_weights(experiment_resource: ExperimentResource):
     """
     Get weights using experiment resource. All weight values in the output will be integers.
     """
-    if experiment_resource.spec.strategy.type == ExperimentType.performance:
+    if experiment_resource.spec.strategy.type == ExperimentType.conformance:
         return Weights(data = [], \
-            message = "weight computation is not applicable to a performance experiment")
+            message = "weight computation is not applicable to a conformance experiment")
 
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates

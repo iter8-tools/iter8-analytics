@@ -98,7 +98,7 @@ class ExperimentType(str, Enum):
     canary = "Canary"
     ab = "A/B"
     abn = "A/B/N"
-    performance = "Performance"
+    conformance = "Conformance"
     bluegreen = "BlueGreen"
 
 class WeightAlgorithm(str, Enum):
