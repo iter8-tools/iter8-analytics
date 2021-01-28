@@ -83,6 +83,21 @@ class TestExperiment:
             er = ExperimentResource(** eg)
             get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
     
+    def test_v2_am_incorrect_tag_names(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            eg = copy.deepcopy(er_example)
+            eg['spec']['metrics'][0]['metricObj']['spec']['params']['query'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
+            eg['spec']['metrics'][1]['metricObj']['spec']['params']['query'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
+            eg['spec']['versionInfo']['baseline']['tags'] = {"revision_name": "sample-application-v1"}
+            eg['spec']['versionInfo']['candidates'][0]['tags'] = {"revision_name": "sample-application-v2"}
+            er = ExperimentResource(** eg)
+            
+            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            assert("Error from metrics backend for metric" in resp.message)
+    
     def test_v2_analytics_assessment_performance(self):
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',

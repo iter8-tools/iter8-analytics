@@ -46,7 +46,14 @@ def extrapolate(template: str, version: Version, start_time: datetime):
     args["interval"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
     args["interval"] = str(args["interval"]) + 's'
     templ = Template(template)
-    return templ.substitute(**args)
+    try:
+        result = templ.substitute(**args), None
+        return result
+
+    except KeyError:
+        logger.debug("Error while attemping to substitute tag in query template")
+        return "", "Error while attemping to substitute tag in query template"
+    
 
 def unmarshal(response, provider):
     """
@@ -120,24 +127,28 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
     Extrapolate metrics backend URL and query parameters; query the metrics backend;
     and return the value of the metric.
     """
-    url_template = get_metrics_url_template(metric_resource)
-    url = extrapolate(url_template, version, start_time)
-    # example for prometheus; 
-    # metric_resource.spec.params now: {"query": "your prometheus query template"}
-    params = {}
-    for pt_key, pt_value in metric_resource.spec.params.items():
-        params[pt_key] = extrapolate(pt_value, version, start_time)
-    # continuing the above example...
-    # params now: {"query": "your prometheus query"}
     (value, err) = (None, None)
-    try:
-        logger.debug("Invoking requests get with url %s and params: %s", \
-            url, params)
-        response = requests.get(url, params=params, timeout=2.0).json()
-    except requests.exceptions.RequestException as exp:
-        logger.error("Error while attempting to connect to metrics backend")
-        return value, exp
-    value, err = unmarshal(response, metric_resource.spec.provider)
+    url_template = get_metrics_url_template(metric_resource)
+    url, err = extrapolate(url_template, version, start_time)
+    if err is None:
+        # example for prometheus; 
+        # metric_resource.spec.params now: {"query": "your prometheus query template"}
+        params = {}
+        for pt_key, pt_value in metric_resource.spec.params.items():
+            params[pt_key], err = extrapolate(pt_value, version, start_time)
+            if err is not None:
+                break
+        if err is None:
+            # continuing the above example...
+            # params now: {"query": "your prometheus query"}
+            try:
+                logger.debug("Invoking requests get with url %s and params: %s", \
+                    url, params)
+                response = requests.get(url, params=params, timeout=2.0).json()
+            except requests.exceptions.RequestException as exp:
+                logger.error("Error while attempting to connect to metrics backend")
+                return value, exp
+            value, err = unmarshal(response, metric_resource.spec.provider)
     return value, err
 
 def get_aggregated_metrics(er: ExperimentResource):
