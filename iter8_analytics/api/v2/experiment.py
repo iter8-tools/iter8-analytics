@@ -203,8 +203,7 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
             "conformance tests cannot have winner assessments")])
         return was
 
-    elif (experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.canary) or \
-        (experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.bluegreen):
+    elif (experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.canary):
         return get_winner_assessment_for_canarybg(experiment_resource)
 
     else:

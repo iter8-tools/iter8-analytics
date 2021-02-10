@@ -106,7 +106,7 @@ class ExperimentTestingPattern(str, Enum):
     ab = "A/B"
     abn = "A/B/N"
     conformance = "Conformance"
-    bluegreen = "BlueGreen"
+    
 
 class ExperimentDeploymentPattern(str, Enum):
     """
@@ -114,6 +114,7 @@ class ExperimentDeploymentPattern(str, Enum):
     """
     progressive = "Progressive"
     fixed = "FixedSplit"
+    bluegreen = "BlueGreen"
 
 class WeightsConfig(BaseModel):
     """
