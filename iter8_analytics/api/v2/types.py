@@ -110,7 +110,7 @@ class ExperimentTestingPattern(str, Enum):
 
 class ExperimentDeploymentPattern(str, Enum):
     """
-    Algorithm deployment patterns
+    Deployment patterns
     """
     progressive = "Progressive"
     fixed = "FixedSplit"
