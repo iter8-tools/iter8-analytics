@@ -40,9 +40,9 @@ def extrapolate(template: str, version: Version, start_time: datetime):
     """
     args = {}
     args["name"] = version.name
-    if version.tags is not None:
-        for key, value in version.tags.items():
-            args[key] = value
+    if version.variables is not None and len(version.variables) > 0:
+        for variable in version.variables:
+            args[variable.name] = variable.value
     args["interval"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
     args["interval"] = str(args["interval"]) + 's'
     templ = Template(template)

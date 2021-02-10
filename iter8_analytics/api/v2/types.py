@@ -15,12 +15,19 @@ from iter8_analytics.api.utils import convert_to_float, convert_to_quantity
 
 PolymorphicQuantity = Union[int, str, float]
 
+class VersionVariables(BaseModel):
+    """
+    Pydantic model for Version variables
+    """
+    name: str = Field(..., description = "version variable name")
+    value: str = Field(..., description= "version variable value")
+
 class Version(BaseModel):
     """
     Pydantic model for Version
     """
     name: str = Field(..., description = "version name")
-    tags: Dict[str, str] = Field(None, descriptiopn = "version tags (key-value pairs)")
+    variables: Sequence[VersionVariables] = Field(None, descriptiopn = "version tags (key-value pairs)")
 
 class VersionInfo(BaseModel):
     """
@@ -91,7 +98,7 @@ class Criteria(BaseModel):
             self.objectives = [obj.convert_to_quantity() for obj in self.objectives]
         return self
 
-class ExperimentType(str, Enum):
+class ExperimentTestingPattern(str, Enum):
     """
     Experiment types
     """
@@ -101,7 +108,7 @@ class ExperimentType(str, Enum):
     conformance = "Conformance"
     bluegreen = "BlueGreen"
 
-class WeightAlgorithm(str, Enum):
+class ExperimentDeploymentPattern(str, Enum):
     """
     Algorithm types
     """
@@ -116,15 +123,16 @@ class WeightsConfig(BaseModel):
         candidate weight never exceeds this value", le = 100, ge = 0)
     maxCandidateWeightIncrement: int = Field(5, description = "units = percent; \
         candidate weight increment never exceeds this value", le = 100, ge = 0)
-    algorithm: WeightAlgorithm = Field(WeightAlgorithm.progressive, description = \
-        "weight computation algorithm")
+    
 
 class ExperimentStrategy(BaseModel):
     """
     Experiment strategy
     """
-    type: ExperimentType = Field(..., \
+    testingPattern: ExperimentTestingPattern = Field(..., \
         description="indicates preference for metric values -- lower, higher, or None (default)")
+    deploymentPattern: ExperimentDeploymentPattern = Field(ExperimentDeploymentPattern.progressive, description = \
+        "weight computation algorithm")
     weights: WeightsConfig = Field(None, \
         description = "weights configuration")
 

@@ -12,7 +12,7 @@ import numpy as np
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
     VersionAssessments, VersionWeight, \
-    WinnerAssessment, WinnerAssessmentData, Weights, Analysis, Objective, ExperimentType, \
+    WinnerAssessment, WinnerAssessmentData, Weights, Analysis, Objective, ExperimentTestingPattern, \
     Reward, PreferredDirection
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 from iter8_analytics.api.utils import gen_round
@@ -197,14 +197,14 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
     Get winner assessment using experiment resource.
     """
 
-    if experiment_resource.spec.strategy.type == ExperimentType.conformance:
+    if experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.conformance:
         was = WinnerAssessment()
         was.message = Message.join_messages([Message(MessageLevel.error, \
             "conformance tests cannot have winner assessments")])
         return was
 
-    elif (experiment_resource.spec.strategy.type == ExperimentType.canary) or \
-        (experiment_resource.spec.strategy.type == ExperimentType.bluegreen):
+    elif (experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.canary) or \
+        (experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.bluegreen):
         return get_winner_assessment_for_canarybg(experiment_resource)
 
     else:
@@ -215,7 +215,7 @@ def get_weights(experiment_resource: ExperimentResource):
     """
     Get weights using experiment resource. All weight values in the output will be integers.
     """
-    if experiment_resource.spec.strategy.type == ExperimentType.conformance:
+    if experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.conformance:
         return Weights(data = [], \
             message = "weight computation is not applicable to a conformance experiment")
 

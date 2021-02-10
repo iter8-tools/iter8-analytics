@@ -41,21 +41,23 @@ mr_example = [{
 er_example = {
     "spec": {
         "strategy": {
-            "type": "Canary"
+            "testingPattern": "Canary"
         },
         "versionInfo": {
             "baseline": {
                 "name": "default",
-                "tags": {
-                    "container": "sklearn-iris-20"
-                }
+                "variables": [{
+                    "name": "container",
+                    "value": "sklearn-iris-20"
+                }]
             },
             "candidates": [
                 {
                     "name": "canary",
-                    "tags": {
-                        "container": "sklearn-iris-22"
-                    }
+                    "variables": [{
+                        "name": "container",
+                        "value": "sklearn-iris-22"
+                }]
                 }
             ]
         },

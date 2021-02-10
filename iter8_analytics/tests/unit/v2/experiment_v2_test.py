@@ -103,10 +103,10 @@ class TestExperiment:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             m.get(metrics_endpoint, json=json.load(open(file_path)))
-
+ 
             eg = copy.deepcopy(er_example)
             del(eg['spec']['versionInfo']['candidates'])
-            eg['spec']['strategy']['type'] = 'Conformance'
+            eg['spec']['strategy']['testingPattern'] = 'Conformance'
             er = ExperimentResource(** eg)
             ans = get_analytics_results(er.convert_to_float()).convert_to_quantity()
 
