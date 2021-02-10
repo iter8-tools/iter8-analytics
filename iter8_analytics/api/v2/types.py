@@ -100,7 +100,7 @@ class Criteria(BaseModel):
 
 class ExperimentTestingPattern(str, Enum):
     """
-    Experiment types
+    Experiment testing patterns
     """
     canary = "Canary"
     ab = "A/B"
@@ -110,7 +110,7 @@ class ExperimentTestingPattern(str, Enum):
 
 class ExperimentDeploymentPattern(str, Enum):
     """
-    Algorithm types
+    Algorithm deployment patterns
     """
     progressive = "Progressive"
     fixed = "FixedSplit"
