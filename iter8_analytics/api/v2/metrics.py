@@ -134,7 +134,8 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
         # example for prometheus; 
         # metric_resource.spec.params now: {"query": "your prometheus query template"}
         params = {}
-        for pt_key, pt_value in metric_resource.spec.params.items():
+        for pattern in metric_resource.spec.params:
+            pt_key, pt_value = pattern.name, pattern.value
             params[pt_key], err = extrapolate(pt_value, version, start_time)
             if err is not None:
                 break

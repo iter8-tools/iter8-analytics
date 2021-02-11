@@ -37,351 +37,352 @@ class TestExperiment:
         er = ExperimentResource(** er_example_step3)
         
         
-    # def test_experiment_response_objects(self):
-    #     am = AggregatedMetric(** am_response)
-    #     va = VersionAssessments(** va_response)
-    #     wa = WinnerAssessment(** wa_response)
-    #     w = Weights(** w_response)
+    def test_experiment_response_objects(self):
+        am = AggregatedMetric(** am_response)
+        va = VersionAssessments(** va_response)
+        wa = WinnerAssessment(** wa_response)
+        w = Weights(** w_response)
 
-    # def test_v2_aggregated_metrics_endpoint(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
+    def test_v2_aggregated_metrics_endpoint(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
-    #         er = ExperimentResource(** er_example)
-    #         get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            er = ExperimentResource(** er_example)
+            get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
         
-    # def test_v2_version_assessment_endpoint(self):
-    #     er = ExperimentResource(** er_example_step1)
-    #     get_version_assessments(er.convert_to_float())
+    def test_v2_version_assessment_endpoint(self):
+        er = ExperimentResource(** er_example_step1)
+        get_version_assessments(er.convert_to_float())
     
-    # def test_v2_winner_assessment_endpoint(self):
-    #     er = ExperimentResource(** er_example_step2)
-    #     get_winner_assessment(er.convert_to_float())
+    def test_v2_winner_assessment_endpoint(self):
+        er = ExperimentResource(** er_example_step2)
+        get_winner_assessment(er.convert_to_float())
     
-    # def test_v2_weights_endpoint(self):
-    #     er = ExperimentResource(** er_example_step3)
-    #     get_weights(er.convert_to_float())
+    def test_v2_weights_endpoint(self):
+        er = ExperimentResource(** er_example_step3)
+        get_weights(er.convert_to_float())
     
-    # def test_v2_analytics_assessment_endpoint(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
+    def test_v2_analytics_assessment_endpoint(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
-    #         er = ExperimentResource(** er_example)
-    #         get_analytics_results(er.convert_to_float()).convert_to_quantity()
+            er = ExperimentResource(** er_example)
+            get_analytics_results(er.convert_to_float()).convert_to_quantity()
     
-    # def test_v2_am_without_candidates(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
-    #         eg = copy.deepcopy(er_example)
-    #         del(eg['spec']['versionInfo']['candidates'])
-    #         er = ExperimentResource(** eg)
-    #         get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+    def test_v2_am_without_candidates(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            eg = copy.deepcopy(er_example)
+            del(eg['spec']['versionInfo']['candidates'])
+            er = ExperimentResource(** eg)
+            get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
     
-    # def test_v2_am_incorrect_tag_names(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
-    #         eg = copy.deepcopy(er_example)
-    #         eg['spec']['metrics'][0]['metricObj']['spec']['params']['query'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
-    #         eg['spec']['metrics'][1]['metricObj']['spec']['params']['query'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
-    #         eg['spec']['versionInfo']['baseline']['tags'] = {"revision_name": "sample-application-v1"}
-    #         eg['spec']['versionInfo']['candidates'][0]['tags'] = {"revision_name": "sample-application-v2"}
-    #         er = ExperimentResource(** eg)
+    def test_v2_am_incorrect_tag_names(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            eg = copy.deepcopy(er_example)
+            eg['spec']['metrics'][0]['metricObj']['spec']['params'][0]['value'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
+            eg['spec']['metrics'][1]['metricObj']['spec']['params'][0]['value'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
+            eg['spec']['versionInfo']['baseline']['variables'] = [{"name": "revision_name", "value": "sample-application-v1"}]
+            eg['spec']['versionInfo']['candidates'][0]['variables'] = [{"name": "revision_name", "value": "sample-application-v2"}]
+            er = ExperimentResource(** eg)
             
-    #         resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-    #         assert("Error from metrics backend for metric" in resp.message)
+            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            logger.info(resp)
+            assert("Error from metrics backend for metric" in resp.message)
     
-    # def test_v2_analytics_assessment_conformance(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
+    def test_v2_analytics_assessment_conformance(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
  
-    #         eg = copy.deepcopy(er_example)
-    #         del(eg['spec']['versionInfo']['candidates'])
-    #         eg['spec']['strategy']['testingPattern'] = 'Conformance'
-    #         er = ExperimentResource(** eg)
-    #         ans = get_analytics_results(er.convert_to_float()).convert_to_quantity()
+            eg = copy.deepcopy(er_example)
+            del(eg['spec']['versionInfo']['candidates'])
+            eg['spec']['strategy']['testingPattern'] = 'Conformance'
+            er = ExperimentResource(** eg)
+            ans = get_analytics_results(er.convert_to_float()).convert_to_quantity()
 
-    # def test_v2_va_without_am(self):
-    #     er = ExperimentResource(** er_example)
-    #     try:
-    #         get_version_assessments(er.convert_to_float())
-    #     except AttributeError:
-    #         pass
+    def test_v2_va_without_am(self):
+        er = ExperimentResource(** er_example)
+        try:
+            get_version_assessments(er.convert_to_float())
+        except AttributeError:
+            pass
 
-    # def test_v2_wa_without_va(self):
-    #     er = ExperimentResource(** er_example)
-    #     try:
-    #         get_winner_assessment(er.convert_to_float())
-    #     except AttributeError:
-    #         pass
+    def test_v2_wa_without_va(self):
+        er = ExperimentResource(** er_example)
+        try:
+            get_winner_assessment(er.convert_to_float())
+        except AttributeError:
+            pass
     
-    # def test_v2_w_without_wa(self):
-    #     er = ExperimentResource(** er_example)
-    #     try:
-    #         get_weights(er.convert_to_float())
-    #     except AttributeError:
-    #         pass
+    def test_v2_w_without_wa(self):
+        er = ExperimentResource(** er_example)
+        try:
+            get_weights(er.convert_to_float())
+        except AttributeError:
+            pass
 
-    # def test_v2_no_prometheus_response(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_no_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
+    def test_v2_no_prometheus_response(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_no_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
-    #         er = ExperimentResource(** er_example)
-    #         resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-    #         expected_response = {
-    #                 "request-count": {
-    #                     "max": None,
-    #                     "min": None,
-    #                     "data": {
-    #                         "default": {
-    #                             "max": None,
-    #                             "min": None,
-    #                             "sampleSize": None,
-    #                             "value": None
-    #                         },
-    #                         "canary": {
-    #                             "max": None,
-    #                             "min": None,
-    #                             "sampleSize": None,
-    #                             "value": None
-    #                         }
-    #                     }
-    #                 },
-    #                 "mean-latency": {
-    #                     "max": None,
-    #                     "min": None,
-    #                     "data": {
-    #                         "default": {
-    #                             "max": None,
-    #                             "min": None,
-    #                             "sampleSize": None,
-    #                             "value": None
-    #                         },
-    #                         "canary": {
-    #                             "max": None,
-    #                             "min": None,
-    #                             "sampleSize": None,
-    #                             "value": None
-    #                         }
-    #                     }
-    #                 }
-    #             }
-    #         assert(resp.data == expected_response)
+            er = ExperimentResource(** er_example)
+            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            expected_response = {
+                    "request-count": {
+                        "max": None,
+                        "min": None,
+                        "data": {
+                            "default": {
+                                "max": None,
+                                "min": None,
+                                "sampleSize": None,
+                                "value": None
+                            },
+                            "canary": {
+                                "max": None,
+                                "min": None,
+                                "sampleSize": None,
+                                "value": None
+                            }
+                        }
+                    },
+                    "mean-latency": {
+                        "max": None,
+                        "min": None,
+                        "data": {
+                            "default": {
+                                "max": None,
+                                "min": None,
+                                "sampleSize": None,
+                                "value": None
+                            },
+                            "canary": {
+                                "max": None,
+                                "min": None,
+                                "sampleSize": None,
+                                "value": None
+                            }
+                        }
+                    }
+                }
+            assert(resp.data == expected_response)
     
-    # def test_v2_va_with_no_metric_value(self):
-    #     with requests_mock.mock(real_http=True) as m:
-    #         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-    #                                  'prometheus_sample_no_response.json')
-    #         m.get(metrics_endpoint, json=json.load(open(file_path)))
+    def test_v2_va_with_no_metric_value(self):
+        with requests_mock.mock(real_http=True) as m:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                     'prometheus_sample_no_response.json')
+            m.get(metrics_endpoint, json=json.load(open(file_path)))
 
-    #         er = ExperimentResource(** er_example)
-    #         resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            er = ExperimentResource(** er_example)
+            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
 
-    #         eg = copy.deepcopy(er_example_step1)
-    #         eg['status']['analysis']["aggregatedMetrics"] = resp
-    #         er = ExperimentResource(** eg)
-    #         resp2 = get_version_assessments(er.convert_to_float())
+            eg = copy.deepcopy(er_example_step1)
+            eg['status']['analysis']["aggregatedMetrics"] = resp
+            er = ExperimentResource(** eg)
+            resp2 = get_version_assessments(er.convert_to_float())
             
-    #         assert(resp2.data == {'default': [False], 'canary': [False]})
+            assert(resp2.data == {'default': [False], 'canary': [False]})
                 
-    # def test_v2_va_without_mean_latency_metric(self):
-    #     eg = copy.deepcopy(er_example_step1)
-    #     eg['status']['analysis']['aggregatedMetrics']["data"].pop('mean-latency', None)
-    #     er = ExperimentResource(** eg)
-    #     resp = get_version_assessments(er.convert_to_float())
-    #     assert(resp.message == "Error: ; Warning: Aggregated metric object for mean-latency metric is unavailable.; Info: ")
+    def test_v2_va_without_mean_latency_metric(self):
+        eg = copy.deepcopy(er_example_step1)
+        eg['status']['analysis']['aggregatedMetrics']["data"].pop('mean-latency', None)
+        er = ExperimentResource(** eg)
+        resp = get_version_assessments(er.convert_to_float())
+        assert(resp.message == "Error: ; Warning: Aggregated metric object for mean-latency metric is unavailable.; Info: ")
 
-    # def test_v2_canary_passing_criteria(self):
-    #     eg = copy.deepcopy(er_example_step1)
-    #     eg['spec']['criteria']['objectives'][0]['upperLimit'] = 500
-    #     er = ExperimentResource(** eg)
-    #     resp = get_version_assessments(er.convert_to_float())
-    #     assert(resp.data == {'default': [True], 'canary': [True]})
+    def test_v2_canary_passing_criteria(self):
+        eg = copy.deepcopy(er_example_step1)
+        eg['spec']['criteria']['objectives'][0]['upperLimit'] = 500
+        er = ExperimentResource(** eg)
+        resp = get_version_assessments(er.convert_to_float())
+        assert(resp.data == {'default': [True], 'canary': [True]})
 
-    # def test_v2_canary_failing_upperlimit_criteria(self):
-    #     er = ExperimentResource(** er_example_step1)
-    #     resp = get_version_assessments(er.convert_to_float())
-    #     assert(resp.data == {'default': [True], 'canary': [False]})
+    def test_v2_canary_failing_upperlimit_criteria(self):
+        er = ExperimentResource(** er_example_step1)
+        resp = get_version_assessments(er.convert_to_float())
+        assert(resp.data == {'default': [True], 'canary': [False]})
     
-    # def test_v2_canary_failing_lowerlimit_criteria(self):
-    #     eg = copy.deepcopy(er_example_step1)
-    #     eg['spec']['criteria']['objectives'][0].pop('upperLimit')
-    #     eg['spec']['criteria']['objectives'][0]['lowerLimit'] = 500
-    #     er = ExperimentResource(** eg)
-    #     resp = get_version_assessments(er.convert_to_float())
-    #     assert(resp.data == {'default': [False], 'canary': [False]})
+    def test_v2_canary_failing_lowerlimit_criteria(self):
+        eg = copy.deepcopy(er_example_step1)
+        eg['spec']['criteria']['objectives'][0].pop('upperLimit')
+        eg['spec']['criteria']['objectives'][0]['lowerLimit'] = 500
+        er = ExperimentResource(** eg)
+        resp = get_version_assessments(er.convert_to_float())
+        assert(resp.data == {'default': [False], 'canary': [False]})
     
-    # def test_v2_canary_is_winner(self):
-    #     eg = copy.deepcopy(er_example_step2)
+    def test_v2_canary_is_winner(self):
+        eg = copy.deepcopy(er_example_step2)
 
-    #     eg['status']['analysis']['versionAssessments'] = {
-    #         "data": {
-    #             "default": [
-    #                 True
-    #             ],
-    #             "canary": [
-    #                 True
-    #             ]
-    #         },
-    #         "message": "All ok"
-    #     }
-    #     er = ExperimentResource(** eg)
-    #     resp = get_winner_assessment(er.convert_to_float())
-    #     assert(resp.data.winnerFound == wa_response['data']['winnerFound'])
-    #     assert(resp.data.winner == wa_response['data']['winner'])
+        eg['status']['analysis']['versionAssessments'] = {
+            "data": {
+                "default": [
+                    True
+                ],
+                "canary": [
+                    True
+                ]
+            },
+            "message": "All ok"
+        }
+        er = ExperimentResource(** eg)
+        resp = get_winner_assessment(er.convert_to_float())
+        assert(resp.data.winnerFound == wa_response['data']['winnerFound'])
+        assert(resp.data.winner == wa_response['data']['winner'])
 
-    # def test_v2_default_is_winner(self):
-    #     eg = copy.deepcopy(er_example_step2)
+    def test_v2_default_is_winner(self):
+        eg = copy.deepcopy(er_example_step2)
 
-    #     eg['status']['analysis']['versionAssessments'] = {
-    #         "data": {
-    #             "default": [
-    #                 True
-    #             ],
-    #             "canary": [
-    #                 False
-    #             ]
-    #         },
-    #         "message": "All ok"
-    #     }
-    #     er = ExperimentResource(** eg)
-    #     resp = get_winner_assessment(er.convert_to_float())
+        eg['status']['analysis']['versionAssessments'] = {
+            "data": {
+                "default": [
+                    True
+                ],
+                "canary": [
+                    False
+                ]
+            },
+            "message": "All ok"
+        }
+        er = ExperimentResource(** eg)
+        resp = get_winner_assessment(er.convert_to_float())
 
-    #     assert(resp.data.winnerFound == wa_response['data']['winnerFound'])
-    #     assert(resp.data.winner == 'default')
+        assert(resp.data.winnerFound == wa_response['data']['winnerFound'])
+        assert(resp.data.winner == 'default')
     
-    # def test_v2_no_winner(self):
-    #     eg = copy.deepcopy(er_example_step2)
+    def test_v2_no_winner(self):
+        eg = copy.deepcopy(er_example_step2)
 
-    #     eg['status']['analysis']['versionAssessments'] = {
-    #         "data": {
-    #             "default": [
-    #                 False
-    #             ],
-    #             "canary": [
-    #                 False
-    #             ]
-    #         },
-    #         "message": "All ok"
-    #     }
-    #     er = ExperimentResource(** eg)
-    #     resp = get_winner_assessment(er.convert_to_float())
+        eg['status']['analysis']['versionAssessments'] = {
+            "data": {
+                "default": [
+                    False
+                ],
+                "canary": [
+                    False
+                ]
+            },
+            "message": "All ok"
+        }
+        er = ExperimentResource(** eg)
+        resp = get_winner_assessment(er.convert_to_float())
 
-    #     assert(resp.data.winnerFound == False)
+        assert(resp.data.winnerFound == False)
     
-    # def test_v2_weights_with_winner(self):
-    #     er = ExperimentResource(** er_example_step3)
-    #     resp = get_weights(er.convert_to_float())  
+    def test_v2_weights_with_winner(self):
+        er = ExperimentResource(** er_example_step3)
+        resp = get_weights(er.convert_to_float())  
 
-    #     expected_resp = [{
-    #             "name": "default",
-    #             "value": 5
+        expected_resp = [{
+                "name": "default",
+                "value": 5
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 95
+            },{
+                "name": "canary",
+                "value": 95
 
-    #         }]      
-    #     assert(resp.data == expected_resp)
+            }]      
+        assert(resp.data == expected_resp)
 
-    # def test_v2_weights_with_no_winner(self):
-    #     eg = copy.deepcopy(er_example_step3)
-    #     eg['status']['analysis']['winnerAssessment']['data'] = {
-    #         "winnerFound": False
-    #     }
-    #     er = ExperimentResource(** eg)
-    #     resp = get_weights(er.convert_to_float()) 
-    #     assert(resp.data == w_response['data'])
+    def test_v2_weights_with_no_winner(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['analysis']['winnerAssessment']['data'] = {
+            "winnerFound": False
+        }
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float()) 
+        assert(resp.data == w_response['data'])
     
-    # def test_v2_inc_old_weights_and_best_versions_and_canary_winner(self):
-    #     eg = copy.deepcopy(er_example_step3)
-    #     eg['status']['currentWeightDistribution'] = [{
-    #             "name": "default",
-    #             "value": 70
+    def test_v2_inc_old_weights_and_best_versions_and_canary_winner(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['currentWeightDistribution'] = [{
+                "name": "default",
+                "value": 70
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 30
+            },{
+                "name": "canary",
+                "value": 30
 
-    #         }]
-    #     expected_resp = [{
-    #             "name": "default",
-    #             "value": 5
+            }]
+        expected_resp = [{
+                "name": "default",
+                "value": 5
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 95
+            },{
+                "name": "canary",
+                "value": 95
 
-    #         }]
-    #     er = ExperimentResource(** eg)
-    #     resp = get_weights(er.convert_to_float())         
-    #     assert(resp.data == expected_resp)
+            }]
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float())         
+        assert(resp.data == expected_resp)
 
-    # def test_v2_inc_old_weights_and_no_best_versions(self):
-    #     eg = copy.deepcopy(er_example_step3)
-    #     eg['status']['currentWeightDistribution'] = [{
-    #             "name": "default",
-    #             "value": 50
+    def test_v2_inc_old_weights_and_no_best_versions(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['currentWeightDistribution'] = [{
+                "name": "default",
+                "value": 50
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 50
+            },{
+                "name": "canary",
+                "value": 50
 
-    #         }]
-    #     eg["status"]["analysis"]["winnerAssessment"]["data"] = {
-    #         "winnerFound": False
-    #     } 
-    #     expected_resp = [{
-    #             "name": "default",
-    #             "value": 95
+            }]
+        eg["status"]["analysis"]["winnerAssessment"]["data"] = {
+            "winnerFound": False
+        } 
+        expected_resp = [{
+                "name": "default",
+                "value": 95
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 5
+            },{
+                "name": "canary",
+                "value": 5
 
-    #         }]
-    #     er = ExperimentResource(** eg)
-    #     resp = get_weights(er.convert_to_float())
-    #     assert(resp.data == expected_resp)
+            }]
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float())
+        assert(resp.data == expected_resp)
     
-    # def test_v2_set_weights_config(self):
-    #     eg = copy.deepcopy(er_example_step3)
-    #     eg['status']['currentWeightDistribution'] = [{
-    #             "name": "default",
-    #             "value": 50
+    def test_v2_set_weights_config(self):
+        eg = copy.deepcopy(er_example_step3)
+        eg['status']['currentWeightDistribution'] = [{
+                "name": "default",
+                "value": 50
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 50
+            },{
+                "name": "canary",
+                "value": 50
 
-    #         }]
+            }]
 
-    #     eg['spec']['strategy']['weights'] = {
-    #         "maxCandidateWeight": 53,
-    #         "maxCandidateWeightIncrement": 2,
-    #         "algorithm": 'Progressive'
-    #     }
+        eg['spec']['strategy']['weights'] = {
+            "maxCandidateWeight": 53,
+            "maxCandidateWeightIncrement": 2,
+            "algorithm": 'Progressive'
+        }
 
-    #     expected_resp = [{
-    #             "name": "default",
-    #             "value": 48
+        expected_resp = [{
+                "name": "default",
+                "value": 48
 
-    #         },{
-    #             "name": "canary",
-    #             "value": 52
+            },{
+                "name": "canary",
+                "value": 52
 
-    #         }]
-    #     er = ExperimentResource(** eg)
-    #     resp = get_weights(er.convert_to_float())
-    #     assert(resp.data == expected_resp)
+            }]
+        er = ExperimentResource(** eg)
+        resp = get_weights(er.convert_to_float())
+        assert(resp.data == expected_resp)
