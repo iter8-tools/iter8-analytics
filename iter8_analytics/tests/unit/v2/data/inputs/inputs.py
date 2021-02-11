@@ -7,9 +7,10 @@ mr_example = [{
             "name": "request-count"
         },
         "spec": {
-            "params": {
-                "query": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
-            },
+            "params": [{
+                "name": "query",
+                "value": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
+            }],
             "description": "Number of requests",
             "type": "counter",
             "provider": "prometheus"
@@ -26,11 +27,12 @@ mr_example = [{
         "spec": {
             "description": "Mean latency",
             "units": "milliseconds",
-            "params": {
-                "query": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
-            },
+            "params": [{
+                "name": "query",
+                "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+            }],
             "type": "gauge",
-            "sample_size": {
+            "sampleSize": {
                 "name": "request-count"
             },
             "provider": "prometheus"

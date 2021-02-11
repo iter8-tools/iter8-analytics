@@ -137,11 +137,19 @@ class ExperimentStrategy(BaseModel):
     weights: WeightsConfig = Field(None, \
         description = "weights configuration")
 
+class MetricParams(BaseModel):
+    """
+    Pydantic model for Metric params
+    """
+    name: str = Field(..., description = "name of the parameter")
+    value: str = Field(..., description = "value of the parameter")
+
+
 class MetricSpec(BaseModel):
     """
     Pydantic model for metric spec subresource
     """
-    params: Dict[str, str] = Field(None, description = "parameters to be used \
+    params: Sequence[MetricParams] = Field(None, description = "parameters to be used \
         as part of the REST query for this metric")
     provider: str = Field(..., description = "identifier for the metrics backend")
 
@@ -196,8 +204,8 @@ class VersionMetric(BaseModel):
         for this metric for this version")
     value: PolymorphicQuantity = Field(None, description = "last observed value \
         for this metric for this version")
-    sample_size: PolymorphicQuantity = Field(None, description = "last observed value \
-        for the sample_size metric for this version; this is none if sample_size is not specified")
+    sampleSize: PolymorphicQuantity = Field(None, description = "last observed value \
+        for the sampleSize metric for this version; this is none if sampleSize is not specified")
 
     def convert_to_float(self):
         """
@@ -206,7 +214,7 @@ class VersionMetric(BaseModel):
         self.max = convert_to_float(self.max)
         self.min = convert_to_float(self.min)
         self.value = convert_to_float(self.value)
-        self.sample_size = convert_to_float(self.sample_size)
+        self.sampleSize = convert_to_float(self.sampleSize)
         return self
 
     def convert_to_quantity(self):
@@ -216,7 +224,7 @@ class VersionMetric(BaseModel):
         self.max = convert_to_quantity(self.max)
         self.min = convert_to_quantity(self.min)
         self.value = convert_to_quantity(self.value)
-        self.sample_size = convert_to_quantity(self.sample_size)
+        self.sampleSize = convert_to_quantity(self.sampleSize)
         return self
 
 class AggregatedMetric(BaseModel):

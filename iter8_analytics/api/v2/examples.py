@@ -34,7 +34,7 @@ mr_example = [{
                 "query": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
             },
             "type": "gauge",
-            "sample_size": {
+            "sampleSize": {
                 "name": "request-count"
             },
             "provider": "prometheus"
