@@ -2,8 +2,6 @@
 Environment variables that control the iter8 analytics server
 """
 
-# deprecated; used only by flask
-ITER8_ANALYTICS_DEBUG_ENV = 'ITER8_ANALYTICS_DEBUG'
 ITER8_ANALYTICS_LOG_LEVEL_ENV = 'ITER8_ANALYTICS_LOG_LEVEL'  # used by fastapi
 
 ITER8_DATA_CAPTURE_MODE_ENV = 'ITER8_DATA_CAPTURE_MODE'

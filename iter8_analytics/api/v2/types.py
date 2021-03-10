@@ -5,10 +5,9 @@ Module containing pydantic data models for iter8 v2
 from typing import Sequence, Dict, Union
 from datetime import datetime
 from enum import Enum
-from decimal import Decimal
 
 # external module dependencies
-from pydantic import BaseModel, Field, conlist
+from pydantic import BaseModel, Field
 
 # iter8 dependencies
 from iter8_analytics.api.utils import convert_to_float, convert_to_quantity
@@ -27,7 +26,8 @@ class Version(BaseModel):
     Pydantic model for Version
     """
     name: str = Field(..., description = "version name")
-    variables: Sequence[VersionVariables] = Field(None, descriptiopn = "version tags (key-value pairs)")
+    variables: Sequence[VersionVariables] = \
+        Field(None, descriptiopn = "version tags (key-value pairs)")
 
 class VersionInfo(BaseModel):
     """
@@ -106,7 +106,6 @@ class ExperimentTestingPattern(str, Enum):
     ab = "A/B"
     abn = "A/B/N"
     conformance = "Conformance"
-    
 
 class ExperimentDeploymentPattern(str, Enum):
     """
@@ -124,7 +123,6 @@ class WeightsConfig(BaseModel):
         candidate weight never exceeds this value", le = 100, ge = 0)
     maxCandidateWeightIncrement: int = Field(5, description = "units = percent; \
         candidate weight increment never exceeds this value", le = 100, ge = 0)
-    
 
 class ExperimentStrategy(BaseModel):
     """
@@ -132,7 +130,8 @@ class ExperimentStrategy(BaseModel):
     """
     testingPattern: ExperimentTestingPattern = Field(..., \
         description="indicates preference for metric values -- lower, higher, or None (default)")
-    deploymentPattern: ExperimentDeploymentPattern = Field(ExperimentDeploymentPattern.progressive, description = \
+    deploymentPattern: ExperimentDeploymentPattern = \
+        Field(ExperimentDeploymentPattern.progressive, description = \
         "weight computation algorithm")
     weights: WeightsConfig = Field(None, \
         description = "weights configuration")
@@ -166,7 +165,7 @@ class MetricResource(BaseModel):
     """
     name: str = Field(..., description= "name of the metric")
     metricObj: MetricObject = Field(..., description = "metric obj resource")
-    
+
 class ExperimentSpec(BaseModel):
     """
     Pydantic model for experiment spec subresource

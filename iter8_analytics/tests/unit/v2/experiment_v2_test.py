@@ -9,7 +9,6 @@ import copy
 import requests_mock
 from fastapi import HTTPException
 
-
 from iter8_analytics import fastapi_app
 from iter8_analytics.api.v2.types import *
 from iter8_analytics.config import env_config

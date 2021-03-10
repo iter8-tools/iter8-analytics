@@ -8,11 +8,6 @@ from fastapi import FastAPI, Body
 import uvicorn
 
 # iter8 dependencies
-from iter8_analytics.api.types import \
-    ExperimentIterationParameters, Iter8AssessmentAndRecommendation
-#from iter8_analytics.api.analytics.experiment import Experiment
-import iter8_analytics.api.experiment as experiment
-from iter8_analytics.api.examples import eip_example
 import iter8_analytics.constants as constants
 import iter8_analytics.config as config
 
@@ -31,21 +26,6 @@ logger = logging.getLogger('iter8_analytics')
 # main FastAPI app
 app = FastAPI()
 
-
-@app.post("/assessment", response_model=Iter8AssessmentAndRecommendation)
-def provide_assessment_for_this_experiment_iteration(
-        eip: ExperimentIterationParameters = Body(..., example=eip_example)):
-    """
-    POST iter8 experiment iteration data and obtain assessment of how
-    the versions are performing and recommendations on how to split traffic
-    based on multiple strategies.
-    \f
-    :body eip: ExperimentIterationParameters
-    """
-    run_result = experiment.Experiment(eip).run()
-    return run_result
-
-
 @app.get("/health_check")
 def provide_iter8_analytics_health():
     """Get iter8 analytics health status"""
@@ -54,13 +34,13 @@ def provide_iter8_analytics_health():
 @app.post("/v2/aggregated_metrics", response_model=AggregatedMetrics, \
     response_model_exclude_unset=True)
 def provide_aggregated_metrics(
-    er: ExperimentResource = Body(..., example=er_example)):
+    ere: ExperimentResource = Body(..., example=er_example)):
     """
     POST iter8 2.0 experiment resource and metric resources and obtain aggregated metrics.
     \f
     :body er: ExperimentResource
     """
-    return get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+    return get_aggregated_metrics(ere.convert_to_float()).convert_to_quantity()
 
 @app.post("/v2/version_assessments", response_model=VersionAssessments)
 def provide_version_assessments(

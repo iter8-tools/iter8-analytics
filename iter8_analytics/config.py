@@ -1,7 +1,6 @@
 # core python dependencies
 import logging
 import os
-import sys
 import yaml
 
 import iter8_analytics.constants as constants
@@ -160,17 +159,6 @@ def get_env_config():
     # log result
     logging.getLogger(__name__).info(
         f"The backend metrics server is {config[constants.METRICS_BACKEND_CONFIG_URL]}")
-
-    # debug mode
-    # default is False
-    # currently only specifiable by environment variable
-    debug_mode = os.getenv(constants.ITER8_ANALYTICS_DEBUG_ENV, 'false')
-    if debug_mode == '1' or str.lower(debug_mode) == 'true':
-        config[constants.ITER8_ANALYTICS_DEBUG_ENV] = True
-    else:
-        config[constants.ITER8_ANALYTICS_DEBUG_ENV] = False
-    # log result
-    logging.getLogger(__name__).info(u'Debug mode: {0}'.format(debug_mode))
 
     return config
 

@@ -1,4 +1,3 @@
-
 from iter8_analytics import fastapi_app
 from fastapi.testclient import TestClient
 import unittest
