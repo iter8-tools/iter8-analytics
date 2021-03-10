@@ -66,6 +66,6 @@ The following instructions have been tested in a Python 3.7.4 virtual environmen
 4. pip install -r test-requirements.txt
 5. pip install -e .
 6. export ITER8_ANALYTICS_METRICS_BACKEND_URL=<URL of your prometheus service>
-7. make test
+7. coverage run --source=iter8_analytics --omit="*/__init__.py" -m pytest
 ```
 You can see the coverage report by opening `htmlcov/index.html` on your browser. The prometheus URL in step 6 is a dummy URL since all Prometheus calls are mocked in unit tests.
