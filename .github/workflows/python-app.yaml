@@ -38,7 +38,9 @@ jobs:
     #     # stop the build if there are Python syntax errors or undefined names
     #     pylint iter8_analytics --reports=y
     - name: Test
-      run: coverage run --source=iter8_analytics --omit="*/__init__.py" -m pytest
+      run: |
+        export UNMARSHAL_FILE=iter8_analytics/tests/unit/v2/data/unmarshal.yaml
+        coverage run --source=iter8_analytics --omit="*/__init__.py" -m pytest
 
   build-and-push:
     # Ensure test job passes before pushing image.
