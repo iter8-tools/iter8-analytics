@@ -39,6 +39,7 @@ jobs:
     #     pylint iter8_analytics --reports=y
     - name: Test
       run: |
+        echo $(pwd)
         export UNMARSHAL_FILE=iter8_analytics/tests/unit/v2/data/unmarshal.yaml
         coverage run --source=iter8_analytics --omit="*/__init__.py" -m pytest
 
