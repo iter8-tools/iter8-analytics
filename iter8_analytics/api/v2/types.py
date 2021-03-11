@@ -14,27 +14,48 @@ from iter8_analytics.api.utils import convert_to_float, convert_to_quantity
 
 PolymorphicQuantity = Union[int, str, float]
 
-class VersionVariables(BaseModel):
-    """
-    Pydantic model for Version variables
-    """
-    name: str = Field(..., description = "version variable name")
-    value: str = Field(..., description= "version variable value")
+#### Common
 
-class Version(BaseModel):
+class NamedValue(BaseModel):
     """
-    Pydantic model for Version
+    Pydantic model for a name-value pair.
+    """
+    name: str = Field(..., description = "name")
+    value: str = Field(..., description= "value")
+
+#### Metrics
+
+class MetricSpec(BaseModel):
+    """
+    Pydantic model for metric spec subresource
+    """
+    params: Sequence[NamedValue] = Field(None, description = "parameters to be used \
+        as part of the REST query for this metric")
+    provider: str = Field(..., description = "identifier for the metrics backend")
+    urlTemplate: str = Field(..., description="template of the URL to be used for querying this metric")
+
+class MetricResource(BaseModel):
+    """
+    Pydantic model for metric resource object
+    """
+    spec: MetricSpec = Field(..., description = "metrics resource spec")
+
+#### Experiments
+
+class VersionDetail(BaseModel):
+    """
+    Pydantic model for VersionDetail
     """
     name: str = Field(..., description = "version name")
-    variables: Sequence[VersionVariables] = \
-        Field(None, descriptiopn = "version tags (key-value pairs)")
+    variables: Sequence[NamedValue] = \
+        Field(None, description = "version tags (key-value pairs)")
 
 class VersionInfo(BaseModel):
     """
     Pydantic model for versionInfo field in experiment spec subresource
     """
-    baseline: Version = Field(..., description = "baseline version")
-    candidates: Sequence[Version] = Field(None, description = "a list of candidate versions")
+    baseline: VersionDetail = Field(..., description = "baseline version")
+    candidates: Sequence[VersionDetail] = Field(None, description = "a list of candidate versions")
 
 class PreferredDirection(str, Enum):
     """
@@ -79,8 +100,8 @@ class Criteria(BaseModel):
     """
     Pydantic model for Criteria field in experiment spec
     """
-    reward: Reward = Field(None, description = "reward metric")
-    objectives: Sequence[Objective] = Field(None, description = "sequence of objectives")
+    rewards: Sequence[Reward] = Field(None, description = "sequence of rewards")
+    objectives: Sequence[Objective] = Field(None, description = "sequence of metric-based objectives")
 
     def convert_to_float(self):
         """
@@ -98,7 +119,7 @@ class Criteria(BaseModel):
             self.objectives = [obj.convert_to_quantity() for obj in self.objectives]
         return self
 
-class ExperimentTestingPattern(str, Enum):
+class TestingPattern(str, Enum):
     """
     Experiment testing patterns
     """
@@ -106,14 +127,6 @@ class ExperimentTestingPattern(str, Enum):
     ab = "A/B"
     abn = "A/B/N"
     conformance = "Conformance"
-
-class ExperimentDeploymentPattern(str, Enum):
-    """
-    Deployment patterns
-    """
-    progressive = "Progressive"
-    fixed = "FixedSplit"
-    bluegreen = "BlueGreen"
 
 class WeightsConfig(BaseModel):
     """
@@ -128,43 +141,16 @@ class ExperimentStrategy(BaseModel):
     """
     Experiment strategy
     """
-    testingPattern: ExperimentTestingPattern = Field(..., \
+    testingPattern: TestingPattern = Field(..., \
         description="indicates preference for metric values -- lower, higher, or None (default)")
-    deploymentPattern: ExperimentDeploymentPattern = \
-        Field(ExperimentDeploymentPattern.progressive, description = \
-        "weight computation algorithm")
-    weights: WeightsConfig = Field(None, \
-        description = "weights configuration")
+    weights: WeightsConfig = Field(None, description = "weights configuration")
 
-class MetricParams(BaseModel):
-    """
-    Pydantic model for Metric params
-    """
-    name: str = Field(..., description = "name of the parameter")
-    value: str = Field(..., description = "value of the parameter")
-
-
-class MetricSpec(BaseModel):
-    """
-    Pydantic model for metric spec subresource
-    """
-    params: Sequence[MetricParams] = Field(None, description = "parameters to be used \
-        as part of the REST query for this metric")
-    provider: str = Field(..., description = "identifier for the metrics backend")
-
-class MetricObject(BaseModel):
-    """
-    Pydantic model for metricObj subresource
-    """
-    spec: MetricSpec = Field(..., description = "metrics resource spec")
-
-
-class MetricResource(BaseModel):
+class MetricInfo(BaseModel):
     """
     Pydantic model for metric resource
     """
     name: str = Field(..., description= "name of the metric")
-    metricObj: MetricObject = Field(..., description = "metric obj resource")
+    metricObj: MetricResource = Field(..., description = "metric resource object")
 
 class ExperimentSpec(BaseModel):
     """
@@ -174,8 +160,8 @@ class ExperimentSpec(BaseModel):
         description = "experiment strategy")
     versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
     criteria: Criteria = Field(None, description = "experiment criteria")
-    metrics: Sequence[MetricResource] = Field(None, description = "Sequence of \
-        MetricResource objects")
+    metrics: Sequence[MetricInfo] = Field(None, description = "Sequence of \
+        MetricInfo objects")
 
     def convert_to_float(self):
         """
@@ -256,7 +242,7 @@ class AggregatedMetric(BaseModel):
             self.data[key] = value.convert_to_quantity()
         return self
 
-class AggregatedMetrics(BaseModel):
+class AggregatedMetricsAnalysis(BaseModel):
     """
     Pydantic model for aggregated metrics response
     """
@@ -280,7 +266,7 @@ class AggregatedMetrics(BaseModel):
             self.data[key] = value.convert_to_quantity()
         return self
 
-class VersionAssessments(BaseModel):
+class VersionAssessmentsAnalysis(BaseModel):
     """
     Pydantic model for version assessments
     """
@@ -296,7 +282,7 @@ class WinnerAssessmentData(BaseModel):
     winner: str = Field(None, description = "winning version; None if winner not found")
     bestVersions: Sequence[str] = Field([], description = "the list of best versions found; if this list is a singleton, then winnerFound = true and winner is the only element of the list")
 
-class WinnerAssessment(BaseModel):
+class WinnerAssessmentAnalysis(BaseModel):
     """
     Pydantic model for winner assessment
     """
@@ -306,12 +292,12 @@ class WinnerAssessment(BaseModel):
 
 class VersionWeight(BaseModel):
     """
-    Pydantic model for version weight
+    Pydantic model for version weight.
     """
     name: str = Field(..., description = "version name")
     value: int = Field(..., description = "weight for a version", ge = 0)
 
-class Weights(BaseModel):
+class WeightsAnalysis(BaseModel):
     """
     Pydantic model for weight object
     """
@@ -324,13 +310,13 @@ class Analysis(BaseModel):
     """
     Pydantic model for analysis section of experiment status
     """
-    aggregatedMetrics: AggregatedMetrics = Field(None, \
+    aggregatedMetrics: AggregatedMetricsAnalysis = Field(None, \
         description = "aggregated metrics")
-    versionAssessments: VersionAssessments = Field(None, \
+    versionAssessments: VersionAssessmentsAnalysis = Field(None, \
         description = "version assessments")
-    winnerAssessment: WinnerAssessment = Field(None, \
+    winnerAssessment: WinnerAssessmentAnalysis = Field(None, \
         description = "winner assessment")
-    weights: Weights = Field(None, description = "weight recommendations")
+    weights: WeightsAnalysis = Field(None, description = "weight recommendations")
 
     def convert_to_float(self):
         """

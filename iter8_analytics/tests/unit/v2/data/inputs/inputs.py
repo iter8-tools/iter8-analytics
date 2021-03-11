@@ -13,7 +13,8 @@ mr_example = [{
             }],
             "description": "Number of requests",
             "type": "counter",
-            "provider": "prometheus"
+            "provider": "prometheus",
+            "urlTemplate": "http://prometheus-operated.iter8-monitoring:9090/api/v1/query"
         }
     }},
     {
@@ -35,7 +36,8 @@ mr_example = [{
             "sampleSize": {
                 "name": "request-count"
             },
-            "provider": "prometheus"
+            "provider": "prometheus",
+            "urlTemplate": "http://prometheus-operated.iter8-monitoring:9090/api/v1/query"
         }
     }}
 ]

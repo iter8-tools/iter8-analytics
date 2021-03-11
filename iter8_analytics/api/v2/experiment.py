@@ -11,8 +11,8 @@ import numpy as np
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
-    VersionAssessments, VersionWeight, \
-    WinnerAssessment, WinnerAssessmentData, Weights, Analysis, Objective, ExperimentTestingPattern, \
+    VersionAssessmentsAnalysis, VersionWeight, \
+    WinnerAssessmentAnalysis, WinnerAssessmentData, WeightsAnalysis, Analysis, Objective, TestingPattern, \
     Reward, PreferredDirection
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 from iter8_analytics.api.utils import gen_round
@@ -40,7 +40,7 @@ def get_version_assessments(experiment_resource: ExperimentResource):
 
     aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
 
-    version_assessments = VersionAssessments(data = {})
+    version_assessments = VersionAssessmentsAnalysis(data = {})
 
     if experiment_resource.spec.criteria is None:
         return version_assessments
@@ -75,7 +75,7 @@ def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
     """
     Get winner assessment using experiment resource for Canary or BlueGreen experiments
     """
-    was = WinnerAssessment()
+    was = WinnerAssessmentAnalysis()
 
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
@@ -102,7 +102,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
     """
     Get winner assessment using experiment resource for ab or abn experiments
     """
-    was = WinnerAssessment()
+    was = WinnerAssessmentAnalysis()
 
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
@@ -197,13 +197,13 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
     Get winner assessment using experiment resource.
     """
 
-    if experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.conformance:
-        was = WinnerAssessment()
+    if experiment_resource.spec.strategy.testingPattern == TestingPattern.conformance:
+        was = WinnerAssessmentAnalysis()
         was.message = Message.join_messages([Message(MessageLevel.error, \
             "conformance tests cannot have winner assessments")])
         return was
 
-    elif (experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.canary):
+    elif (experiment_resource.spec.strategy.testingPattern == TestingPattern.canary):
         return get_winner_assessment_for_canarybg(experiment_resource)
 
     else:
@@ -214,8 +214,8 @@ def get_weights(experiment_resource: ExperimentResource):
     """
     Get weights using experiment resource. All weight values in the output will be integers.
     """
-    if experiment_resource.spec.strategy.testingPattern == ExperimentTestingPattern.conformance:
-        return Weights(data = [], \
+    if experiment_resource.spec.strategy.testingPattern == TestingPattern.conformance:
+        return WeightsAnalysis(data = [], \
             message = "weight computation is not applicable to a conformance experiment")
 
     versions = [experiment_resource.spec.versionInfo.baseline]
@@ -326,7 +326,7 @@ def get_weights(experiment_resource: ExperimentResource):
     data = []
     for version in versions:
         data.append(VersionWeight(name = version.name, value = next(integral_weights)))
-    _weights = Weights(data = data)
+    _weights = WeightsAnalysis(data = data)
     _weights.message = Message.join_messages([Message(MessageLevel.info, "all ok")])
     logger.debug("weights: %s", pprint.PrettyPrinter().pformat(_weights))
     return _weights

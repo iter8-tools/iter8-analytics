@@ -13,8 +13,8 @@ import iter8_analytics.config as config
 
 # v2 imports
 from iter8_analytics.api.v2.types import  ExperimentResource, \
-    AggregatedMetrics, VersionAssessments, \
-    WinnerAssessment, Weights, Analysis
+    AggregatedMetricsAnalysis, VersionAssessmentsAnalysis, \
+    WinnerAssessmentAnalysis, WeightsAnalysis, Analysis
 from iter8_analytics.api.v2.examples import er_example, er_example_step1, \
     er_example_step2, er_example_step3
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
@@ -31,7 +31,7 @@ def provide_iter8_analytics_health():
     """Get iter8 analytics health status"""
     return {"status": "Ok"}
 
-@app.post("/v2/aggregated_metrics", response_model=AggregatedMetrics, \
+@app.post("/v2/aggregated_metrics", response_model=AggregatedMetricsAnalysis, \
     response_model_exclude_unset=True)
 def provide_aggregated_metrics(
     ere: ExperimentResource = Body(..., example=er_example)):
@@ -42,7 +42,7 @@ def provide_aggregated_metrics(
     """
     return get_aggregated_metrics(ere.convert_to_float()).convert_to_quantity()
 
-@app.post("/v2/version_assessments", response_model=VersionAssessments)
+@app.post("/v2/version_assessments", response_model=VersionAssessmentsAnalysis)
 def provide_version_assessments(
     experiment_resource: ExperimentResource = Body(..., example=er_example_step1)):
     """
@@ -53,7 +53,7 @@ def provide_version_assessments(
     """
     return get_version_assessments(experiment_resource.convert_to_float())
 
-@app.post("/v2/winner_assessment", response_model=WinnerAssessment)
+@app.post("/v2/winner_assessment", response_model=WinnerAssessmentAnalysis)
 def provide_winner_assessment(
     experiment_resource: ExperimentResource = Body(..., example=er_example_step2)):
     """
@@ -62,10 +62,9 @@ def provide_winner_assessment(
     \f
     :body er: ExperimentResource
     """
-    
     return get_winner_assessment(experiment_resource.convert_to_float())
 
-@app.post("/v2/weights", response_model=Weights)
+@app.post("/v2/weights", response_model=WeightsAnalysis)
 def provide_weights(
     experiment_resource: ExperimentResource = Body(..., example=er_example_step3)):
     """
@@ -79,13 +78,13 @@ def provide_weights(
 
 @app.post("/v2/analytics_results", response_model=Analysis)
 def provide_analytics_results(
-    er: ExperimentResource = Body(..., example=er_example)):
+    expr: ExperimentResource = Body(..., example=er_example)):
     """
     POST iter8 2.0 experiment resource and metric resources and get analytics results.
     \f
-    :body er: ExperimentResource
+    :body expr: ExperimentResource
     """
-    return get_analytics_results(er.convert_to_float()).convert_to_quantity()
+    return get_analytics_results(expr.convert_to_float()).convert_to_quantity()
 
 def config_logger(log_level="debug"):
     """Configures the global logger
@@ -93,7 +92,6 @@ def config_logger(log_level="debug"):
     Args:
         log_level (str): log level ('debug', 'info', ...)
     """
-    logger = logging.getLogger('iter8_analytics')
     handler = logging.StreamHandler()
 
     if str.lower(log_level) == 'info':

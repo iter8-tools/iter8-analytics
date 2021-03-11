@@ -10,30 +10,25 @@ import pprint
 
 # external module dependencies
 import requests
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
 import numpy as np
 import jq
 
 # iter8 dependencies
-from iter8_analytics.api.v2.types import AggregatedMetrics, ExperimentResource, \
-    MetricResource, Version, AggregatedMetric, VersionMetric
-import iter8_analytics.constants as constants
-from iter8_analytics.config import env_config
+from iter8_analytics.api.v2.types import AggregatedMetricsAnalysis, ExperimentResource, \
+    MetricResource, VersionDetail, AggregatedMetric, VersionMetric
+import iter8_analytics.config as config
 from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
+
 
 def get_metrics_url_template(metric_resource):
     """
     Get the URL template for the given metric.
     """
-    assert metric_resource.spec.provider == "prometheus"
-    prometheus_url_template = env_config[constants.METRICS_BACKEND_CONFIG_URL]
-    logger.debug("Prometheus url template: %s", prometheus_url_template)
-    return prometheus_url_template + "/api/v1/query"
+    return metric_resource.spec.urlTemplate
 
-def extrapolate(template: str, version: Version, start_time: datetime):
+def extrapolate(template: str, version: VersionDetail, start_time: datetime):
     """
     Extrapolate a string templated using name and tags of versions,
     and starting time of the experiment
@@ -53,86 +48,34 @@ def extrapolate(template: str, version: Version, start_time: datetime):
     except KeyError:
         logger.debug("Error while attemping to substitute tag in query template")
         return "", "Error while attemping to substitute tag in query template"
-    
 
 def unmarshal(response, provider):
     """
     Unmarshal value from metric response
     """
-    assert provider == "prometheus"
-    # for now, this will hardcode the prometheus unmarshaler
-    schema = {
-        "name": "prometheus_singleton_vector",
-        "data": {
-                "$schema": "http://json-schema.org/schema#",
-                "$id": "http://iter8.tools/kfserving/schemas/prometheus_singleton.json",
-                "type": "object",
-                "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "success"
-                        ]
-                    },
-                    "data": {
-                        "type": "object",
-                        "properties": {
-                            "resultType": {
-                                "type": "string",
-                                "enum": [
-                                    "vector"
-                                ]
-                            },
-                            "result": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "value": {
-                                            "type": "array",
-                                            "minItems": 2,
-                                            "maxItems": 2
-                                        }
-                                    },
-                                    "required": ["value"]
-                                },
-                                "minItems": 1,
-                                "maxItems": 1
-                            }
-                        },
-                        "required": ["resultType", "result"]
-                    }
-                },
-            "required": [
-                    "status",
-                    "data"
-                ]
-        }
-    }
+    logger.info(config.unmarshal)
+    if provider not in config.unmarshal.keys():
+        logger.error("metrics provider %s not  present in unmarshal object", provider)
+        return None, ValueError(f"metrics provider {provider} not present in unmarshal object")
     try:
-        validate(instance = response, schema = schema)
-        logger.debug("Validated response: %s", response)
-        try:
-            num = jq.compile(".data.result[0].value[1] | tonumber").input(response).first()
-            if isinstance(num, numbers.Number) and not np.isnan(num):
-                return num, None
-            return None, ValueError("Metrics response did not yield a number")
-        except Exception as err:
-            return None, err
-    except ValidationError as err:
+        num = jq.compile(config.unmarshal[provider]).input(response).first()
+        if isinstance(num, numbers.Number) and not np.isnan(num):
+            return num, None
+        return None, ValueError("Metrics response did not yield a number")
+    except Exception as err:
         return None, err
 
-def get_metric_value(metric_resource: MetricResource, version: Version, start_time: datetime):
+def get_metric_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
     """
     Extrapolate metrics backend URL and query parameters; query the metrics backend;
     and return the value of the metric.
     """
     (value, err) = (None, None)
     url_template = get_metrics_url_template(metric_resource)
-    url, err = extrapolate(url_template, version, start_time)
+    # the following extrapolation is wrong; it should  happen based on secrets
+    # url, err = extrapolate(url_template, version, start_time)
+    url = url_template
     if err is None:
-        # example for prometheus; 
-        # metric_resource.spec.params now: {"query": "your prometheus query template"}
         params = {}
         for pattern in metric_resource.spec.params:
             pt_key, pt_value = pattern.name, pattern.value
@@ -149,37 +92,40 @@ def get_metric_value(metric_resource: MetricResource, version: Version, start_ti
             except requests.exceptions.RequestException as exp:
                 logger.error("Error while attempting to connect to metrics backend")
                 return value, exp
+            logger.debug("unmarshaling metrics response...")
             value, err = unmarshal(response, metric_resource.spec.provider)
     return value, err
 
-def get_aggregated_metrics(er: ExperimentResource):
+def get_aggregated_metrics(expr: ExperimentResource):
     """
     Get aggregated metrics from experiment resource and metric resources.
     """
-    versions = [er.spec.versionInfo.baseline]
-    if er.spec.versionInfo.candidates is not None:
-        versions += er.spec.versionInfo.candidates
+    versions = [expr.spec.versionInfo.baseline]
+    if expr.spec.versionInfo.candidates is not None:
+        versions += expr.spec.versionInfo.candidates
 
     messages = []
 
-    iam = AggregatedMetrics(data = {})
+    iam = AggregatedMetricsAnalysis(data = {})
 
     #check if start time is greater than now
-    if er.status.startTime > (datetime.now(timezone.utc)):
+    if expr.status.startTime > (datetime.now(timezone.utc)):
         messages.append(Message(MessageLevel.error, "Invalid startTime: greater than current time"))
         iam.message = Message.join_messages(messages)
         return iam
 
-    for metric_resource in er.spec.metrics:
+    for metric_resource in expr.spec.metrics:
         iam.data[metric_resource.name] = AggregatedMetric(data = {})
         for version in versions:
             iam.data[metric_resource.name].data[version.name] = VersionMetric()
             val, err = get_metric_value(metric_resource.metricObj, version, \
-            er.status.startTime)
+            expr.status.startTime)
             if err is None:
                 iam.data[metric_resource.name].data[version.name].value = val
             else:
-                messages.append(Message(MessageLevel.error, f"Error from metrics backend for metric: {metric_resource.name} and version: {version.name}"))
+                messages.append(Message(MessageLevel.error, \
+                    f"Error from metrics backend for metric: {metric_resource.name} \
+                        and version: {version.name}"))
 
     iam.message = Message.join_messages(messages)
     logger.debug("Analysis object after metrics collection")

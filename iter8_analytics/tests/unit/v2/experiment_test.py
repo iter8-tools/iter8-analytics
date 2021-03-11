@@ -1,4 +1,4 @@
-"""Tests for module iter8_analytics.api.analytics.endpoints.metrics_test"""
+"""Tests for module iter8_analytics.api.v2"""
 # standard python stuff
 import logging
 import json
@@ -10,10 +10,14 @@ import requests_mock
 from fastapi import HTTPException
 
 from iter8_analytics import fastapi_app
-from iter8_analytics.api.v2.types import *
-from iter8_analytics.config import env_config
+from iter8_analytics.api.v2.types import \
+    ExperimentResource, AggregatedMetricsAnalysis, VersionAssessmentsAnalysis, \
+        WinnerAssessmentAnalysis, WeightsAnalysis
+from iter8_analytics.config import env_config, unmarshal
 import iter8_analytics.constants as constants
-from iter8_analytics.tests.unit.v2.data.inputs.inputs import *
+from iter8_analytics.tests.unit.v2.data.inputs.inputs import \
+    er_example, er_example_step1, er_example_step2, er_example_step3, \
+        am_response, va_response, wa_response, w_response
 
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
@@ -24,32 +28,35 @@ logger = logging.getLogger('iter8_analytics')
 if not logger.hasHandlers():
     fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 
-prometheus_url_template = env_config[constants.METRICS_BACKEND_CONFIG_URL]
-metrics_endpoint = f'{prometheus_url_template}/api/v1/query'
+logger.info(env_config)
+logger.info(unmarshal)
 
 
 class TestExperiment:
+    """Test Iter8 v2 experiment, metrics and types"""
     def test_v2_input_object(self):
-        er = ExperimentResource(** er_example)
-        er = ExperimentResource(** er_example_step1)
-        er = ExperimentResource(** er_example_step2)
-        er = ExperimentResource(** er_example_step3)
+        ExperimentResource(** er_example)
+        ExperimentResource(** er_example_step1)
+        ExperimentResource(** er_example_step2)
+        ExperimentResource(** er_example_step3)
         
         
     def test_experiment_response_objects(self):
-        am = AggregatedMetric(** am_response)
-        va = VersionAssessments(** va_response)
-        wa = WinnerAssessment(** wa_response)
-        w = Weights(** w_response)
+        AggregatedMetricsAnalysis(** am_response)
+        VersionAssessmentsAnalysis(** va_response)
+        WinnerAssessmentAnalysis(** wa_response)
+        WeightsAnalysis(** w_response)
 
     def test_v2_aggregated_metrics_endpoint(self):
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            response_json = json.load(open(file_path))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=response_json)
 
-            er = ExperimentResource(** er_example)
-            get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
+            expr = ExperimentResource(** er_example)
+            agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
+            assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
         
     def test_v2_version_assessment_endpoint(self):
         er = ExperimentResource(** er_example_step1)
@@ -67,7 +74,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
 
             er = ExperimentResource(** er_example)
             get_analytics_results(er.convert_to_float()).convert_to_quantity()
@@ -76,7 +83,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
             eg = copy.deepcopy(er_example)
             del(eg['spec']['versionInfo']['candidates'])
             er = ExperimentResource(** eg)
@@ -86,7 +93,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
             eg = copy.deepcopy(er_example)
             eg['spec']['metrics'][0]['metricObj']['spec']['params'][0]['value'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
             eg['spec']['metrics'][1]['metricObj']['spec']['params'][0]['value'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
@@ -102,13 +109,13 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
  
             eg = copy.deepcopy(er_example)
             del(eg['spec']['versionInfo']['candidates'])
             eg['spec']['strategy']['testingPattern'] = 'Conformance'
             er = ExperimentResource(** eg)
-            ans = get_analytics_results(er.convert_to_float()).convert_to_quantity()
+            get_analytics_results(er.convert_to_float()).convert_to_quantity()
 
     def test_v2_va_without_am(self):
         er = ExperimentResource(** er_example)
@@ -135,7 +142,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_no_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
 
             er = ExperimentResource(** er_example)
             resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
@@ -183,7 +190,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_no_response.json')
-            m.get(metrics_endpoint, json=json.load(open(file_path)))
+            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
 
             er = ExperimentResource(** er_example)
             resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
