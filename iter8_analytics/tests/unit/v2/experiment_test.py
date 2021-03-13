@@ -40,7 +40,6 @@ class TestExperiment:
         ExperimentResource(** er_example_step2)
         ExperimentResource(** er_example_step3)
         
-        
     def test_experiment_response_objects(self):
         AggregatedMetricsAnalysis(** am_response)
         VersionAssessmentsAnalysis(** va_response)
@@ -57,6 +56,13 @@ class TestExperiment:
             expr = ExperimentResource(** er_example)
             agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
             assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
+
+            ercopy = copy.deepcopy(er_example)
+            del ercopy["spec"]["metrics"]
+            expr = ExperimentResource(** ercopy)
+            agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
+            # assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
+
         
     def test_v2_version_assessment_endpoint(self):
         er = ExperimentResource(** er_example_step1)
@@ -88,22 +94,6 @@ class TestExperiment:
             del(eg['spec']['versionInfo']['candidates'])
             er = ExperimentResource(** eg)
             get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-    
-    def test_v2_am_incorrect_tag_names(self):
-        with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-                                     'prometheus_sample_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
-            eg = copy.deepcopy(er_example)
-            eg['spec']['metrics'][0]['metricObj']['spec']['params'][0]['value'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
-            eg['spec']['metrics'][1]['metricObj']['spec']['params'][0]['value'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
-            eg['spec']['versionInfo']['baseline']['variables'] = [{"name": "revision_name", "value": "sample-application-v1"}]
-            eg['spec']['versionInfo']['candidates'][0]['variables'] = [{"name": "revision_name", "value": "sample-application-v2"}]
-            er = ExperimentResource(** eg)
-            
-            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-            logger.info(resp)
-            assert("Error from metrics backend for metric" in resp.message)
     
     def test_v2_analytics_assessment_conformance(self):
         with requests_mock.mock(real_http=True) as m:

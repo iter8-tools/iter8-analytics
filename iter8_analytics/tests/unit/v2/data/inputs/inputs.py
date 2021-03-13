@@ -75,8 +75,7 @@ er_example = {
     },
     "status": {
         "startTime": "2020-04-03T12:55:50.568Z"
-    },
-    
+    },    
 }
 
 am_response = {

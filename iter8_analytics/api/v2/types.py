@@ -32,7 +32,14 @@ class MetricSpec(BaseModel):
     params: Sequence[NamedValue] = Field(None, description = "parameters to be used \
         as part of the REST query for this metric")
     provider: str = Field(..., description = "identifier for the metrics backend")
-    urlTemplate: str = Field(..., description="template of the URL to be used for querying this metric")
+    urlTemplate: str = Field(..., \
+        description="template of the URL to be used for querying this metric")
+    secret: str = Field(None, description="k8s secret reference in the namespace/name format")
+    headerTemplates: Sequence[NamedValue] = Field(None, \
+        description = "headerTemplates are field names \
+        and value templates for headers that should be passed to the metrics backend; \
+        typically, these are authentication headers; \
+        values are interpolated using secret data")
 
 class MetricResource(BaseModel):
     """
