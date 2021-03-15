@@ -27,8 +27,7 @@ jobs:
         # minikube service list
         # minikube service iter8-analytics --url
         minikube tunnel --cleanup &
-        echo "------------------opening the service------------------"
-        curl $(minikube service iter8-analytics --url)/health_check
+        curl http://localhost:8080/health_check
 
     # curl metrics endpoint of analytics with proper metrics inputs... 
     # try proper URLs
