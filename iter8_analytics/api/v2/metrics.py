@@ -117,16 +117,12 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
             return None, err
     return params, None
 
-def unmarshal(response, provider):
+def unmarshal(response, jq_expression):
     """
     Unmarshal value from metric response
     """
-    logger.info(config.unmarshal)
-    if provider not in config.unmarshal.keys():
-        logger.error("metrics provider %s not  present in unmarshal object", provider)
-        return None, ValueError(f"metrics provider {provider} not present in unmarshal object")
     try:
-        num = jq.compile(config.unmarshal[provider]).input(response).first()
+        num = jq.compile(jq_expression).input(response).first()
         if isinstance(num, numbers.Number) and not np.isnan(num):
             return num, None
         return None, ValueError("Metrics response did not yield a number")
@@ -154,7 +150,7 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
             logger.error("Error while attempting to connect to metrics backend")
             return value, exp
         logger.debug("unmarshaling metrics response...")
-        value, err = unmarshal(response, metric_resource.spec.provider)
+        value, err = unmarshal(response, metric_resource.spec.jqExpression)
     return value, err
 
 def get_aggregated_metrics(expr: ExperimentResource):

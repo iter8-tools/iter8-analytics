@@ -40,7 +40,6 @@ jobs:
     - name: Test
       run: |
         echo $(pwd)
-        export UNMARSHAL_FILE=$(pwd)/iter8_analytics/tests/unit/v2/data/unmarshal.yaml
         coverage run --source=iter8_analytics --omit="*/__init__.py" -m pytest
 
   build-and-push:

@@ -18,15 +18,5 @@ spec:
         - name: iter8-analytics
           image: "iter8/iter8-analytics:latest"
           imagePullPolicy: Always
-          env:
-            - name: UNMARSHAL_FILE
-              value: "/config/unmarshal.yaml"
           resources:
             {}
-          volumeMounts:
-          - mountPath: /config
-            name: config-volume
-      volumes:
-        - name: config-volume
-          configMap: 
-            name: iter8-analytics

@@ -13,7 +13,7 @@ from iter8_analytics import fastapi_app
 from iter8_analytics.api.v2.types import \
     ExperimentResource, AggregatedMetricsAnalysis, VersionAssessmentsAnalysis, \
         WinnerAssessmentAnalysis, WeightsAnalysis
-from iter8_analytics.config import env_config, unmarshal
+from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 from iter8_analytics.tests.unit.v2.data.inputs.inputs import \
     er_example, er_example_step1, er_example_step2, er_example_step3, \
@@ -29,8 +29,6 @@ if not logger.hasHandlers():
     fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 
 logger.info(env_config)
-logger.info(unmarshal)
-
 
 class TestExperiment:
     """Test Iter8 v2 experiment, metrics and types"""

@@ -1,35 +1,8 @@
-"""Provides functions for reading configuration and unmarshal information"""
+"""Provides functions for reading configuration information"""
 import logging
 import os
-import yaml
 
 import iter8_analytics.constants as constants
-
-def get_unmarshal():
-    """Get unmarshal map that providers unmarshal logic for all metric backends"""
-    unmarshal_file = os.getenv(constants.UNMARSHAL_FILE_ENV)
-    if unmarshal_file is None:
-        logging.getLogger(__name__).error(\
-            "%s environment variable not set", constants.UNMARSHAL_FILE_ENV)
-        return {}
-
-    logging.getLogger(__name__).info("reading unmarshal file: %s", unmarshal_file)
-
-    try:
-        with open(unmarshal_file, 'r') as stream:
-            try:
-                _unmarshal = yaml.safe_load(stream)
-            except yaml.YAMLError:
-                logging.getLogger(__name__).warning(\
-                    "unable to parse configuration file %s; ignoring", unmarshal_file)
-                return {}
-    except IOError:
-        logging.getLogger(__name__).warning(\
-            "Unable to read configuration file %s; ignoring", unmarshal_file)
-        return {}
-    return _unmarshal
-
-unmarshal = get_unmarshal()
 
 def get_env_config():
     ''' Reads ITER8 config information for env variables'''
