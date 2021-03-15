@@ -10,9 +10,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Run Kubernetes tools
-        uses: stefanprodan/kube-tools@v1
-        with:
-          kubectl: 1.20.0
+      uses: stefanprodan/kube-tools@v1
+      with:
+        kubectl: 1.20.0
     - name: Setup Minikube
       uses: manusa/actions-setup-minikube@v2.3.1
       with:
