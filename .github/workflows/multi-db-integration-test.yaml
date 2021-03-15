@@ -26,6 +26,7 @@ jobs:
     - run: |
         # minikube service list
         # minikube service iter8-analytics --url
+        minikube tunnel --cleanup &
         echo "------------------opening the service------------------"
         curl $(minikube service iter8-analytics --url)/health_check
 
