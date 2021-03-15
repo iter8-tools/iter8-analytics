@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-mock
+  labels:
+    app: metrics-mock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-mock
+  template:
+    metadata:
+      labels:
+        app: metrics-mock
+    spec:
+      containers:
+      - name: metrics-mock
+        image: iter8/metrics-mock:0.1.0
+        imagePullPolicy: IfNotPresent
+---        
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-mock
+spec:
+  selector:
+    app: metrics-mock
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

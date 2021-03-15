@@ -21,11 +21,11 @@ jobs:
     - run: |
         eval $(minikube docker-env)
         docker build . -t iter8-analytics
-        kubectl create -f iter8_analytics/tests/integration/deployment.yaml
-  
-      
-    # run iter8-analytics container in the cluster
-    # run metrics mock
+        kubectl apply -f iter8_analytics/tests/integration/deployment.yaml
+        kubectl apply -f iter8_analytics/tests/integration/metrics-mock.yaml
+    - run: |
+        kubectl get svc
+        curl http://localhost:8080/health_check
     # curl metrics endpoint of analytics with proper metrics inputs... 
     # try proper URLs
     # try improper URLs
