@@ -26,9 +26,8 @@ jobs:
     - run: |
         # minikube service list
         # minikube service iter8-analytics --url
-        minikube tunnel --cleanup &
-        sleep 10.0
-        kubectl get svc
+        kubectl port-forward svc/iter8-analytics 8080:8080 &
+        sleep 3.0
         curl http://localhost:8080/health_check
 
     # curl metrics endpoint of analytics with proper metrics inputs... 

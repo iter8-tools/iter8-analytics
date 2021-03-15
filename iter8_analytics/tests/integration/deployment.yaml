@@ -24,9 +24,10 @@ kind: Service
 metadata:
   name: iter8-analytics
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: iter8-analytics
   ports:
     - port: 8080
       targetPort: 8080
+      nodePort: 30800
