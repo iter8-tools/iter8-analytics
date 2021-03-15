@@ -27,6 +27,7 @@ jobs:
         # minikube service list
         # minikube service iter8-analytics --url
         minikube tunnel --cleanup &
+        sleep 10.0
         kubectl get svc
         curl http://localhost:8080/health_check
 
