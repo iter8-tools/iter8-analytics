@@ -28,6 +28,5 @@ spec:
   selector:
     app: iter8-analytics
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 8080
       targetPort: 8080

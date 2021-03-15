@@ -25,9 +25,9 @@ jobs:
         kubectl apply -f iter8_analytics/tests/integration/metrics-mock.yaml
     - run: |
         minikube service list
-        minikube service iter8-analytics --url
         echo "------------------opening the service------------------"
-        curl http://localhost:80/health_check
+        curl $(minikube service iter8-analytics --url)/health_check
+
     # curl metrics endpoint of analytics with proper metrics inputs... 
     # try proper URLs
     # try improper URLs
