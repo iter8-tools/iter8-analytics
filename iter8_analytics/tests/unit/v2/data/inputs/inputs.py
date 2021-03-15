@@ -1,3 +1,6 @@
+"""
+Examples used as inputs in tests and in OpenAPI documentation
+"""
 mr_example = [{
     "name": "request-count",
     "metricObj": {
@@ -43,7 +46,7 @@ mr_example = [{
         }
     }}
 ]
-    
+
 er_example = {
     "spec": {
         "strategy": {
@@ -77,7 +80,7 @@ er_example = {
     },
     "status": {
         "startTime": "2020-04-03T12:55:50.568Z"
-    },    
+    },
 }
 
 am_response = {

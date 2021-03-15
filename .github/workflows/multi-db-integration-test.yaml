@@ -1,0 +1,35 @@
+name: Multi database and secrets integration test
+
+on: ["pull_request"]
+
+jobs:
+  in-cluster-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run Kubernetes tools
+        uses: stefanprodan/kube-tools@v1
+        with:
+          kubectl: 1.20.0
+    - name: Setup Minikube
+      uses: manusa/actions-setup-minikube@v2.3.1
+      with:
+        minikube version: 'v1.16.0'
+        kubernetes version: 'v1.20.0'
+    - run: |
+        eval $(minikube docker-env)
+        docker build . -t iter8-analytics
+        kubectl create -f iter8_analytics/tests/integration/deployment.yaml
+  
+      
+    # run iter8-analytics container in the cluster
+    # run metrics mock
+    # curl metrics endpoint of analytics with proper metrics inputs... 
+    # try proper URLs
+    # try improper URLs
+    # try with proper headers
+    # try without proper headers
+    # try proper versions
+    # try improper versions
