@@ -15,7 +15,7 @@ from iter8_analytics.api.v2.types import \
         WinnerAssessmentAnalysis, WeightsAnalysis
 from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
-from iter8_analytics.tests.unit.v2.data.inputs.inputs import \
+from iter8_analytics.api.v2.examples import \
     er_example, er_example_step1, er_example_step2, er_example_step3, \
         am_response, va_response, wa_response, w_response
 

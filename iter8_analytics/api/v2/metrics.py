@@ -9,6 +9,7 @@ import numbers
 import pprint
 import base64
 import binascii
+import json
 
 # external module dependencies
 import requests
@@ -21,7 +22,6 @@ from kubernetes import config as kubeconfig
 # iter8 dependencies
 from iter8_analytics.api.v2.types import AggregatedMetricsAnalysis, ExperimentResource, \
     MetricResource, VersionDetail, AggregatedMetric, VersionMetric
-import iter8_analytics.config as config
 from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
@@ -146,9 +146,9 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
         try:
             logger.debug("Invoking requests get with url %s and params: %s", url, params)
             response = requests.get(url, params = params, headers = headers, timeout = 2.0).json()
-        except requests.exceptions.RequestException as exp:
-            logger.error("Error while attempting to connect to metrics backend")
-            return value, exp
+        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError) as exc:
+            logger.error("Error while attempting to get metric value from backend")
+            return value, exc
         logger.debug("unmarshaling metrics response...")
         value, err = unmarshal(response, metric_resource.spec.jqExpression)
     return value, err
