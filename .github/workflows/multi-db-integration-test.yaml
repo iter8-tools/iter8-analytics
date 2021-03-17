@@ -26,8 +26,7 @@ jobs:
         kubectl apply -f iter8_analytics/tests/integration/deployment.yaml
         kubectl apply -f iter8_analytics/tests/integration/metrics-mock.yaml
     - run: |
-        # minikube service list
-        # minikube service iter8-analytics --url
+        # port forwarding analytics
         kubectl wait deploy iter8-analytics --for condition=available --timeout=30s
         kubectl wait deploy metrics-mock --for condition=available --timeout=30s
         kubectl port-forward svc/iter8-analytics 8080:8080 &
