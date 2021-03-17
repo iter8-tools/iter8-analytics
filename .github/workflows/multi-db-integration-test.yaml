@@ -39,6 +39,10 @@ jobs:
         sleep 10.0
         curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics1.json > out.json
         cat out.json
+        echo "logging iter8 analytics"
+        kubectl logs deploy/iter8-analytics
+        echo "logging metrics mock"
+        kubect logs deploy/metrics-mock
         cat out.json | jq '.data | ."request-count".data.default.value | tonumber'
 
     # curl metrics endpoint of analytics with proper metrics inputs... 
