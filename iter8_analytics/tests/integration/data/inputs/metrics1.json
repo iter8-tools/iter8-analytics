@@ -55,7 +55,7 @@
               "type": "counter",
               "provider": "prometheus",
               "jqExpression": ".data.result[0].value[1] | tonumber",
-              "urlTemplate": "http://metrics-mock:8080/promcounter",
+              "urlTemplate": "http://metrics-mock.default.svc.cluster.local:8080/promcounter",
               "secret": "default/test-secret"
             }
           }
