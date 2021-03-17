@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: metrics-mock
-        image: iter8/metrics-mock:0.1.0
+        image: iter8/metrics-mock:0.1.1
         imagePullPolicy: IfNotPresent
 ---        
 apiVersion: v1

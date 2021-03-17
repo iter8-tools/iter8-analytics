@@ -30,9 +30,14 @@ logger = logging.getLogger('iter8_analytics')
 @cached(cache=TTLCache(maxsize=1024, ttl=10))
 def get_secret_data(name, namespace):
     """fetch a secret from Kubernetes cluster and return its decoded data"""
-    kubeconfig.load_kube_config()
+    kubeconfig.load_incluster_config()
     core = kubeclient.CoreV1Api()
-    sec = core.read_namespaced_secret(name, namespace)
+    try:
+        sec = core.read_namespaced_secret(name, namespace)
+    except kubeclient.exceptions.ApiException as exc:
+        logger.error("An exception occurred while attempting to read secret.. \
+            does iter8-analytics have RBAC permissions for reading this secret?")
+        return None, exc
     if sec is None:
         return None, KeyError(f"cannot find secret {name} in namespace {namespace}")
     sec_data = {}
@@ -144,10 +149,11 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
         params, err = get_params(metric_resource, version, start_time)
     if err is None:
         try:
-            logger.debug("Invoking requests get with url %s and params: %s", url, params)
+            logger.debug("Invoking requests get with url %s and params: %s and headers: %s", url, params, headers)
             response = requests.get(url, params = params, headers = headers, timeout = 2.0).json()
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError) as exc:
             logger.error("Error while attempting to get metric value from backend")
+            logger.error(exc)
             return value, exc
         logger.debug("unmarshaling metrics response...")
         value, err = unmarshal(response, metric_resource.spec.jqExpression)

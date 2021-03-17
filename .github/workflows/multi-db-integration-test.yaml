@@ -26,9 +26,15 @@ jobs:
     - run: |
         # minikube service list
         # minikube service iter8-analytics --url
+        kubectl wait deploy iter8-analytics --for condition=available
+        kubectl wait deploy metrics-mock --for condition=available
         kubectl port-forward svc/iter8-analytics 8080:8080 &
         sleep 3.0
         curl http://localhost:8080/health_check
+    - run: |
+        # create kubernetes secret for use by iter8-analytics
+        kubectl create secret generic test-secret --from-literal=user=abcd --from-literal=pass=efgh
+        curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics1.json  
 
     # curl metrics endpoint of analytics with proper metrics inputs... 
     # try proper URLs
