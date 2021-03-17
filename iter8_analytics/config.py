@@ -9,11 +9,9 @@ def get_env_config():
     config = {}
 
     # log level
-    # default value
-    config[constants.LOG_LEVEL] = constants.LOG_LEVEL_DEFAULT_LEVEL
     # override with environment variable
-    config[constants.LOG_LEVEL] = os.getenv(
-        constants.ITER8_ANALYTICS_LOG_LEVEL_ENV, config[constants.LOG_LEVEL])
+    config[constants.LOG_LEVEL] = os.getenv(constants.ITER8_ANALYTICS_LOG_LEVEL_ENV, \
+        constants.LOG_LEVEL_DEFAULT_LEVEL)
 
     # port
     # default value

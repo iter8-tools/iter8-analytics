@@ -12,7 +12,7 @@ from fastapi import HTTPException
 from iter8_analytics import fastapi_app
 from iter8_analytics.api.v2.types import \
     ExperimentResource, AggregatedMetricsAnalysis, VersionAssessmentsAnalysis, \
-        WinnerAssessmentAnalysis, WeightsAnalysis
+        WinnerAssessmentAnalysis, WeightsAnalysis, VersionWeight
 from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 from iter8_analytics.api.v2.examples import \
@@ -37,7 +37,7 @@ class TestExperiment:
         ExperimentResource(** er_example_step1)
         ExperimentResource(** er_example_step2)
         ExperimentResource(** er_example_step3)
-        
+
     def test_experiment_response_objects(self):
         AggregatedMetricsAnalysis(** am_response)
         VersionAssessmentsAnalysis(** va_response)
@@ -277,17 +277,12 @@ class TestExperiment:
     
     def test_v2_weights_with_winner(self):
         er = ExperimentResource(** er_example_step3)
-        resp = get_weights(er.convert_to_float())  
+        resp = get_weights(er.convert_to_float())
 
-        expected_resp = [{
-                "name": "default",
-                "value": 5
-
-            },{
-                "name": "canary",
-                "value": 95
-
-            }]      
+        expected_resp = [
+            VersionWeight(name = "default", value = 5), 
+            VersionWeight(name = "canary", value = 95)
+            ]
         assert(resp.data == expected_resp)
 
     def test_v2_weights_with_no_winner(self):
@@ -296,7 +291,7 @@ class TestExperiment:
             "winnerFound": False
         }
         er = ExperimentResource(** eg)
-        resp = get_weights(er.convert_to_float()) 
+        resp = get_weights(er.convert_to_float())
         assert(resp.data == w_response['data'])
     
     def test_v2_inc_old_weights_and_best_versions_and_canary_winner(self):

@@ -125,7 +125,8 @@ va_response = {
 wa_response = {
   "data": {
     "winnerFound": True,
-    "winner": "canary"
+    "winner": "canary",
+    "bestVersions": ["canary"]
   },
   "message": "candidate satisfies all objectives"
 }
