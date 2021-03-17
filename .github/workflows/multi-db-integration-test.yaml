@@ -36,6 +36,7 @@ jobs:
     - run: |
         # create kubernetes secret for use by iter8-analytics
         kubectl create secret generic test-secret --from-literal=user=abcd --from-literal=pass=efgh
+        sleep 4.0
         curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics1.json > out.json
         cat out.json
         cat out.json | jq '.data | ."request-count".data.default.value | tonumber'
