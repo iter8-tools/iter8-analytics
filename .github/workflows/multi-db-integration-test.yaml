@@ -58,6 +58,7 @@ jobs:
             exit 1
         else
             echo "command failed as expected..."
+        fi
     - run: |
         # curl metrics endpoint of analytics with metrics inputs... try improper headers
         curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics3.json > out.json
@@ -71,6 +72,7 @@ jobs:
             exit 1
         else
             echo "command failed as expected..."
+        fi
     - run: |
         # curl metrics endpoint of analytics with metrics inputs... try improper versions
         curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics4.json > out.json
@@ -84,3 +86,4 @@ jobs:
             exit 1
         else
             echo "command failed as expected..."
+        fi
