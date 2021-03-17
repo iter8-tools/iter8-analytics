@@ -42,7 +42,7 @@ jobs:
         echo "logging iter8 analytics"
         kubectl logs deploy/iter8-analytics
         echo "logging metrics mock"
-        kubect logs deploy/metrics-mock
+        kubectl logs deploy/metrics-mock
         cat out.json | jq '.data | ."request-count".data.default.value | tonumber'
 
     # curl metrics endpoint of analytics with proper metrics inputs... 
