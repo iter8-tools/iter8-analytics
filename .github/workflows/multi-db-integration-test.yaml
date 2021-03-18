@@ -61,6 +61,7 @@ jobs:
         fi
     - run: |
         # curl metrics endpoint of analytics with metrics inputs... try improper headers
+        # header name within headerTemplates is wrong... now what the backend expects
         curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics3.json > out.json
         cat out.json
         echo "logging iter8 analytics"
@@ -75,7 +76,23 @@ jobs:
         fi
     - run: |
         # curl metrics endpoint of analytics with metrics inputs... try improper versions
+        # metrics4.json has app versions for which data does not exist in the metrics backend
         curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics4.json > out.json
+        cat out.json
+        echo "logging iter8 analytics"
+        kubectl logs deploy/iter8-analytics
+        echo "logging metrics mock"
+        kubectl logs deploy/metrics-mock
+        if [ `cat out.json | jq '.data | ."request-count".data.default.value | tonumber'` ]; then
+            echo "command succeeded unexpectedly..."
+            exit 1
+        else
+            echo "command failed as expected..."
+        fi
+    - run: |
+        # curl metrics endpoint of analytics with metrics inputs... try improper headers
+        # header name within headerTemplates is correct... but headerTemplate is not to be found within the secret
+        curl -X POST "http://localhost:8080/v2/aggregated_metrics" -H  "accept: application/json" -H  "Content-Type: application/json" -d @iter8_analytics/tests/integration/data/inputs/metrics5.json > out.json
         cat out.json
         echo "logging iter8 analytics"
         kubectl logs deploy/iter8-analytics
