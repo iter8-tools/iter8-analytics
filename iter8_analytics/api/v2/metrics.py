@@ -30,6 +30,7 @@ logger = logging.getLogger('iter8_analytics')
 @cached(cache=TTLCache(maxsize=1024, ttl=10))
 def get_secret_data(name, namespace):
     """fetch a secret from Kubernetes cluster and return its decoded data"""
+    # use in-cluster kubernetes client to fetch secret
     kubeconfig.load_incluster_config()
     core = kubeclient.CoreV1Api()
     try:
@@ -38,12 +39,17 @@ def get_secret_data(name, namespace):
         logger.error("An exception occurred while attempting to read secret.. \
             does iter8-analytics have RBAC permissions for reading this secret?")
         return None, exc
+    # at this point, the read_namespaced_secret call succeeded...
     if sec is None:
         return None, KeyError(f"cannot find secret {name} in namespace {namespace}")
+    # there is a secret in the namespace...
     sec_data = {}
+    # data is an optional field in k8s secrets...
     if sec.data is not None:
         for field in sec.data:
             try:
+                # ascii decoding of data is the lowest common denominator
+                # HTTP headers need to be ascii encoded
                 sec_data[field] = base64.b64decode(sec.data[field]).decode(encoding="ascii")
             except (UnicodeDecodeError, binascii.Error) as err:
                 return None, err
@@ -51,22 +57,27 @@ def get_secret_data(name, namespace):
 
 def get_secret_data_for_metric(metric_resource: MetricResource):
     """fetch a secret referenced in a metric from Kubernetes cluster and return its decoded data"""
+    # python k8s client does not have a clean call finding current namespace...
+    # this is the most accepted answer at this point
     my_ns = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read()
     if metric_resource.spec.secret is None:
         return None, "metric does not reference any secret"
+    # there is a secret referenced in the metric ...
     namespaced_name = metric_resource.spec.secret.split("/")
-    if len(namespaced_name) == 1:
+    if len(namespaced_name) == 1: # secret does not have a namespace in it
         args, err = get_secret_data(namespaced_name[0], my_ns)
-    elif len(namespaced_name) == 2:
+    elif len(namespaced_name) == 2: # secret has a namespace in it
         args, err = get_secret_data(namespaced_name[1], namespaced_name[0])
     return args, err
 
 def interpolate(template: str, args: dict):
     """
-    Interpolate a template using a dictionary
+    Interpolate a template string using a dictionary
     """
-    templ = Template(template)
     try:
+        templ = Template(template)
+        # if placeholder values are not present in args dictionary,
+        # then no interpolation will occur ... this is the behavior of safe_substitute
         result = templ.safe_substitute(**args), None
         return result
     except Exception:
@@ -75,11 +86,12 @@ def interpolate(template: str, args: dict):
 
 def get_url(metric_resource: MetricResource):
     """
-    Get the URL template for the given metric.
+    Get the URL for the given metric by interpolating the URLTemplate string using secret.
     """
-    if metric_resource.spec.secret is None:
+    if metric_resource.spec.secret is None: # no need to interpolate
         return metric_resource.spec.urlTemplate, None
     args, err = get_secret_data_for_metric(metric_resource)
+    # interpolate urlTemplate string using secret data
     if err is None:
         return interpolate(metric_resource.spec.urlTemplate, args)
     return None, err
@@ -89,13 +101,17 @@ def get_headers(metric_resource: MetricResource):
     Get the headers to be used in the REST query for the given metric.
     """
     headers = {}
+    # no headers will be used
     if metric_resource.spec.headerTemplates is None:
         return headers, None
+    # initialize headers dictionary
     for item in metric_resource.spec.headerTemplates:
         headers[item.name] = item.value
+    # if no secret is referenced, there is nothing to do
     if metric_resource.spec.secret is None:
         return headers, None
 
+    # args contain decoded secret data for header template interpolation
     args, err = get_secret_data_for_metric(metric_resource)
     if err is None:
         for key in headers:
@@ -106,7 +122,9 @@ def get_headers(metric_resource: MetricResource):
     return None, err
 
 def get_params(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
-    """Interpolate parameter values for metric and return params"""
+    """Interpolate REST query params for metric and return interpolated params"""
+    # args contain data from VersionInfo,
+    # along with interval (time since the start of experiment)
     args = {}
     args["name"] = version.name
     if version.variables is not None and len(version.variables) > 0:
@@ -124,10 +142,13 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
 
 def unmarshal(response, jq_expression):
     """
-    Unmarshal value from metric response
+    Unmarshal metric value from metric response
     """
     try:
+        # in general, jq execution could yield multiple values
+        # we will use the first value
         num = jq.compile(jq_expression).input(response).first()
+        # if that value is not a number, there is an error
         if isinstance(num, numbers.Number) and not np.isnan(num):
             return num, None
         return None, ValueError("Metrics response did not yield a number")
@@ -136,26 +157,29 @@ def unmarshal(response, jq_expression):
 
 def get_metric_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
     """
-    Extrapolate metrics backend URL and query parameters; query the metrics backend;
-    and return the value of the metric.
+    Interpolate metrics backend URL, headerTemplates, and REST query parameters;
+    query the metrics backend;
+    return the value of the metric.
     """
     (value, err) = (None, None)
-    # the following extrapolation is wrong; it should  happen based on secrets
-    # url, err = extrapolate(url_template, version, start_time)
+    # interpolated metrics backend URL
     url, err = get_url(metric_resource)
     if err is None:
+        # interpolated header templates
         headers, err = get_headers(metric_resource)
     if err is None:
+        # interpolated params
         params, err = get_params(metric_resource, version, start_time)
     if err is None:
         try:
-            logger.debug("Invoking requests get with url %s and params: %s and headers: %s", url, params, headers)
+            logger.debug("Invoking requests get with url %s and params: \
+                %s and headers: %s", url, params, headers)
             response = requests.get(url, params = params, headers = headers, timeout = 2.0).json()
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError) as exc:
             logger.error("Error while attempting to get metric value from backend")
             logger.error(exc)
             return value, exc
-        logger.debug("unmarshaling metrics response...")
+        logger.debug("unmarshaling metrics response using jqExpression...")
         value, err = unmarshal(response, metric_resource.spec.jqExpression)
     return value, err
 
@@ -167,8 +191,10 @@ def get_aggregated_metrics(expr: ExperimentResource):
     if expr.spec.versionInfo.candidates is not None:
         versions += expr.spec.versionInfo.candidates
 
+    # messages not working as intended...
     messages = []
 
+    # initialize aggregated metrics object
     iam = AggregatedMetricsAnalysis(data = {})
 
     #check if start time is greater than now
@@ -177,10 +203,13 @@ def get_aggregated_metrics(expr: ExperimentResource):
         iam.message = Message.join_messages(messages)
         return iam
 
+    # if there are metrics to be fetched...
     if expr.spec.metrics is not None:
         for metric_resource in expr.spec.metrics:
             iam.data[metric_resource.name] = AggregatedMetric(data = {})
+            # fetch the metric value for each version...
             for version in versions:
+                # initialize metric object for this version...
                 iam.data[metric_resource.name].data[version.name] = VersionMetric()
                 val, err = get_metric_value(metric_resource.metricObj, version, \
                 expr.status.startTime)
