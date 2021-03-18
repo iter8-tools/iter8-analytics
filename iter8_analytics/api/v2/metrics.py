@@ -174,7 +174,12 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
         try:
             logger.debug("Invoking requests get with url %s and params: \
                 %s and headers: %s", url, params, headers)
-            response = requests.get(url, params = params, headers = headers, timeout = 2.0).json()
+            raw_response = requests.get(url, params = params, headers = headers, timeout = 2.0)
+            logger.debug("response status code: %s", raw_response.status_code)
+            logger.debug("response text: %s", raw_response.text)
+            response = raw_response.json()
+            logger.debug("json response...")
+            logger.debug(response)
         except (requests.exceptions.RequestException, json.decoder.JSONDecodeError) as exc:
             logger.error("Error while attempting to get metric value from backend")
             logger.error(exc)
