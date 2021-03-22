@@ -12,10 +12,10 @@ from fastapi import HTTPException
 from iter8_analytics import fastapi_app
 from iter8_analytics.api.v2.types import \
     ExperimentResource, AggregatedMetricsAnalysis, VersionAssessmentsAnalysis, \
-        WinnerAssessmentAnalysis, WeightsAnalysis
-from iter8_analytics.config import env_config, unmarshal
+        WinnerAssessmentAnalysis, WeightsAnalysis, VersionWeight
+from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
-from iter8_analytics.tests.unit.v2.data.inputs.inputs import \
+from iter8_analytics.api.v2.examples import \
     er_example, er_example_step1, er_example_step2, er_example_step3, \
         am_response, va_response, wa_response, w_response
 
@@ -37,8 +37,6 @@ if not logger.hasHandlers():
     fastapi_app.config_logger(env_config[constants.LOG_LEVEL])
 
 logger.info(env_config)
-logger.info(unmarshal)
-
 
 class TestExperiment:
     """Test Iter8 v2 experiment, metrics and types"""
@@ -47,8 +45,7 @@ class TestExperiment:
         ExperimentResource(** er_example_step1)
         ExperimentResource(** er_example_step2)
         ExperimentResource(** er_example_step3)
-        
-        
+
     def test_experiment_response_objects(self):
         AggregatedMetricsAnalysis(** am_response)
         VersionAssessmentsAnalysis(** va_response)
@@ -66,6 +63,13 @@ class TestExperiment:
             agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
             logger.info(agm)
             assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
+
+            ercopy = copy.deepcopy(er_example)
+            del ercopy["spec"]["metrics"]
+            expr = ExperimentResource(** ercopy)
+            agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
+            # assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
+
         
     def test_v2_version_assessment_endpoint(self):
         er = ExperimentResource(** er_example_step1)
@@ -97,22 +101,6 @@ class TestExperiment:
             del(eg['spec']['versionInfo']['candidates'])
             er = ExperimentResource(** eg)
             get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-    
-    def test_v2_am_incorrect_tag_names(self):
-        with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-                                     'prometheus_sample_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
-            eg = copy.deepcopy(er_example)
-            eg['spec']['metrics'][0]['metricObj']['spec']['params'][0]['value'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
-            eg['spec']['metrics'][1]['metricObj']['spec']['params'][0]['value'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
-            eg['spec']['versionInfo']['baseline']['variables'] = [{"name": "revision_name", "value": "sample-application-v1"}]
-            eg['spec']['versionInfo']['candidates'][0]['variables'] = [{"name": "revision_name", "value": "sample-application-v2"}]
-            er = ExperimentResource(** eg)
-            
-            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-            logger.info(resp)
-            assert("Error from metrics backend for metric" in resp.message)
     
     def test_v2_analytics_assessment_conformance(self):
         with requests_mock.mock(real_http=True) as m:
@@ -329,17 +317,12 @@ class TestExperiment:
     
     def test_v2_weights_with_winner(self):
         er = ExperimentResource(** er_example_step3)
-        resp = get_weights(er.convert_to_float())  
+        resp = get_weights(er.convert_to_float())
 
-        expected_resp = [{
-                "name": "default",
-                "value": 5
-
-            },{
-                "name": "canary",
-                "value": 95
-
-            }]      
+        expected_resp = [
+            VersionWeight(name = "default", value = 5), 
+            VersionWeight(name = "canary", value = 95)
+            ]
         assert(resp.data == expected_resp)
 
     def test_v2_weights_with_no_winner(self):
@@ -348,7 +331,7 @@ class TestExperiment:
             "winnerFound": False
         }
         er = ExperimentResource(** eg)
-        resp = get_weights(er.convert_to_float()) 
+        resp = get_weights(er.convert_to_float())
         assert(resp.data == w_response['data'])
     
     def test_v2_inc_old_weights_and_best_versions_and_canary_winner(self):

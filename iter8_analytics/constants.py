@@ -2,12 +2,9 @@
 Environment variables that control the iter8 analytics server
 """
 
-
-UNMARSHAL_FILE_ENV = 'UNMARSHAL_FILE'
-
 ITER8_ANALYTICS_LOG_LEVEL_ENV = 'ITER8_ANALYTICS_LOG_LEVEL'  # used by fastapi
-LOG_LEVEL = 'logLevel'
 LOG_LEVEL_DEFAULT_LEVEL = 'debug'
+LOG_LEVEL = 'log_level'
 
 ANALYTICS_SERVICE_PORT = 'ANALYTICS_SERVICE_PORT'
 ANALYTICS_SERVICE_DEFAULT_PORT = 8080

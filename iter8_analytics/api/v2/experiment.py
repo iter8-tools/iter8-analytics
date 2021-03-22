@@ -135,7 +135,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
     fvn = list(map(lambda version: version.name, feasible_versions))
 
     def get_inf_reward(reward: Reward):
-        if reward.preferredDirection == PreferredDirection.high:
+        if reward.preferredDirection == PreferredDirection.HIGH:
             return -math.inf
         else:
             return math.inf
@@ -149,7 +149,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
             err = "Metrics cannot be compared without preferred direction"
             logger.error(err)
             return False, err
-        if preferred_direction is PreferredDirection.high:
+        if preferred_direction is PreferredDirection.HIGH:
             return (first > second), None
         return (first < second), None
 

@@ -1,0 +1,68 @@
+{
+    "spec": {
+      "strategy": {
+        "testingPattern": "Canary"
+      },
+      "versionInfo": {
+        "baseline": {
+          "name": "default",
+          "variables": [
+            {
+              "name": "revision_name",
+              "value": "lively-revision"
+            }
+          ]
+        },
+        "candidates": [
+          {
+            "name": "canary",
+            "variables": [
+              {
+                "name": "revision_name",
+                "value": "darkest-revision"
+              }
+            ]
+          }
+        ]
+      },
+      "metrics": [
+        {
+          "name": "request-count",
+          "metricObj": {
+            "apiVersion": "core.iter8.tools/v2alpha2",
+            "kind": "Metric",
+            "metadata": {
+              "name": "request-count"
+            },
+            "spec": {
+              "params": [
+                {
+                  "name": "query",
+                  "value": "sum(increase(revision_app_request_latencies_count{revision_name='$revision_name'}[$interval]))"
+                }
+              ],
+              "headerTemplates": [
+                {
+                  "name": "user", 
+                  "value": "$user"
+                }, 
+                {
+                  "name": "pass", 
+                  "value": "$pass"
+                }
+              ],
+              "description": "Number of requests",
+              "type": "counter",
+              "provider": "prometheus",
+              "jqExpression": ".data.result[0].value[1] | tonumber",
+              "urlTemplate": "http://metrics-mock.default.svc.cluster.local:8080/promcounter",
+              "secret": "default/test-secret"
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "startTime": "2020-04-03T12:55:50.568Z"
+    }
+  }

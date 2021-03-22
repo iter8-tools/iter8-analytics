@@ -5,24 +5,27 @@ Examples used in tests of iter8 analytics v2 APIs.
 mr_example = [{
     "name": "request-count",
     "metricObj": {
-        "apiVersion": "core.iter8.tools/v1alpha3",
+        "apiVersion": "core.iter8.tools/v2alpha2",
         "kind": "Metric",
         "metadata": {
             "name": "request-count"
         },
         "spec": {
-            "params": {
-                "query": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
-            },
+            "params": [{
+                "name": "query",
+                "value": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0)"
+            }],
             "description": "Number of requests",
             "type": "counter",
-            "provider": "prometheus"
+            "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
+            "urlTemplate": "http://metrics-mock:8080/promcounter"
         }
     }},
     {
     "name":"mean-latency",
     "metricObj": {
-        "apiVersion": "core.iter8.tools/v1alpha3",
+        "apiVersion": "core.iter8.tools/v2alpha2",
         "kind": "Metric",
         "metadata": {
             "name": "mean-latency"
@@ -30,36 +33,41 @@ mr_example = [{
         "spec": {
             "description": "Mean latency",
             "units": "milliseconds",
-            "params": {
-                "query": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
-            },
+            "params": [{
+                "name": "query",
+                "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$interval])) or on() vector(0))"
+            }],
             "type": "gauge",
             "sampleSize": {
                 "name": "request-count"
             },
-            "provider": "prometheus"
+            "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
+            "urlTemplate": "http://metrics-mock:8080/promcounter"
         }
     }}
 ]
-    
+
 er_example = {
     "spec": {
         "strategy": {
-            "type": "Canary"
+            "testingPattern": "Canary"
         },
         "versionInfo": {
             "baseline": {
                 "name": "default",
-                "tags": {
-                    "container": "sklearn-iris-20"
-                }
+                "variables": [{
+                    "name": "container",
+                    "value": "sklearn-iris-20"
+                }]
             },
             "candidates": [
                 {
                     "name": "canary",
-                    "tags": {
-                        "container": "sklearn-iris-22"
-                    }
+                    "variables": [{
+                        "name": "container",
+                        "value": "sklearn-iris-22"
+                }]
                 }
             ]
         },
@@ -74,7 +82,6 @@ er_example = {
     "status": {
         "startTime": "2020-04-03T12:55:50.568Z"
     },
-    
 }
 
 am_response = {
@@ -118,9 +125,23 @@ va_response = {
 wa_response = {
   "data": {
     "winnerFound": True,
-    "winner": "canary"
+    "winner": "canary",
+    "bestVersions": ["canary"]
   },
   "message": "candidate satisfies all objectives"
+}
+
+w_response = {
+    "data": [{
+        "name": "default",
+        "value":95
+
+    },{
+        "name": "canary",
+        "value": 5
+
+    }],
+    "message": "All ok"
 }
 
 er_example_step1 = {
