@@ -15,15 +15,15 @@ from iter8_analytics.api.v2.types import \
         WinnerAssessmentAnalysis, WeightsAnalysis, VersionWeight
 from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
-from iter8_analytics.api.v2.examples import \
+from iter8_analytics.api.v2.examples.examples_canary import \
     er_example, er_example_step1, er_example_step2, er_example_step3, \
         am_response, va_response, wa_response, w_response
 
-from iter8_analytics.tests.unit.v2.data.inputs.inputs_ab import \
+from iter8_analytics.api.v2.examples.examples_ab import \
     ab_er_example, ab_er_example_step1, ab_er_example_step2, ab_er_example_step3, \
         ab_am_response, ab_va_response, ab_wa_response, ab_w_response
 
-from iter8_analytics.tests.unit.v2.data.inputs.inputs_abn import \
+from iter8_analytics.api.v2.examples.examples_abn import \
     abn_er_example, abn_er_example_step1, abn_er_example_step2, abn_er_example_step3, \
         abn_am_response, abn_va_response, abn_wa_response, abn_w_response
 
@@ -472,21 +472,6 @@ class TestExperiment:
             er = ExperimentResource(** eg)
             get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
     
-    def test_v2_ab_am_incorrect_tag_names(self):
-        with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-                                     'prometheus_sample_response.json')
-            m.get(ab_er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
-            eg = copy.deepcopy(ab_er_example)
-            eg['spec']['metrics'][0]['metricObj']['spec']['params'][0]['value'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
-            eg['spec']['metrics'][1]['metricObj']['spec']['params'][0]['value'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
-            eg['spec']['versionInfo']['baseline']['variables'] = [{"name": "revision_name", "value": "sample-application-v1"}]
-            eg['spec']['versionInfo']['candidates'][0]['variables'] = [{"name": "revision_name", "value": "sample-application-v2"}]
-            er = ExperimentResource(** eg)
-            
-            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-            assert("Error from metrics backend for metric" in resp.message)
-    
     def test_v2_ab_analytics_assessment_conformance(self):
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
@@ -620,21 +605,6 @@ class TestExperiment:
             del(eg['spec']['versionInfo']['candidates'])
             er = ExperimentResource(** eg)
             get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-    
-    def test_v2_abn_am_incorrect_tag_names(self):
-        with requests_mock.mock(real_http=True) as m:
-            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
-                                     'prometheus_sample_response.json')
-            m.get(abn_er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
-            eg = copy.deepcopy(abn_er_example)
-            eg['spec']['metrics'][0]['metricObj']['spec']['params'][0]['value'] = "sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0)"
-            eg['spec']['metrics'][1]['metricObj']['spec']['params'][0]['value'] = "(sum(increase(revision_app_request_latencies_sum{revision_name=~'.*$svc_name'}[$interval]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{revision_name=~'.*$svc_name'}[$interval])) or on() vector(0))"
-            eg['spec']['versionInfo']['baseline']['variables'] = [{"name": "revision_name", "value": "sample-application-v1"}]
-            eg['spec']['versionInfo']['candidates'][0]['variables'] = [{"name": "revision_name", "value": "sample-application-v2"}]
-            er = ExperimentResource(** eg)
-            
-            resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
-            assert("Error from metrics backend for metric" in resp.message)
     
     def test_v2_abn_analytics_assessment_conformance(self):
         with requests_mock.mock(real_http=True) as m:

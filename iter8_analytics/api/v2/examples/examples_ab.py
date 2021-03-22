@@ -14,6 +14,7 @@ ab_mr_example = [{
             "description": "Number of requests",
             "type": "counter",
             "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
             "urlTemplate": "http://prometheus-operated.iter8-monitoring:9090/api/v1/query"
         }
     }},
@@ -37,6 +38,7 @@ ab_mr_example = [{
                 "name": "request-count"
             },
             "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
             "urlTemplate": "http://prometheus-operated.iter8-monitoring:9090/api/v1/query"
         }
     }},
@@ -60,6 +62,7 @@ ab_mr_example = [{
                 "name": "request-count"
             },
             "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
             "urlTemplate": "http://prometheus-operated.iter8-monitoring:9090/api/v1/query"
         }
     }}
