@@ -38,7 +38,7 @@
               "params": [
                 {
                   "name": "query",
-                  "value": "sum(increase(revision_app_request_latencies_count{revision_name='$revision_name'}[$interval]))"
+                  "value": "sum(increase(revision_app_request_latencies_count{revision_name='$revision_name'}[$elapsedTime]))"
                 }
               ],
               "headerTemplates": [

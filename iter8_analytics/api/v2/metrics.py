@@ -124,14 +124,14 @@ def get_headers(metric_resource: MetricResource):
 def get_params(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
     """Interpolate REST query params for metric and return interpolated params"""
     # args contain data from VersionInfo,
-    # along with interval (time since the start of experiment)
+    # along with elapsedTime (time since the start of experiment)
     args = {}
     args["name"] = version.name
     if version.variables is not None and len(version.variables) > 0:
         for variable in version.variables:
             args[variable.name] = variable.value
-    args["interval"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
-    args["interval"] = str(args["interval"]) + 's'
+    args["elapsedTime"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    args["elapsedTime"] = str(args["elapsedTime"]) + 's'
 
     params = {}
     for par in metric_resource.spec.params:
