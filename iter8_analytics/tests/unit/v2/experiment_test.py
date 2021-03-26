@@ -49,14 +49,14 @@ class TestExperiment:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
             response_json = json.load(open(file_path))
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=response_json)
+            m.get(er_example["status"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=response_json)
 
             expr = ExperimentResource(** er_example)
             agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
             assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
 
             ercopy = copy.deepcopy(er_example)
-            del ercopy["spec"]["metrics"]
+            del ercopy["status"]["metrics"]
             expr = ExperimentResource(** ercopy)
             agm = get_aggregated_metrics(expr.convert_to_float()).convert_to_quantity()
             # assert(agm.data['request-count'].data['default'].value == response_json['data']['result'][0]['value'][1])
@@ -78,7 +78,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
+            m.get(er_example["status"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
 
             er = ExperimentResource(** er_example)
             get_analytics_results(er.convert_to_float()).convert_to_quantity()
@@ -87,7 +87,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
+            m.get(er_example["status"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
             eg = copy.deepcopy(er_example)
             del(eg['spec']['versionInfo']['candidates'])
             er = ExperimentResource(** eg)
@@ -97,7 +97,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
+            m.get(er_example["status"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
  
             eg = copy.deepcopy(er_example)
             del(eg['spec']['versionInfo']['candidates'])
@@ -130,7 +130,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_no_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
+            m.get(er_example["status"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
 
             er = ExperimentResource(** er_example)
             resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()
@@ -178,7 +178,7 @@ class TestExperiment:
         with requests_mock.mock(real_http=True) as m:
             file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
                                      'prometheus_sample_no_response.json')
-            m.get(er_example["spec"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
+            m.get(er_example["status"]["metrics"][0]["metricObj"]["spec"]["urlTemplate"], json=json.load(open(file_path)))
 
             er = ExperimentResource(** er_example)
             resp = get_aggregated_metrics(er.convert_to_float()).convert_to_quantity()

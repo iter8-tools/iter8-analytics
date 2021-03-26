@@ -76,11 +76,11 @@ er_example = {
                 "metric": "mean-latency",
                 "upperLimit": 420.0
             }]
-        },
-        "metrics": mr_example
+        }
     },
     "status": {
-        "startTime": "2020-04-03T12:55:50.568Z"
+        "startTime": "2020-04-03T12:55:50.568Z",
+        "metrics": mr_example
     },
 }
 

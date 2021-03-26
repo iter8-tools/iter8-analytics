@@ -209,8 +209,8 @@ def get_aggregated_metrics(expr: ExperimentResource):
         return iam
 
     # if there are metrics to be fetched...
-    if expr.spec.metrics is not None:
-        for metric_resource in expr.spec.metrics:
+    if expr.status.metrics is not None:
+        for metric_resource in expr.status.metrics:
             iam.data[metric_resource.name] = AggregatedMetric(data = {})
             # fetch the metric value for each version...
             for version in versions:

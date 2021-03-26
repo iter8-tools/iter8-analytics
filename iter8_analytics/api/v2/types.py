@@ -169,8 +169,6 @@ class ExperimentSpec(BaseModel):
         description = "experiment strategy")
     versionInfo: VersionInfo = Field(..., description = "versions in the experiment")
     criteria: Criteria = Field(None, description = "experiment criteria")
-    metrics: Sequence[MetricInfo] = Field(None, description = "Sequence of \
-        MetricInfo objects")
 
     def convert_to_float(self):
         """
@@ -348,6 +346,8 @@ class ExperimentStatus(BaseModel):
     Pydantic model for experiment status subresource
     """
     startTime: datetime = Field(..., description = "starttime of the experiment")
+    metrics: Sequence[MetricInfo] = Field(None, description = "Sequence of \
+        MetricInfo objects")
     analysis: Analysis = Field(None, description = "currently available analysis")
     currentWeightDistribution: Sequence[VersionWeight] = Field(None, \
         description = "current weight distribution for versions")
