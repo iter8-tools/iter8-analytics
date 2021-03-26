@@ -107,11 +107,11 @@ abn_er_example = {
                 "metric": "business-revenue",
                 "preferredDirection": "High"
             }]
-        },
-        "metrics": abn_mr_example
+        }
     },
     "status": {
-        "startTime": "2020-04-03T12:55:50.568Z"
+        "startTime": "2020-04-03T12:55:50.568Z",
+        "metrics": abn_mr_example
     },
     
 }
