@@ -71,6 +71,27 @@ def get_version_assessments(experiment_resource: ExperimentResource):
     logger.debug("version assessments: %s", pprint.PrettyPrinter().pformat(version_assessments))
     return version_assessments
 
+def get_winner_assessment_for_conformance(experiment_resource: ExperimentResource):
+    """
+    Get winner assessment using experiment resource for Conformance
+    """
+    was = WinnerAssessmentAnalysis()
+
+    versions = [experiment_resource.spec.versionInfo.baseline]
+
+    feasible_versions = list(filter(lambda version: \
+    all(experiment_resource.status.analysis.versionAssessments.data[version.name]), versions))
+
+    # names of feasible versions
+    fvn = list(map(lambda version: version.name, feasible_versions))
+
+    if versions[0].name in fvn:
+        was.data = WinnerAssessmentData(winnerFound = True, winner = versions[0].name, \
+            bestVersions = [versions[0].name])
+        was.message = Message.join_messages([Message(MessageLevel.info, \
+            "baseline satisfies all objectives")])
+    return was
+
 def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
     """
     Get winner assessment using experiment resource for Canary or BlueGreen experiments
@@ -133,13 +154,13 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
         return (first < second), None
 
     aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
-    if experiment_resource.spec.criteria.reward is not None:
-        reward_metric = experiment_resource.spec.criteria.reward.metric
+    if experiment_resource.spec.criteria.rewards is not None:
+        reward_metric = experiment_resource.spec.criteria.rewards[0].metric
         if reward_metric in aggregated_metric_data:
             reward_metric_data = aggregated_metric_data[reward_metric].data
 
             (top_reward, best_versions) = (get_inf_reward(\
-                experiment_resource.spec.criteria.reward.preferredDirection), [])
+                experiment_resource.spec.criteria.rewards[0]), [])
 
             messages = []
 
@@ -154,7 +175,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
                         else: # this reward not equal to top reward
                             is_better, err = first_better_than_second(\
                                 reward_metric_data[fver].value, top_reward, \
-                                experiment_resource.spec.criteria.reward.preferredDirection)
+                                experiment_resource.spec.criteria.rewards[0].preferredDirection)
                             if err is None:
                                 if is_better:
                                     (top_reward, best_versions) = \
@@ -183,13 +204,12 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
             was.message = Message.join_messages(messages)
 
         else: # reward metric values are not available
-            was.message = Message.join_messages(Message(MessageLevel.warning, \
-                "reward metric values are not available"))
+            was.message = Message.join_messages([Message(MessageLevel.warning, \
+                "reward metric values are not available")])
 
     else: # ab or abn experiment without reward metric
-        was.message = Message.join_messages(Message(MessageLevel.warning, \
-            "No reward metric in experiment. Winner assessment cannot be computed for ab or abn experiments without reward metric."))
-
+        was.message = Message.join_messages([Message(MessageLevel.warning, \
+            "No reward metric in experiment. Winner assessment cannot be computed for ab or abn experiments without reward metric.")])
     return was
 
 def get_winner_assessment(experiment_resource: ExperimentResource):
@@ -198,10 +218,7 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
     """
 
     if experiment_resource.spec.strategy.testingPattern == TestingPattern.conformance:
-        was = WinnerAssessmentAnalysis()
-        was.message = Message.join_messages([Message(MessageLevel.error, \
-            "conformance tests cannot have winner assessments")])
-        return was
+        return get_winner_assessment_for_conformance(experiment_resource)
 
     elif (experiment_resource.spec.strategy.testingPattern == TestingPattern.canary):
         return get_winner_assessment_for_canarybg(experiment_resource)

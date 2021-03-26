@@ -15,7 +15,7 @@ import iter8_analytics.config as config
 from iter8_analytics.api.v2.types import  ExperimentResource, \
     AggregatedMetricsAnalysis, VersionAssessmentsAnalysis, \
     WinnerAssessmentAnalysis, WeightsAnalysis, Analysis
-from iter8_analytics.api.v2.examples import er_example, er_example_step1, \
+from iter8_analytics.api.v2.examples.examples_canary import er_example, er_example_step1, \
     er_example_step2, er_example_step3
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
      get_weights, get_analytics_results
