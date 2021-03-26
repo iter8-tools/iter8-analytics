@@ -24,7 +24,10 @@
             ]
           }
         ]
-      },
+      }
+    },
+    "status": {
+      "startTime": "2020-04-03T12:55:50.568Z",
       "metrics": [
         {
           "name": "request-count",
@@ -61,8 +64,5 @@
           }
         }
       ]
-    },
-    "status": {
-      "startTime": "2020-04-03T12:55:50.568Z"
     }
   }
