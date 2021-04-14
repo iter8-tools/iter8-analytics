@@ -31,4 +31,4 @@ class TestMetrics:
         start_time = expr.status.startTime
         params = get_params(metric_resource, version, start_time)
         groups = re.search('(\\[[0-9]+s\\])', params[0]["query"])
-        assert(groups is not None)
+        assert groups is not None
