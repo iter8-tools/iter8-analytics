@@ -131,7 +131,7 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
         for variable in version.variables:
             args[variable.name] = variable.value
     args["elapsedTime"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
-    args["elapsedTime"] = str(args["elapsedTime"]) + 's'
+    args["elapsedTime"] = str(args["elapsedTime"])
 
     params = {}
     for par in metric_resource.spec.params:
