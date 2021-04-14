@@ -9,7 +9,7 @@ abn_mr_example = [{
         "spec": {
             "params": [{
                 "name": "query",
-                "value": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$elapsedTime])) or on() vector(0)"
+                "value": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0)"
             }],
             "description": "Number of requests",
             "type": "counter",
@@ -31,7 +31,7 @@ abn_mr_example = [{
             "units": "milliseconds",
             "params": [{
                 "name": "query",
-                "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[$elapsedTime]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$elapsedTime])) or on() vector(0))"
+                "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
             }],
             "type": "gauge",
             "sampleSize": {
@@ -55,7 +55,7 @@ abn_mr_example = [{
             "units": "dollars",
             "params": [{
                 "name": "query",
-                "value": "(sum(increase(business_revenue{service_name=~'.*$name'}[$elapsedTime]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[$elapsedTime])) or on() vector(0))"
+                "value": "(sum(increase(business_revenue{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
             }],
             "type": "gauge",
             "sampleSize": {

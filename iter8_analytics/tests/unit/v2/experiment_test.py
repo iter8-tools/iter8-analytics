@@ -40,7 +40,7 @@ logger.info(env_config)
 
 
 class TestExperiment:
-    """Test Iter8 v2 experiment, metrics and types"""
+    """Test Iter8 v2 experiment"""
 
     def test_v2_input_object(self):
         ExperimentResource(** er_example)
