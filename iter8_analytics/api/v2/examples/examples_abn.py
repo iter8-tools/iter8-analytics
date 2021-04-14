@@ -1,3 +1,6 @@
+"""
+Examples used in A/B/n tests of iter8 analytics v2 APIs.
+"""
 abn_mr_example = [{
     "name": "request-count",
     "metricObj": {
@@ -67,7 +70,7 @@ abn_mr_example = [{
         }
     }}
 ]
-    
+
 abn_er_example = {
     "spec": {
         "strategy": {
@@ -113,7 +116,6 @@ abn_er_example = {
         "startTime": "2020-04-03T12:55:50.568Z",
         "metrics": abn_mr_example
     },
-    
 }
 
 abn_am_response = {

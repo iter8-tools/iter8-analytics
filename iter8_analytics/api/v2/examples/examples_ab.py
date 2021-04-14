@@ -1,3 +1,6 @@
+"""
+Examples used in A/B tests of iter8 analytics v2 APIs.
+"""
 ab_mr_example = [{
     "name": "request-count",
     "metricObj": {
@@ -67,7 +70,7 @@ ab_mr_example = [{
         }
     }}
 ]
-    
+
 ab_er_example = {
     "spec": {
         "strategy": {
@@ -106,7 +109,6 @@ ab_er_example = {
         "startTime": "2020-04-03T12:55:50.568Z",
         "metrics": ab_mr_example
     },
-    
 }
 
 ab_am_response = {
