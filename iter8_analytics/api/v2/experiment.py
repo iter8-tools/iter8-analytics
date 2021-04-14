@@ -58,13 +58,13 @@ def get_version_assessments(experiment_resource: ExperimentResource):
                         version_assessments.data[version.name][ind] = \
                             check_limits(obj, versions_metric_data[version.name].value)
                     else:
-                        messages.append(Message(MessageLevel.warning, \
+                        messages.append(Message(MessageLevel.WARNING, \
                             f"Value for {obj.metric} metric and {version.name} version is None."))
                 else:
-                    messages.append(Message(MessageLevel.warning, \
+                    messages.append(Message(MessageLevel.WARNING, \
                         f"Value for {obj.metric} metric and {version.name} version is unavailable."))
         else:
-            messages.append(Message(MessageLevel.warning, \
+            messages.append(Message(MessageLevel.WARNING, \
                 f"Aggregated metric object for {obj.metric} metric is unavailable."))
 
     version_assessments.message = Message.join_messages(messages)
@@ -88,7 +88,7 @@ def get_winner_assessment_for_conformance(experiment_resource: ExperimentResourc
     if versions[0].name in fvn:
         was.data = WinnerAssessmentData(winnerFound = True, winner = versions[0].name, \
             bestVersions = [versions[0].name])
-        was.message = Message.join_messages([Message(MessageLevel.info, \
+        was.message = Message.join_messages([Message(MessageLevel.INFO, \
             "baseline satisfies all objectives")])
     return was
 
@@ -110,12 +110,12 @@ def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
     if versions[1].name in fvn:
         was.data = WinnerAssessmentData(winnerFound = True, winner = versions[1].name, \
             bestVersions = [versions[1].name])
-        was.message = Message.join_messages([Message(MessageLevel.info, \
+        was.message = Message.join_messages([Message(MessageLevel.INFO, \
             "candidate satisfies all objectives")])
     elif versions[0].name in fvn:
         was.data = WinnerAssessmentData(winnerFound = True, winner = versions[0].name, \
             bestVersions = [versions[0].name])
-        was.message = Message.join_messages([Message(MessageLevel.info, \
+        was.message = Message.join_messages([Message(MessageLevel.INFO, \
             "baseline satisfies all objectives; candidate does not")])
     return was
 
@@ -165,7 +165,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
             messages = []
 
             if not fvn:
-                messages.append(Message(MessageLevel.info, "no version satisfies all objectives"))
+                messages.append(Message(MessageLevel.INFO, "no version satisfies all objectives"))
 
             for fver in fvn: # for each feasible version
                 if fver in reward_metric_data:
@@ -181,14 +181,14 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
                                     (top_reward, best_versions) = \
                                         (reward_metric_data[fver].value, [fver])
                             else: # there is an error in comparison
-                                was.message = Message.join_messages(Message(MessageLevel.error, \
+                                was.message = Message.join_messages(Message(MessageLevel.ERROR, \
                                     str(err)))
                                 return was
                     else: # found a feasible version without reward value
-                        messages.append(Message(MessageLevel.warning, \
+                        messages.append(Message(MessageLevel.WARNING, \
                             f"reward value for feasible version {fver} is not available"))
                 else: # found a feasible version without reward value
-                    messages.append(Message(MessageLevel.warning, \
+                    messages.append(Message(MessageLevel.WARNING, \
                         f"reward value for feasible version {fver} is not available"))
 
             was.data.bestVersions = best_versions
@@ -196,19 +196,19 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
             if len(best_versions) == 1:
                 was.data.winnerFound = True
                 was.data.winner = best_versions[0]
-                messages.append(Message(MessageLevel.info, "found unique winner"))
+                messages.append(Message(MessageLevel.INFO, "found unique winner"))
             elif len(best_versions) > 1:
-                messages.append(Message(MessageLevel.info, \
+                messages.append(Message(MessageLevel.INFO, \
                     "no unique winner; two or more feasible versions with same reward value"))
 
             was.message = Message.join_messages(messages)
 
         else: # reward metric values are not available
-            was.message = Message.join_messages([Message(MessageLevel.warning, \
+            was.message = Message.join_messages([Message(MessageLevel.WARNING, \
                 "reward metric values are not available")])
 
     else: # ab or abn experiment without reward metric
-        was.message = Message.join_messages([Message(MessageLevel.warning, \
+        was.message = Message.join_messages([Message(MessageLevel.WARNING, \
             "No reward metric in experiment. Winner assessment cannot be computed for ab or abn experiments without reward metric.")])
     return was
 
@@ -258,14 +258,14 @@ def get_weights(experiment_resource: ExperimentResource):
         try:
             bvs = experiment_resource.status.analysis.winnerAssessment.data.bestVersions
             assert len(bvs) > 0
-            messages.append(Message(MessageLevel.info, "found best version(s)"))
+            messages.append(Message(MessageLevel.INFO, "found best version(s)"))
             for i, version in enumerate(versions):
                 if version.name in bvs:
                     exploitation_weights[i] = 1/len(bvs)
         except (KeyError, AssertionError):
             exploitation_weights = np.full((len(versions), ), 0.0)
             exploitation_weights[0] = 1.0
-            messages.append(Message(MessageLevel.info, "no best version(s) found"))
+            messages.append(Message(MessageLevel.INFO, "no best version(s) found"))
         return exploitation_weights
 
     exploitation_weights = get_exploitation_weights()
@@ -343,7 +343,7 @@ def get_weights(experiment_resource: ExperimentResource):
     for version in versions:
         data.append(VersionWeight(name = version.name, value = next(integral_weights)))
     _weights = WeightsAnalysis(data = data)
-    _weights.message = Message.join_messages([Message(MessageLevel.info, "all ok")])
+    _weights.message = Message.join_messages([Message(MessageLevel.INFO, "all ok")])
     logger.debug("weights: %s", pprint.PrettyPrinter().pformat(_weights))
     return _weights
 

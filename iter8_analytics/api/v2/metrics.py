@@ -204,7 +204,7 @@ def get_aggregated_metrics(expr: ExperimentResource):
 
     #check if start time is greater than now
     if expr.status.startTime > (datetime.now(timezone.utc)):
-        messages.append(Message(MessageLevel.error, "Invalid startTime: greater than current time"))
+        messages.append(Message(MessageLevel.ERROR, "Invalid startTime: greater than current time"))
         iam.message = Message.join_messages(messages)
         return iam
 
@@ -221,7 +221,7 @@ def get_aggregated_metrics(expr: ExperimentResource):
                 if err is None:
                     iam.data[metric_resource.name].data[version.name].value = val
                 else:
-                    messages.append(Message(MessageLevel.error, \
+                    messages.append(Message(MessageLevel.ERROR, \
                         f"Error from metrics backend for metric: {metric_resource.name} \
                             and version: {version.name}"))
 

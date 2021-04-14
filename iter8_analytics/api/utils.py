@@ -83,9 +83,9 @@ class MessageLevel(str, Enum):
     """
     Preferred directions for a metric
     """
-    error = "Error"
-    info = "Info"
-    warning = "Warning"
+    ERROR = "Error"
+    INFO = "Info"
+    WARNING = "Warning"
 
 class Message:
     """Message fragment shipped by iter8-analytics as part of its responses.
@@ -112,10 +112,10 @@ class Message:
         Args:
             msgs (Sequence[Message]): a sequence of messages
         """
-        errors = filter(lambda x: x.level == MessageLevel.error, msgs)
+        errors = filter(lambda x: x.level == MessageLevel.ERROR, msgs)
         error_message = "Error: " + ', '.join(map(lambda x: x.msg, errors))
-        warnings = filter(lambda x: x.level == MessageLevel.warning, msgs)
+        warnings = filter(lambda x: x.level == MessageLevel.WARNING, msgs)
         warning_message = "Warning: " + ', '.join(map(lambda x: x.msg, warnings))
-        info = filter(lambda x: x.level == MessageLevel.info, msgs)
+        info = filter(lambda x: x.level == MessageLevel.INFO, msgs)
         info_message = "Info: " + ', '.join(map(lambda x: x.msg, info))
         return '; '.join([error_message, warning_message, info_message])
