@@ -33,7 +33,8 @@ class MetricSpec(BaseModel):
         as part of the REST query for this metric")
     provider: str = Field(None, description = "identifier for the metrics backend")
     jqExpression: str = Field(..., \
-        description = "jq expression used for unmarshaling metric value from the JSON response body of the metrics backend's REST API")
+        description = "jq expression used for unmarshaling metric value from \
+            the JSON response body of the metrics backend's REST API")
     urlTemplate: str = Field(..., \
         description="template of the URL to be used for querying this metric")
     secret: str = Field(None, description="k8s secret reference in the namespace/name format")
@@ -110,7 +111,8 @@ class Criteria(BaseModel):
     Pydantic model for Criteria field in experiment spec
     """
     rewards: Sequence[Reward] = Field(None, description = "sequence of rewards")
-    objectives: Sequence[Objective] = Field(None, description = "sequence of metric-based objectives")
+    objectives: Sequence[Objective] = Field(None, \
+        description = "sequence of metric-based objectives")
 
     def convert_to_float(self):
         """
@@ -132,10 +134,10 @@ class TestingPattern(str, Enum):
     """
     Experiment testing patterns
     """
-    canary = "Canary"
-    ab = "A/B"
-    abn = "A/B/N"
-    conformance = "Conformance"
+    CANARY = "Canary"
+    AB = "A/B"
+    ABN = "A/B/N"
+    CONFORMANCE = "Conformance"
 
 class WeightsConfig(BaseModel):
     """
@@ -278,7 +280,9 @@ class VersionAssessmentsAnalysis(BaseModel):
     Pydantic model for version assessments
     """
     data: Dict[str, Sequence[bool]] = Field(..., \
-    description = "dictionary with version name as key and sequence of booleans as value; each element of the sequence indicates if the version satisfies the corresponding objective.")
+    description = "dictionary with version name as key and \
+        sequence of booleans as value; each element of the sequence indicates if \
+        the version satisfies the corresponding objective.")
     message: str = Field(None, description = "human-readable description of version assessments")
 
 class WinnerAssessmentData(BaseModel):
@@ -287,7 +291,10 @@ class WinnerAssessmentData(BaseModel):
     """
     winnerFound: bool = Field(False, description = "boolean value indicating if winner is found")
     winner: str = Field(None, description = "winning version; None if winner not found")
-    bestVersions: Sequence[str] = Field([], description = "the list of best versions found; if this list is a singleton, then winnerFound = true and winner is the only element of the list")
+    bestVersions: Sequence[str] = Field([], \
+        description = "the list of best versions found; \
+        if this list is a singleton, then winnerFound = true \
+        and winner is the only element of the list")
 
 class WinnerAssessmentAnalysis(BaseModel):
     """

@@ -12,8 +12,8 @@ import numpy as np
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
     VersionAssessmentsAnalysis, VersionWeight, \
-    WinnerAssessmentAnalysis, WinnerAssessmentData, WeightsAnalysis, Analysis, Objective, TestingPattern, \
-    Reward, PreferredDirection
+    WinnerAssessmentAnalysis, WinnerAssessmentData, WeightsAnalysis, \
+    Analysis, Objective, TestingPattern, Reward, PreferredDirection
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 from iter8_analytics.api.utils import gen_round
 from iter8_analytics.api.utils import Message, MessageLevel
@@ -217,21 +217,20 @@ def get_winner_assessment(experiment_resource: ExperimentResource):
     Get winner assessment using experiment resource.
     """
 
-    if experiment_resource.spec.strategy.testingPattern == TestingPattern.conformance:
+    if experiment_resource.spec.strategy.testingPattern == TestingPattern.CONFORMANCE:
         return get_winner_assessment_for_conformance(experiment_resource)
 
-    elif (experiment_resource.spec.strategy.testingPattern == TestingPattern.canary):
+    elif experiment_resource.spec.strategy.testingPattern == TestingPattern.CANARY:
         return get_winner_assessment_for_canarybg(experiment_resource)
 
     else:
         return get_winner_assessment_for_abn(experiment_resource)
-    
 
 def get_weights(experiment_resource: ExperimentResource):
     """
     Get weights using experiment resource. All weight values in the output will be integers.
     """
-    if experiment_resource.spec.strategy.testingPattern == TestingPattern.conformance:
+    if experiment_resource.spec.strategy.testingPattern == TestingPattern.CONFORMANCE:
         return WeightsAnalysis(data = [], \
             message = "weight computation is not applicable to a conformance experiment")
 
@@ -273,7 +272,7 @@ def get_weights(experiment_resource: ExperimentResource):
 
     def get_constrained_weights(input_weights):
         """
-        Take input weights in percentage. 
+        Take input weights in percentage.
         Apply weight constraints and return modified weights.
 
         Example illustrating the inner workings of this function:

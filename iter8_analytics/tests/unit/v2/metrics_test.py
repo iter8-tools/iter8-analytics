@@ -19,16 +19,12 @@ if not logger.hasHandlers():
 
 logger.info(env_config)
 
-
-class TestMetrics:
-    """Test Iter8 v2 metrics"""
-
-    def test_params(self):
-        """Test how parameters are computed"""
-        expr = ExperimentResource(** er_example)
-        metric_resource = expr.status.metrics[0].metricObj
-        version = expr.spec.versionInfo.baseline
-        start_time = expr.status.startTime
-        params = get_params(metric_resource, version, start_time)
-        groups = re.search('(\\[[0-9]+s\\])', params[0]["query"])
-        assert groups is not None
+def test_params():
+    """Test how parameters are computed"""
+    expr = ExperimentResource(** er_example)
+    metric_resource = expr.status.metrics[0].metricObj
+    version = expr.spec.versionInfo.baseline
+    start_time = expr.status.startTime
+    params = get_params(metric_resource, version, start_time)
+    groups = re.search('(\\[[0-9]+s\\])', params[0]["query"])
+    assert groups is not None
