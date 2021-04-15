@@ -135,7 +135,7 @@ def test_v2_version_assessment_conformance():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert resp.versionAssessments.data == {'default': [True]}
+        assert resp.version_assessment.data == {'default': [True]}
 
 def test_v2_va_without_am():
     expr = ExperimentResource(** er_example)
@@ -518,7 +518,7 @@ def test_v2_ab_version_assessment_conformance():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert resp.versionAssessments.data == {'default': [True]}
+        assert resp.version_assessment.data == {'default': [True]}
 
 def test_v2_ab_va_without_am():
     expr = ExperimentResource(** ab_er_example)
@@ -552,8 +552,8 @@ def test_v2_ab_without_reward():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert "No reward metric in experiment" in resp.winnerAssessment.message
-        assert resp.winnerAssessment.data.winnerFound is False
+        assert "No reward metric in experiment" in resp.winner_assessment.message
+        assert resp.winner_assessment.data.winnerFound is False
 
 def test_v2_ab_without_reward_metric_config():
     with requests_mock.mock(real_http=True) as mock:
@@ -568,8 +568,8 @@ def test_v2_ab_without_reward_metric_config():
             expr.convert_to_float()).convert_to_quantity()
 
         assert "reward metric values are not available" in \
-            resp.winnerAssessment.message
-        assert resp.winnerAssessment.data.winnerFound is False
+            resp.winner_assessment.message
+        assert resp.winner_assessment.data.winnerFound is False
 
 def test_v2_ab_without_reward_for_feasible_version():
     example = copy.deepcopy(ab_er_example_step2)
@@ -666,7 +666,7 @@ def test_v2_abn_version_assessment_conformance():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert resp.versionAssessments.data == {'default': [True]}
+        assert resp.version_assessment.data == {'default': [True]}
 
 def test_v2_abn_va_without_am():
     expr = ExperimentResource(** abn_er_example)
@@ -701,8 +701,8 @@ def test_v2_abn_without_reward():
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
         assert "No reward metric in experiment" in \
-            resp.winnerAssessment.message
-        assert resp.winnerAssessment.data.winnerFound is False
+            resp.winner_assessment.message
+        assert resp.winner_assessment.data.winnerFound is False
 
 def test_v2_abn_without_reward_metric_config():
     with requests_mock.mock(real_http=True) as mock:
@@ -717,8 +717,8 @@ def test_v2_abn_without_reward_metric_config():
             expr.convert_to_float()).convert_to_quantity()
 
         assert "reward metric values are not available" in \
-                resp.winnerAssessment.message
-        assert resp.winnerAssessment.data.winnerFound is False
+                resp.winner_assessment.message
+        assert resp.winner_assessment.data.winnerFound is False
 
 def test_v2_abn_general():
     example = copy.deepcopy(abn_er_example_step2)
