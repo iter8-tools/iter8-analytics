@@ -80,7 +80,7 @@ def get_winner_assessment_for_conformance(experiment_resource: ExperimentResourc
     versions = [experiment_resource.spec.versionInfo.baseline]
 
     feasible_versions = list(filter(lambda version: \
-    all(experiment_resource.status.analysis.version_assessment.data[version.name]), versions))
+    all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
 
     # names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))
@@ -102,7 +102,7 @@ def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
     versions += experiment_resource.spec.versionInfo.candidates
 
     feasible_versions = list(filter(lambda version: \
-    all(experiment_resource.status.analysis.version_assessment.data[version.name]), versions))
+    all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
 
     # names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))
@@ -129,7 +129,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
     versions += experiment_resource.spec.versionInfo.candidates
 
     feasible_versions = list(filter(lambda version: \
-    all(experiment_resource.status.analysis.version_assessment.data[version.name]), versions))
+    all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
 
     # names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))
@@ -353,7 +353,7 @@ def get_analytics_results(exp_res: ExperimentResource):
     """
     exp_res.status.analysis = Analysis()
     exp_res.status.analysis.aggregated_metrics = get_aggregated_metrics(exp_res)
-    exp_res.status.analysis.version_assessment = get_version_assessments(exp_res)
+    exp_res.status.analysis.version_assessments = get_version_assessments(exp_res)
     exp_res.status.analysis.winner_assessment = get_winner_assessment(exp_res)
     exp_res.status.analysis.weights = get_weights(exp_res)
     return exp_res.status.analysis

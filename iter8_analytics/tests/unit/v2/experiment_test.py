@@ -135,7 +135,7 @@ def test_v2_version_assessment_conformance():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert resp.version_assessment.data == {'default': [True]}
+        assert resp.version_assessments.data == {'default': [True]}
 
 def test_v2_va_without_am():
     expr = ExperimentResource(** er_example)
@@ -518,7 +518,7 @@ def test_v2_ab_version_assessment_conformance():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert resp.version_assessment.data == {'default': [True]}
+        assert resp.version_assessments.data == {'default': [True]}
 
 def test_v2_ab_va_without_am():
     expr = ExperimentResource(** ab_er_example)
@@ -666,7 +666,7 @@ def test_v2_abn_version_assessment_conformance():
         expr = ExperimentResource(** example)
         resp = get_analytics_results(
             expr.convert_to_float()).convert_to_quantity()
-        assert resp.version_assessment.data == {'default': [True]}
+        assert resp.version_assessments.data == {'default': [True]}
 
 def test_v2_abn_va_without_am():
     expr = ExperimentResource(** abn_er_example)
