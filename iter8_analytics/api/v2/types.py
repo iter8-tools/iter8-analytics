@@ -46,7 +46,6 @@ class MetricSpec(BaseModel):
     """
     params: Sequence[NamedValue] = Field(None, description = "parameters to be used \
         as part of the REST query for this metric")
-    provider: str = Field(None, description = "identifier for the metrics backend")
     jqExpression: str = Field(..., \
         description = "jq expression used for unmarshaling metric value from \
             the JSON response body of the metrics backend's REST API")
@@ -222,7 +221,8 @@ class VersionMetric(BaseModel):
     value: PolymorphicQuantity = Field(None, description = "last observed value \
         for this metric for this version")
     sample_size: PolymorphicQuantity = Field(None, description = "last observed value \
-        for the sampleSize metric for this version; equals None if sampleSize is not specified", alias = "sampleSize")
+        for the sampleSize metric for this version; \
+equals None if sampleSize is not specified", alias = "sampleSize")
 
     def convert_to_float(self):
         """

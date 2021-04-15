@@ -74,6 +74,8 @@ def interpolate(template: str, args: dict):
     """
     Interpolate a template string using a dictionary
     """
+    if args is None:
+        return template, None
     try:
         templ = Template(template)
         # if placeholder values are not present in args dictionary,
