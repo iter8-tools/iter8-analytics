@@ -85,8 +85,11 @@ def interpolate(template: str, args: dict):
         return None, "Error while attemping to substitute tag in query template"
 
 def get_url(metric_resource: MetricResource):
-    """
-    Get the URL for the given metric by interpolating the URLTemplate string using secret.
+    """Derive URL by substituting placeholders in the URLTemplate of a metric resource.
+    Placeholder substitution will be attempted if the metric resource references a valid secret.
+
+    Keyword arguments:
+    metric_resource: the metric resource
     """
     if metric_resource.spec.secret is None: # no need to interpolate
         return metric_resource.spec.urlTemplate, None

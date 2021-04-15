@@ -32,13 +32,13 @@ def get_version_assessments(experiment_resource: ExperimentResource):
     messages = []
 
     def check_limits(obj: Objective, value: float):
-        if (obj.upperLimit is not None) and (value > obj.upperLimit):
+        if (obj.upper_limit is not None) and (value > obj.upper_limit):
             return False
-        if (obj.lowerLimit is not None) and (value < obj.lowerLimit):
+        if (obj.lower_limit is not None) and (value < obj.lower_limit):
             return False
         return True
 
-    aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
+    aggregated_metric_data = experiment_resource.status.analysis.aggregated_metrics.data
 
     version_assessments = VersionAssessmentsAnalysis(data = {})
 
@@ -153,7 +153,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
             return (first > second), None
         return (first < second), None
 
-    aggregated_metric_data = experiment_resource.status.analysis.aggregatedMetrics.data
+    aggregated_metric_data = experiment_resource.status.analysis.aggregated_metrics.data
     if experiment_resource.spec.criteria.rewards is not None:
         reward_metric = experiment_resource.spec.criteria.rewards[0].metric
         if reward_metric in aggregated_metric_data:
@@ -352,7 +352,7 @@ def get_analytics_results(exp_res: ExperimentResource):
     Get analysis results using experiment resource and metric resources.
     """
     exp_res.status.analysis = Analysis()
-    exp_res.status.analysis.aggregatedMetrics = get_aggregated_metrics(exp_res)
+    exp_res.status.analysis.aggregated_metrics = get_aggregated_metrics(exp_res)
     exp_res.status.analysis.versionAssessments = get_version_assessments(exp_res)
     exp_res.status.analysis.winnerAssessment = get_winner_assessment(exp_res)
     exp_res.status.analysis.weights = get_weights(exp_res)

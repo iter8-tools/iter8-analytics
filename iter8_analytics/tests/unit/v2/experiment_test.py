@@ -176,13 +176,13 @@ def test_v2_no_prometheus_response():
                     "default": {
                         "max": None,
                         "min": None,
-                        "sampleSize": None,
+                        "sample_size": None,
                         "value": None
                     },
                     "canary": {
                         "max": None,
                         "min": None,
-                        "sampleSize": None,
+                        "sample_size": None,
                         "value": None
                     }
                 }
@@ -194,13 +194,13 @@ def test_v2_no_prometheus_response():
                     "default": {
                         "max": None,
                         "min": None,
-                        "sampleSize": None,
+                        "sample_size": None,
                         "value": None
                     },
                     "canary": {
                         "max": None,
                         "min": None,
-                        "sampleSize": None,
+                        "sample_size": None,
                         "value": None
                     }
                 }

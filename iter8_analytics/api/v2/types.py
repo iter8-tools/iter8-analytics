@@ -25,6 +25,21 @@ class NamedValue(BaseModel):
 
 #### Metrics
 
+class AuthType(str, Enum):
+    """
+    Types of authentication used in the HTTP(S) request to the metrics API endpoint.
+    """
+    BASIC = "Basic"
+    BEARER = "Bearer"
+    APIKEY = "APIKey"
+
+class Method(str, Enum):
+    """
+    The request method (aka verb) used in the HTTP(s) request to the metrics API endpoint.
+    """
+    GET = "GET"
+    POST = "POST"
+
 class MetricSpec(BaseModel):
     """
     Pydantic model for metric spec subresource
@@ -35,9 +50,15 @@ class MetricSpec(BaseModel):
     jqExpression: str = Field(..., \
         description = "jq expression used for unmarshaling metric value from \
             the JSON response body of the metrics backend's REST API")
-    urlTemplate: str = Field(..., \
-        description="template of the URL to be used for querying this metric")
+    urlTemplate: str = Field(..., description = \
+        "template of the URL to be used for querying this metric")
+    authType: AuthType = Field(None, description = \
+        "type of authentication used in the HTTP(S) request to the metrics API endpoint")
+    method: Method = Field(Method.GET, description = \
+        "HTTP method used in the HTTP(S) request to the metrics API endpoint")
     secret: str = Field(None, description="k8s secret reference in the namespace/name format")
+    body: str = Field(None, description="body of the HTTP(S) request; \
+        this field is relevant only if method is POST")
     headerTemplates: Sequence[NamedValue] = Field(None, \
         description = "headerTemplates are field names \
         and value templates for headers that should be passed to the metrics backend; \
@@ -87,23 +108,25 @@ class Objective(BaseModel):
     Pydantic model for experiment objective
     """
     metric: str = Field(..., description = "metric name")
-    upperLimit: PolymorphicQuantity = Field(None, description = "upper limit for the metric")
-    lowerLimit: PolymorphicQuantity = Field(None, description = "lower limit for the metric")
+    upper_limit: PolymorphicQuantity = Field(None, \
+        description = "upper limit for the metric", alias = "upperLimit")
+    lower_limit: PolymorphicQuantity = Field(None, \
+        description = "lower limit for the metric", alias = "lowerLimit")
 
     def convert_to_float(self):
         """
         Apply convert_to_float on upper and lower limits
         """
-        self.upperLimit = convert_to_float(self.upperLimit)
-        self.lowerLimit = convert_to_float(self.lowerLimit)
+        self.upper_limit = convert_to_float(self.upper_limit)
+        self.lower_limit = convert_to_float(self.lower_limit)
         return self
 
     def convert_to_quantity(self):
         """
         Apply convert_to_quantity on upper and lower limits
         """
-        self.upperLimit = convert_to_quantity(self.upperLimit)
-        self.lowerLimit = convert_to_quantity(self.lowerLimit)
+        self.upper_limit = convert_to_quantity(self.upper_limit)
+        self.lower_limit = convert_to_quantity(self.lower_limit)
         return self
 
 class Criteria(BaseModel):
@@ -198,8 +221,8 @@ class VersionMetric(BaseModel):
         for this metric for this version")
     value: PolymorphicQuantity = Field(None, description = "last observed value \
         for this metric for this version")
-    sampleSize: PolymorphicQuantity = Field(None, description = "last observed value \
-        for the sampleSize metric for this version; this is none if sampleSize is not specified")
+    sample_size: PolymorphicQuantity = Field(None, description = "last observed value \
+        for the sampleSize metric for this version; equals None if sampleSize is not specified", alias = "sampleSize")
 
     def convert_to_float(self):
         """
@@ -208,7 +231,7 @@ class VersionMetric(BaseModel):
         self.max = convert_to_float(self.max)
         self.min = convert_to_float(self.min)
         self.value = convert_to_float(self.value)
-        self.sampleSize = convert_to_float(self.sampleSize)
+        self.sample_size = convert_to_float(self.sample_size)
         return self
 
     def convert_to_quantity(self):
@@ -218,7 +241,7 @@ class VersionMetric(BaseModel):
         self.max = convert_to_quantity(self.max)
         self.min = convert_to_quantity(self.min)
         self.value = convert_to_quantity(self.value)
-        self.sampleSize = convert_to_quantity(self.sampleSize)
+        self.sample_size = convert_to_quantity(self.sample_size)
         return self
 
 class AggregatedMetric(BaseModel):
@@ -324,28 +347,28 @@ class Analysis(BaseModel):
     """
     Pydantic model for analysis section of experiment status
     """
-    aggregatedMetrics: AggregatedMetricsAnalysis = Field(None, \
-        description = "aggregated metrics")
-    versionAssessments: VersionAssessmentsAnalysis = Field(None, \
-        description = "version assessments")
-    winnerAssessment: WinnerAssessmentAnalysis = Field(None, \
-        description = "winner assessment")
+    aggregated_metrics: AggregatedMetricsAnalysis = Field(None, \
+        description = "aggregated metrics", alias = "aggregatedMetrics")
+    version_assessments: VersionAssessmentsAnalysis = Field(None, \
+        description = "version assessments", alias = "versionAssessments")
+    winner_assessment: WinnerAssessmentAnalysis = Field(None, \
+        description = "winner assessment", alias = "winnerAssessment")
     weights: WeightsAnalysis = Field(None, description = "weight recommendations")
 
     def convert_to_float(self):
         """
         Apply convert_to_float on aggregatedMetric
         """
-        if self.aggregatedMetrics is not None:
-            self.aggregatedMetrics = self.aggregatedMetrics.convert_to_float()
+        if self.aggregated_metrics is not None:
+            self.aggregated_metrics = self.aggregated_metrics.convert_to_float()
         return self
 
     def convert_to_quantity(self):
         """
         Apply convert_to_quantiy on aggregatedMetric
         """
-        if self.aggregatedMetrics is not None:
-            self.aggregatedMetrics = self.aggregatedMetrics.convert_to_quantity()
+        if self.aggregated_metrics is not None:
+            self.aggregated_metrics = self.aggregated_metrics.convert_to_quantity()
         return self
 
 class ExperimentStatus(BaseModel):
