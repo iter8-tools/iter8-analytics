@@ -1,6 +1,6 @@
 name: Multi database and secrets integration test
 
-on: ["pull_request"]
+# on: ["pull_request"]
 
 jobs:
   in-cluster-test:
