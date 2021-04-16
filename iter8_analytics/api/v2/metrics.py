@@ -21,7 +21,7 @@ from kubernetes import config as kubeconfig
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import AggregatedMetricsAnalysis, ExperimentResource, \
-    MetricResource, VersionDetail, AggregatedMetric, VersionMetric
+    MetricResource, VersionDetail, AggregatedMetric, VersionMetric, AuthType
 from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
@@ -61,7 +61,7 @@ def get_secret_data_for_metric(metric_resource: MetricResource):
     # this is the most accepted answer at this point
     my_ns = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read()
     if metric_resource.spec.secret is None:
-        return None, "metric does not reference any secret"
+        return None, ValueError("metric does not reference any secret")
     # there is a secret referenced in the metric ...
     namespaced_name = metric_resource.spec.secret.split("/")
     if len(namespaced_name) == 1: # secret does not have a namespace in it
@@ -112,7 +112,11 @@ def get_headers(metric_resource: MetricResource):
     # initialize headers dictionary
     for item in metric_resource.spec.headerTemplates:
         headers[item.name] = item.value
-    # if no secret is referenced, there is nothing to do
+    # if authType is None, interpolation is not attempted
+    if metric_resource.spec.authType != AuthType.APIKEY:
+        logger.debug("auth type is %s", metric_resource.spec.authType)
+        return headers, None
+    # if there is no secret referenced, interpolation is not attempted
     if metric_resource.spec.secret is None:
         return headers, None
 
