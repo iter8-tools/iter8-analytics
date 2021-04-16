@@ -137,11 +137,15 @@ def get_basic_auth(metric_resource: MetricResource):
     """
     Get basic auth information.
     """
-    # return error
+    # return error if authType is not Basic
     if metric_resource.spec.authType is None or \
         metric_resource.spec.authType != AuthType.BASIC:
         return None, \
             ValueError("get_basic_auth call is not supported for None of non-Basic auth types")
+    
+    # return error if secret is missing
+    if metric_resource.spec.secret is None:
+        return None, ValueError("basic auth requires a secret")
 
     # args contain decoded secret data for basic auth
     args, err = get_secret_data_for_metric(metric_resource)

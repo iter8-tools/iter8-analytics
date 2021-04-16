@@ -4,11 +4,15 @@ import logging
 import re
 from unittest import TestCase, mock
 
+# external module dependencies
+from requests.auth import HTTPBasicAuth
+
+# iter8 dependencies
 from iter8_analytics import fastapi_app
 from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 
-from iter8_analytics.api.v2.metrics import get_params, get_url, get_headers
+from iter8_analytics.api.v2.metrics import get_params, get_url, get_headers, get_basic_auth
 from iter8_analytics.api.v2.types import ExperimentResource, MetricResource, \
     NamedValue, AuthType
 from iter8_analytics.api.v2.examples.examples_canary import er_example
@@ -23,7 +27,7 @@ class ParamInterpolation(TestCase):
     """Test parameter computation"""
 
     def test_params(self):
-        """elapsedTime must not include an 's' at the end during parameter interpolation"""
+        """elapsedTime must not include 's' as suffix after parameter interpolation"""
         expr = ExperimentResource(** er_example)
         metric_resource = expr.status.metrics[0].metricObj
         version = expr.spec.versionInfo.baseline
@@ -37,7 +41,7 @@ class URLTemplate(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_no_secret_ref(self, mock_secret):
-        """When there is no secret reference in the metric, url should equal urlTemplate"""
+        """When secret is None, url equals urlTemplate"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         url, _ = get_url(metric_resource)
@@ -47,7 +51,7 @@ class URLTemplate(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_invalid_secret(self, mock_secret):
-        """When secret is invalid, there must be an error"""
+        """When secret is invalid, get error"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.secret = "invalid"
@@ -60,8 +64,7 @@ class URLTemplate(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_no_and_partialsecret_data(self, mock_secret):
-        """When there is a valid secret reference in the metric,
-        placeholders in the urlTemplate must be substituted correctly"""
+        """When secret is valid, interpolate urlTemplate"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.urlTemplate = "https://prometheus.com:${port}/$endpoint"
@@ -143,7 +146,7 @@ class HeaderTemplate(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_invalid_secret(self, mock_secret):
-        """Metric resource with APIKey or Bearer auth type, and invalid secret will result in error"""
+        """When authType is APIKey or Bearer, and secret is invalid, get error"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.headerTemplates = [
@@ -168,7 +171,7 @@ class HeaderTemplate(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_bearer_auth_type(self, mock_secret):
-        """When authType is Bearer, interpolate headers"""
+        """When authType is Bearer, and secret is valid, interpolate headers"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.headerTemplates = [
@@ -188,7 +191,7 @@ class HeaderTemplate(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_api_key_auth_type(self, mock_secret):
-        """When authType is APIKey, interpolate headers"""
+        """When authType is APIKey, and secret is valid, interpolate headers"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.headerTemplates = [
@@ -212,3 +215,51 @@ class HeaderTemplate(TestCase):
             "g": "$h"
         }
         assert err is None
+
+class BasicAuth(TestCase):
+    """Test basic auth computation"""
+
+    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
+    def test_basic_auth(self, mock_secret):
+        """When authType is Basic, and secret is valid, get basic auth information"""
+        expr = ExperimentResource(** er_example)
+        metric_resource: MetricResource = expr.status.metrics[0].metricObj
+        metric_resource.spec.authType = AuthType.BASIC
+        metric_resource.spec.secret = "valid"
+        mock_secret.return_value = ({
+            "username": "me",
+            "password": "t0p-secret"
+        }, None)
+        auth, err = get_basic_auth(metric_resource)
+        mock_secret.assert_called_with(metric_resource)
+        assert auth == HTTPBasicAuth("me", "t0p-secret")
+        assert err is None
+
+    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
+    def test_basic_auth_invalid(self, mock_secret):
+        """When authType is Basic, and secret is invalid, get error"""
+        expr = ExperimentResource(** er_example)
+        metric_resource: MetricResource = expr.status.metrics[0].metricObj
+        metric_resource.spec.authType = AuthType.BASIC
+
+        auth, err = get_basic_auth(metric_resource)
+        self.assertFalse(mock_secret.called, \
+            "attempt to fetch secret when no secret is referenced in metric resource")
+        assert auth is None
+        assert err is not None
+
+        metric_resource.spec.secret = "invalid"
+        mock_secret.return_value = ({}, \
+            KeyError("cannot find secret invalid in namespace iter8-system"))
+        auth, err = get_basic_auth(metric_resource)
+        mock_secret.assert_called_with(metric_resource)
+        assert auth is None
+        assert err is not None
+
+        mock_secret.return_value = ({
+            "username": "me"
+        }, None)
+        auth, err = get_basic_auth(metric_resource)
+        mock_secret.assert_called_with(metric_resource)
+        assert auth is None
+        assert err is not None
