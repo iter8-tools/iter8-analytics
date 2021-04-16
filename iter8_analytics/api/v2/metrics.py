@@ -114,8 +114,10 @@ def get_headers(metric_resource: MetricResource):
     for item in metric_resource.spec.headerTemplates:
         headers[item.name] = item.value
     # if authType is None, interpolation is not attempted
-    if metric_resource.spec.authType != AuthType.APIKEY:
-        logger.debug("auth type is %s", metric_resource.spec.authType)
+    if metric_resource.spec.authType is None:
+        return headers, None
+    # if authType is Basic, interpolation is not attempted
+    if metric_resource.spec.authType == AuthType.BASIC:
         return headers, None
     # if there is no secret referenced, interpolation is not attempted
     if metric_resource.spec.secret is None:
@@ -133,19 +135,19 @@ def get_headers(metric_resource: MetricResource):
 
 def get_basic_auth(metric_resource: MetricResource):
     """
-    Get requests library authentication information for Basic and Bearer authentication types.
+    Get basic auth information.
     """
-    # return empty auth
+    # return error
     if metric_resource.spec.authType is None or \
         metric_resource.spec.authType != AuthType.BASIC:
         return None, \
             ValueError("get_basic_auth call is not supported for None of non-Basic auth types")
 
-    # args contain decoded secret data for header template interpolation
+    # args contain decoded secret data for basic auth
     args, err = get_secret_data_for_metric(metric_resource)
     if err is None:
         if "username" in args and "password" in args:
-            return HTTPBasicAuth(args["username"], args["password"])
+            return HTTPBasicAuth(args["username"], args["password"]), None
         else:
             return None, ValueError("username and password keys missing in secret data")
     return None, err
@@ -200,10 +202,17 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
         # interpolated params
         params, err = get_params(metric_resource, version, start_time)
     if err is None:
+        if metric_resource.spec.authType == AuthType.BASIC:
+            # basic auth info
+            auth, err = get_basic_auth(metric_resource)
+    if err is None:
         try:
             logger.debug("Invoking requests get with url %s and params: \
                 %s and headers: %s", url, params, headers)
-            raw_response = requests.get(url, params = params, headers = headers, timeout = 2.0)
+            if metric_resource.spec.authType == AuthType.BASIC:
+                raw_response = requests.get(url, params = params, auth = auth, headers = headers, timeout = 2.0)
+            else:
+                raw_response = requests.get(url, params = params, headers = headers, timeout = 2.0)
             logger.debug("response status code: %s", raw_response.status_code)
             logger.debug("response text: %s", raw_response.text)
             response = raw_response.json()

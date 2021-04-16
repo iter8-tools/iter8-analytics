@@ -19,25 +19,21 @@ if not logger.hasHandlers():
 
 logger.info(env_config)
 
-def test_params():
-    """Test how parameters are computed"""
-    expr = ExperimentResource(** er_example)
-    metric_resource = expr.status.metrics[0].metricObj
-    version = expr.spec.versionInfo.baseline
-    start_time = expr.status.startTime
-    params = get_params(metric_resource, version, start_time)
-    groups = re.search('(\\[[0-9]+s\\])', params[0]["query"])
-    assert groups is not None
+class ParamInterpolation(TestCase):
+    """Test parameter computation"""
 
+    def test_params(self):
+        """elapsedTime must not include an 's' at the end during parameter interpolation"""
+        expr = ExperimentResource(** er_example)
+        metric_resource = expr.status.metrics[0].metricObj
+        version = expr.spec.versionInfo.baseline
+        start_time = expr.status.startTime
+        params = get_params(metric_resource, version, start_time)
+        groups = re.search('(\\[[0-9]+s\\])', params[0]["query"])
+        assert groups is not None
 
-class URLTemplateTestCases(TestCase):
-    """Tests following behaviors during interpolation of URLTemplate.
-    1. urlTemplate interpolation: not attempted when secret is not referenced; url == urlTemplate
-    2. urlTemplate interpolation: exception when secret is invalid
-    3. urlTemplate interpolation: interpolated with data when data has placeholder values
-    4. urlTemplate interpolation: url == urlTemplate,
-    when data is None or does not have the placeholder values
-    """
+class URLTemplate(TestCase):
+    """Test url interpolation"""
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_no_secret_ref(self, mock_secret):
@@ -51,7 +47,7 @@ class URLTemplateTestCases(TestCase):
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_invalid_secret(self, mock_secret):
-        """When there is no secret reference in the metric, url should equal urlTemplate"""
+        """When secret is invalid, there must be an error"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.secret = "invalid"
@@ -63,13 +59,14 @@ class URLTemplateTestCases(TestCase):
         assert err is not None
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
-    def test_valid_secret(self, mock_secret):
-        """When there is a valid secret reference in the metric, 
+    def test_no_and_partialsecret_data(self, mock_secret):
+        """When there is a valid secret reference in the metric,
         placeholders in the urlTemplate must be substituted correctly"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.urlTemplate = "https://prometheus.com:${port}/$endpoint"
         metric_resource.spec.secret = "valid"
+
         mock_secret.return_value = ({
             "port": 8080,
             "endpoint": "nothingtosee"
@@ -79,15 +76,6 @@ class URLTemplateTestCases(TestCase):
         assert url == "https://prometheus.com:8080/nothingtosee"
         assert err is None
 
-    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
-    def test_no_and_partialsecret_data(self, mock_secret):
-        """When there is a valid secret reference in the metric, 
-        placeholders in the urlTemplate must be substituted correctly"""
-        expr = ExperimentResource(** er_example)
-        metric_resource: MetricResource = expr.status.metrics[0].metricObj
-        metric_resource.spec.urlTemplate = "https://prometheus.com:${port}/$endpoint"
-        metric_resource.spec.secret = "valid"
-
         mock_secret.return_value = ({
             "port": 8080
         }, None)
@@ -96,17 +84,20 @@ class URLTemplateTestCases(TestCase):
         assert url == "https://prometheus.com:8080/$endpoint"
         assert err is None
 
+        mock_secret.return_value = {}, None
+        (url, err) = get_url(metric_resource)
+        mock_secret.assert_called_with(metric_resource)
+        assert url == "https://prometheus.com:${port}/$endpoint"
+        assert err is None
+
         mock_secret.return_value = None, None
         (url, err) = get_url(metric_resource)
         mock_secret.assert_called_with(metric_resource)
         assert url == "https://prometheus.com:${port}/$endpoint"
         assert err is None
 
-class HeaderTemplateTestCases(TestCase):
-    """Tests following behaviors during computation of headers.
-    1. When authType is None, do not interpolate headers
-    2. When authType is Basic, do not interpolate headers
-    """
+class HeaderTemplate(TestCase):
+    """Test header computation"""
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_no_auth_type(self, mock_secret):
@@ -125,7 +116,7 @@ class HeaderTemplateTestCases(TestCase):
         assert err is None
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
-    def test_non_api_keys_auth_type(self, mock_secret):
+    def test_basic_auth_type(self, mock_secret):
         """When authType is Basic, do not interpolate headers"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
@@ -150,31 +141,50 @@ class HeaderTemplateTestCases(TestCase):
         }
         assert err is None
 
-        metric_resource.spec.authType = AuthType.BEARER
-        headers, err = get_headers(metric_resource)
-        self.assertFalse(mock_secret.called, \
-            "attempt to fetch secret when no secret is referenced in metric resource")
-        assert headers == {
-            "a": "$b"
-        }
-        assert err is None
-
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_invalid_secret(self, mock_secret):
-        """When authType is absent in the metric resource, do not interpolate headers"""
+        """Metric resource with APIKey or Bearer auth type, and invalid secret will result in error"""
         expr = ExperimentResource(** er_example)
         metric_resource: MetricResource = expr.status.metrics[0].metricObj
         metric_resource.spec.headerTemplates = [
             NamedValue(name = "a", value = "$b")
         ]
-        metric_resource.spec.authType = AuthType.APIKEY
         metric_resource.spec.secret = "invalid"
         mock_secret.return_value = ({}, \
             KeyError("cannot find secret invalid in namespace iter8-system"))
+
+        metric_resource.spec.authType = AuthType.APIKEY
         headers, err = get_headers(metric_resource)
         mock_secret.assert_called_with(metric_resource)
         assert headers is None
         assert err is not None
+
+        metric_resource.spec.authType = AuthType.BEARER
+        headers, err = get_headers(metric_resource)
+        mock_secret.assert_called_with(metric_resource)
+        assert headers is None
+        assert err is not None
+
+
+    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
+    def test_bearer_auth_type(self, mock_secret):
+        """When authType is Bearer, interpolate headers"""
+        expr = ExperimentResource(** er_example)
+        metric_resource: MetricResource = expr.status.metrics[0].metricObj
+        metric_resource.spec.headerTemplates = [
+            NamedValue(name = "Authorization", value = "Bearer $token")
+        ]
+        metric_resource.spec.authType = AuthType.BEARER
+        metric_resource.spec.secret = "valid"
+        mock_secret.return_value = ({
+            "token": "t0p-secret"
+        }, None)
+        headers, err = get_headers(metric_resource)
+        mock_secret.assert_called_with(metric_resource)
+        assert headers == {
+            "Authorization": "Bearer t0p-secret"
+        }
+        assert err is None
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_api_key_auth_type(self, mock_secret):
@@ -202,13 +212,3 @@ class HeaderTemplateTestCases(TestCase):
             "g": "$h"
         }
         assert err is None
-
-def test_url_interpolation():
-    """Test how parameters are computed"""
-    expr = ExperimentResource(** er_example)
-    metric_resource = expr.status.metrics[0].metricObj
-    version = expr.spec.versionInfo.baseline
-    start_time = expr.status.startTime
-    params = get_params(metric_resource, version, start_time)
-    groups = re.search('(\\[[0-9]+s\\])', params[0]["query"])
-    assert groups is not None
