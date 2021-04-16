@@ -142,7 +142,7 @@ def get_basic_auth(metric_resource: MetricResource):
         metric_resource.spec.authType != AuthType.BASIC:
         return None, \
             ValueError("get_basic_auth call is not supported for None of non-Basic auth types")
-    
+
     # return error if secret is missing
     if metric_resource.spec.secret is None:
         return None, ValueError("basic auth requires a secret")
@@ -214,7 +214,8 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
             logger.debug("Invoking requests get with url %s and params: \
                 %s and headers: %s", url, params, headers)
             if metric_resource.spec.authType == AuthType.BASIC:
-                raw_response = requests.get(url, params = params, auth = auth, headers = headers, timeout = 2.0)
+                raw_response = requests.get(url, params = params, auth = auth, \
+                    headers = headers, timeout = 2.0)
             else:
                 raw_response = requests.get(url, params = params, headers = headers, timeout = 2.0)
             logger.debug("response status code: %s", raw_response.status_code)
