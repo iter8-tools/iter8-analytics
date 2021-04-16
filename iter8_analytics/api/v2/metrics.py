@@ -13,6 +13,7 @@ import json
 
 # external module dependencies
 import requests
+from requests.auth import HTTPBasicAuth
 import numpy as np
 import jq
 from cachetools import cached, TTLCache
@@ -128,6 +129,25 @@ def get_headers(metric_resource: MetricResource):
             if err is not None:
                 return None, err
         return headers, None
+    return None, err
+
+def get_basic_auth(metric_resource: MetricResource):
+    """
+    Get requests library authentication information for Basic and Bearer authentication types.
+    """
+    # return empty auth
+    if metric_resource.spec.authType is None or \
+        metric_resource.spec.authType != AuthType.BASIC:
+        return None, \
+            ValueError("get_basic_auth call is not supported for None of non-Basic auth types")
+
+    # args contain decoded secret data for header template interpolation
+    args, err = get_secret_data_for_metric(metric_resource)
+    if err is None:
+        if "username" in args and "password" in args:
+            return HTTPBasicAuth(args["username"], args["password"])
+        else:
+            return None, ValueError("username and password keys missing in secret data")
     return None, err
 
 def get_params(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
