@@ -82,6 +82,7 @@ cpu_utilization = {
                 "name": "query",
                 "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
             }],
+            "method": "POST",
             "type": "gauge",
             "provider": "Sysdig",
             "jqExpression": ".data.result[0].value[1] | tonumber",

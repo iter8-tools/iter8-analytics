@@ -22,7 +22,7 @@ from kubernetes import config as kubeconfig
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import AggregatedMetricsAnalysis, ExperimentResource, \
-    MetricResource, VersionDetail, AggregatedMetric, VersionMetric, AuthType
+    MetricResource, VersionDetail, AggregatedMetric, VersionMetric, AuthType, Method
 from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
@@ -175,6 +175,53 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
             return None, err
     return params, None
 
+def get_body(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
+    """Interpolate POST query body for metric and return interpolated body"""
+    # args contain data from VersionInfo,
+    # along with elapsedTime (time since the start of experiment)
+    args = {}
+    args["name"] = version.name
+    if version.variables is not None and len(version.variables) > 0:
+        for variable in version.variables:
+            args[variable.name] = variable.value
+    args["elapsedTime"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    args["elapsedTime"] = str(args["elapsedTime"])
+
+    if metric_resource.spec.method != Method.POST:
+        return None, ValueError("get_body called when method is not POST")
+
+    if metric_resource.spec.body is None:
+        return None, None
+
+    interpolated_body, err = interpolate(metric_resource.spec.body, args)
+    if err is not None:
+        return None, err
+
+    try:
+        body = json.loads(interpolated_body)
+        return body, None
+    except json.JSONDecodeError as jde:
+        return None, jde
+
+def get_raw_response(url, method, params, body, headers, auth, timeout):
+    """Send GET or POST request to the url and get HTTP response"""
+    kw_args = {}
+
+    if params is not None:
+        kw_args["params"] = params
+    if headers is not None:
+        kw_args["headers"] = headers
+    if auth is not None:
+        kw_args["auth"] = auth
+    if timeout is not None:
+        kw_args["timeout"] = timeout
+
+    if method == Method.GET:
+        return requests.get(url = url, **kw_args)
+    if method == Method.POST:
+        return requests.post(url = url, json = body, **kw_args)
+    raise ValueError("Unknown HTTP request method")
+
 def unmarshal(response, jq_expression):
     """
     Unmarshal metric value from metric response
@@ -199,31 +246,39 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
     (value, err) = (None, None)
     # interpolated metrics backend URL
     url, err = get_url(metric_resource)
-    if err is None:
-        # interpolated header templates
-        headers, err = get_headers(metric_resource)
+    params, headers, auth, body = None, None, None, None
     if err is None:
         # interpolated params
         params, err = get_params(metric_resource, version, start_time)
+        if params == {}:
+            params = None
+    if err is None:
+        # interpolated header templates
+        headers, err = get_headers(metric_resource)
+        if headers == {}:
+            headers = None
     if err is None:
         if metric_resource.spec.authType == AuthType.BASIC:
             # basic auth info
             auth, err = get_basic_auth(metric_resource)
     if err is None:
+        if metric_resource.spec.method == Method.POST:
+            body, err = get_body(metric_resource, version, start_time)
+
+    if err is None:
         try:
             logger.debug("Invoking requests get with url %s and params: \
-                %s and headers: %s", url, params, headers)
-            if metric_resource.spec.authType == AuthType.BASIC:
-                raw_response = requests.get(url, params = params, auth = auth, \
-                    headers = headers, timeout = 2.0)
-            else:
-                raw_response = requests.get(url, params = params, headers = headers, timeout = 2.0)
+                %s and headers: %s and auth: %s and body: %s", url, params, headers, auth, body)
+            raw_response = get_raw_response(url = url, \
+                method = metric_resource.spec.method, params = params, body = body, \
+                    headers = headers, auth = auth, timeout = 2.0)
             logger.debug("response status code: %s", raw_response.status_code)
             logger.debug("response text: %s", raw_response.text)
             response = raw_response.json()
             logger.debug("json response...")
             logger.debug(response)
-        except (requests.exceptions.RequestException, json.decoder.JSONDecodeError) as exc:
+        except (requests.exceptions.RequestException, \
+            json.decoder.JSONDecodeError, ValueError) as exc:
             logger.error("Error while attempting to get metric value from backend")
             logger.error(exc)
             return value, exc

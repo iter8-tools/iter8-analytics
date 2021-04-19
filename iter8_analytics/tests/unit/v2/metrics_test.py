@@ -12,10 +12,12 @@ from iter8_analytics import fastapi_app
 from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 
-from iter8_analytics.api.v2.metrics import get_params, get_url, get_headers, get_basic_auth
-from iter8_analytics.api.v2.types import ExperimentResource, MetricResource, \
-    NamedValue, AuthType
+from iter8_analytics.api.v2.metrics import get_params, get_url, get_headers, \
+    get_basic_auth, get_body
+from iter8_analytics.api.v2.types import ExperimentResource, MetricInfo, \
+    MetricResource, NamedValue, AuthType
 from iter8_analytics.api.v2.examples.examples_canary import er_example
+from iter8_analytics.api.v2.examples.examples_metrics import cpu_utilization
 
 logger = logging.getLogger('iter8_analytics')
 if not logger.hasHandlers():
@@ -263,3 +265,17 @@ class BasicAuth(TestCase):
         mock_secret.assert_called_with(metric_resource)
         assert auth is None
         assert err is not None
+
+class BodyInterpolation(TestCase):
+    """Test body computation"""
+
+    def test_body(self):
+        """body must interpolate elapsedTime and version name"""
+        expr = ExperimentResource(** er_example)
+        metric_info = MetricInfo(** cpu_utilization)
+        version = expr.spec.versionInfo.baseline
+        start_time = expr.status.startTime
+        body, err = get_body(metric_info.metricObj, version, start_time)
+        assert err is None
+        assert body["last"]  > 32931645
+        assert body["filter"] == "kubernetes.node.name = 'n1' and service = 'default'"
