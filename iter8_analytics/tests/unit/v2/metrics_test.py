@@ -2,7 +2,12 @@
 # standard python stuff
 import logging
 import re
+import os
+import json
 from unittest import TestCase, mock
+
+# python libraries
+import requests_mock
 
 # external module dependencies
 from requests.auth import HTTPBasicAuth
@@ -13,7 +18,7 @@ from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 
 from iter8_analytics.api.v2.metrics import get_params, get_url, get_headers, \
-    get_basic_auth, get_body
+    get_basic_auth, get_body, get_metric_value
 from iter8_analytics.api.v2.types import ExperimentResource, MetricInfo, \
     MetricResource, NamedValue, AuthType
 from iter8_analytics.api.v2.examples.examples_canary import er_example
@@ -237,6 +242,18 @@ class BasicAuth(TestCase):
         assert auth == HTTPBasicAuth("me", "t0p-secret")
         assert err is None
 
+        with requests_mock.mock(real_http=True) as req_mock:
+            file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                        'prometheus_sample_response.json')
+            response_json = json.load(open(file_path))
+            req_mock.get(metric_resource.spec.urlTemplate, json=response_json)
+
+            version = expr.spec.versionInfo.baseline
+            start_time = expr.status.startTime
+            value, err = get_metric_value(metric_resource, version, start_time)
+            assert err is None
+            assert value == float(response_json["data"]["result"][0]["value"][1])
+
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_basic_auth_invalid(self, mock_secret):
         """When authType is Basic, and secret is invalid, get error"""
@@ -279,3 +296,32 @@ class BodyInterpolation(TestCase):
         assert err is None
         assert body["last"]  > 32931645
         assert body["filter"] == "kubernetes.node.name = 'n1' and service = 'default'"
+
+    def test_POST_metric(self):
+        """POST metric query must result in a value"""
+        with requests_mock.mock(real_http=True) as req_mock:
+            req_mock.register_uri('POST', cpu_utilization["metricObj"]
+                                  ["spec"]["urlTemplate"], json={
+                                      "data": [
+                                          {
+                                              "t": 1582756200,
+                                              "d": [
+                                                  6.481
+                                              ]
+                                          }
+                                      ],
+                "start": 1582755600,
+                "end": 1582756200
+            }, status_code=200)
+
+            expr = ExperimentResource(** er_example)
+            metric_info = MetricInfo(** cpu_utilization)
+            version = expr.spec.versionInfo.baseline
+            start_time = expr.status.startTime
+            value, err = get_metric_value(metric_info.metricObj, version, start_time)
+            assert err is None
+            assert value == 6.481
+
+
+
+

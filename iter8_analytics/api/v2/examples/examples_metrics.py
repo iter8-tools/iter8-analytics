@@ -78,14 +78,10 @@ cpu_utilization = {
         "spec": {
             "description": "CPU utilization",
             "body": "{\n  \"last\": $elapsedTime,\n  \"sampling\": 600,\n  \"filter\": \"kubernetes.node.name = 'n1' and service = '$name'\",\n   \"metrics\": [\n    {\n      \"id\": \"cpu.cores.used\",\n      \"aggregations\": { \"time\": \"avg\", \"group\": \"sum\" }\n    }\n  ],\n  \"dataSourceType\": \"container\",\n  \"paging\": {\n    \"from\": 0,\n    \"to\": 99\n  }\n}\n",
-            "params": [{
-                "name": "query",
-                "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
-            }],
             "method": "POST",
             "type": "gauge",
             "provider": "Sysdig",
-            "jqExpression": ".data.result[0].value[1] | tonumber",
+            "jqExpression": ".data[0].d[0] | tonumber",
             "urlTemplate": "http://metrics-mock:8080/sysdig"
         }
     }

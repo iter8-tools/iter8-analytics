@@ -141,7 +141,7 @@ def get_basic_auth(metric_resource: MetricResource):
     if metric_resource.spec.authType is None or \
         metric_resource.spec.authType != AuthType.BASIC:
         return None, \
-            ValueError("get_basic_auth call is not supported for None of non-Basic auth types")
+            ValueError("get_basic_auth call is not supported for None/non-Basic auth types")
 
     # return error if secret is missing
     if metric_resource.spec.secret is None:
@@ -169,10 +169,11 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
     args["elapsedTime"] = str(args["elapsedTime"])
 
     params = {}
-    for par in metric_resource.spec.params:
-        params[par.name], err = interpolate(par.value, args)
-        if err is not None:
-            return None, err
+    if  metric_resource.spec.params is not None:
+        for par in metric_resource.spec.params:
+            params[par.name], err = interpolate(par.value, args)
+            if err is not None:
+                return None, err
     return params, None
 
 def get_body(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
@@ -250,20 +251,24 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
     if err is None:
         # interpolated params
         params, err = get_params(metric_resource, version, start_time)
+        logger.debug("Params error: %s", err)
         if params == {}:
             params = None
     if err is None:
         # interpolated header templates
         headers, err = get_headers(metric_resource)
+        logger.debug("Headers error: %s", err)
         if headers == {}:
             headers = None
     if err is None:
         if metric_resource.spec.authType == AuthType.BASIC:
             # basic auth info
             auth, err = get_basic_auth(metric_resource)
+            logger.debug("Auth error: %s", err)
     if err is None:
         if metric_resource.spec.method == Method.POST:
             body, err = get_body(metric_resource, version, start_time)
+            logger.debug("Body error: %s", err)
 
     if err is None:
         try:
