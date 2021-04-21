@@ -22,7 +22,8 @@ from iter8_analytics.api.v2.metrics import get_params, get_url, get_headers, \
 from iter8_analytics.api.v2.types import ExperimentResource, MetricInfo, \
     MetricResource, NamedValue, AuthType
 from iter8_analytics.api.v2.examples.examples_canary import er_example
-from iter8_analytics.api.v2.examples.examples_metrics import cpu_utilization
+from iter8_analytics.api.v2.examples.examples_metrics import cpu_utilization, \
+    request_count
 
 logger = logging.getLogger('iter8_analytics')
 if not logger.hasHandlers():
@@ -297,7 +298,7 @@ class BodyInterpolation(TestCase):
         assert body["last"]  > 32931645
         assert body["filter"] == "kubernetes.node.name = 'n1' and service = 'default'"
 
-    def test_POST_metric(self):
+    def test_post_metric(self):
         """POST metric query must result in a value"""
         with requests_mock.mock(real_http=True) as req_mock:
             req_mock.register_uri('POST', cpu_utilization["metricObj"]
@@ -322,6 +323,94 @@ class BodyInterpolation(TestCase):
             assert err is None
             assert value == 6.481
 
+class SamplesUsedInIter8Docs(TestCase):
+    """Test samples used in https://iter8.tools for metrics"""
+
+    def test_prometheus(self):
+        """Test prometheus with no authentication"""
+        with requests_mock.mock(real_http=True) as req_mock:
+            prometheus_no_auth = request_count
+            metric_info = MetricInfo(** prometheus_no_auth)
+            metric_info.metricObj.spec.params[0].value = "sum(increase(revision_app_request_latencies_count{service_name='${name}',${userfilter}}[${elapsedTime}s])) or on() vector(0)"
+            url = metric_info.metricObj.spec.urlTemplate
+            json_response = {
+                "status": "success",
+                "data": {
+                    "resultType": "vector",
+                    "result": [
+                        {
+                            "value": [1556823494.744, "21.7639"]
+                        }
+                    ]
+                }
+            }
+            req_mock.register_uri('GET', url, json = json_response, status_code = 200)
+
+            expr = ExperimentResource(** er_example)
+            version = expr.spec.versionInfo.baseline
+            version.variables = [
+                NamedValue(name = "userfilter", value = 'usergroup!~"wakanda"')
+            ]
+            start_time = expr.status.startTime
+
+            # verify params
+            params = get_params(metric_info.metricObj, version, start_time)
+            logger.info(params)
+            groups = re.search('(usergroup!~"wakanda")', params[0]["query"])
+            assert groups is not None
+
+            # verify jq expression
+            value, err = get_metric_value(metric_info.metricObj, version, start_time)
+            assert err is None
+            assert value == 21.7639
 
 
+    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
+    def test_prometheus_basic_auth(self, mock_secret):
+        """Test prometheus with no authentication"""
+        with requests_mock.mock(real_http=True) as req_mock:
+            prometheus_basic_auth = request_count
+            metric_info = MetricInfo(** prometheus_basic_auth)
+            metric_info.metricObj.spec.params[0].value = "sum(increase(revision_app_request_latencies_count{service_name='${name}',${userfilter}}[${elapsedTime}s])) or on() vector(0)"
+            metric_info.metricObj.spec.authType = AuthType.BASIC
+            metric_info.metricObj.spec.secret = "myns/promcredentials"
+            url = metric_info.metricObj.spec.urlTemplate
+            json_response = {
+                "status": "success",
+                "data": {
+                    "resultType": "vector",
+                    "result": [
+                        {
+                            "value": [1556823494.744, "21.7639"]
+                        }
+                    ]
+                }
+            }
+            req_mock.register_uri('GET', url, json = json_response, status_code = 200)
+            mock_secret.return_value = ({
+                "username": "produser",
+                "password": "t0p-secret"
+            }, None)
+            auth, err = get_basic_auth(metric_info.metricObj)
+            mock_secret.assert_called_with(metric_info.metricObj)
+            assert auth == HTTPBasicAuth("produser", "t0p-secret")
+            assert err is None
 
+
+            expr = ExperimentResource(** er_example)
+            version = expr.spec.versionInfo.baseline
+            version.variables = [
+                NamedValue(name = "userfilter", value = 'usergroup!~"wakanda"')
+            ]
+            start_time = expr.status.startTime
+
+            # verify params
+            params = get_params(metric_info.metricObj, version, start_time)
+            logger.info(params)
+            groups = re.search('(usergroup!~"wakanda")', params[0]["query"])
+            assert groups is not None
+
+            # verify jq expression
+            value, err = get_metric_value(metric_info.metricObj, version, start_time)
+            assert err is None
+            assert value == 21.7639

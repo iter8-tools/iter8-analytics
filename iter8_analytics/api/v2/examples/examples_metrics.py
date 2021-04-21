@@ -4,7 +4,7 @@ Metric examples used in other examples.
 request_count = {
     "name": "request-count",
     "metricObj": {
-        "apiVersion": "core.iter8.tools/v2alpha2",
+        "apiVersion": "iter8.tools/v2alpha2",
         "kind": "Metric",
         "metadata": {
             "name": "request-count"
@@ -26,7 +26,7 @@ request_count = {
 mean_latency = {
     "name": "mean-latency",
     "metricObj": {
-        "apiVersion": "core.iter8.tools/v2alpha2",
+        "apiVersion": "iter8.tools/v2alpha2",
         "kind": "Metric",
         "metadata": {
             "name": "mean-latency"
@@ -70,7 +70,7 @@ mean_latency = {
 cpu_utilization = {
     "name": "cpu-utilization",
     "metricObj": {
-        "apiVersion": "core.iter8.tools/v2alpha2",
+        "apiVersion": "iter8.tools/v2alpha2",
         "kind": "Metric",
         "metadata": {
             "name": "cpu-utilization"
@@ -90,7 +90,7 @@ cpu_utilization = {
 business_revenue = {
     "name": "business-revenue",
     "metricObj": {
-        "apiVersion": "core.iter8.tools/v2alpha2",
+        "apiVersion": "iter8.tools/v2alpha2",
         "kind": "Metric",
         "metadata": {
             "name": "business-revenue"
