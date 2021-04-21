@@ -188,9 +188,6 @@ def get_body(metric_resource: MetricResource, version: VersionDetail, start_time
     args["elapsedTime"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
     args["elapsedTime"] = str(args["elapsedTime"])
 
-    if metric_resource.spec.method != Method.POST:
-        return None, ValueError("get_body called when method is not POST")
-
     if metric_resource.spec.body is None:
         return None, None
 
@@ -206,21 +203,25 @@ def get_body(metric_resource: MetricResource, version: VersionDetail, start_time
 
 def get_raw_response(url, method, params, body, headers, auth, timeout):
     """Send GET or POST request to the url and get HTTP response"""
-    kw_args = {}
+    kw_args = {
+        "url": url
+    }
 
     if params is not None:
         kw_args["params"] = params
     if headers is not None:
         kw_args["headers"] = headers
+    if body is not None:
+        kw_args["json"] = body
     if auth is not None:
         kw_args["auth"] = auth
     if timeout is not None:
         kw_args["timeout"] = timeout
 
     if method == Method.GET:
-        return requests.get(url = url, **kw_args)
+        return requests.get(**kw_args)
     if method == Method.POST:
-        return requests.post(url = url, json = body, **kw_args)
+        return requests.post(**kw_args)
     raise ValueError("Unknown HTTP request method")
 
 def unmarshal(response, jq_expression):
@@ -241,8 +242,7 @@ def unmarshal(response, jq_expression):
 def get_metric_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
     """
     Interpolate metrics backend URL, headerTemplates, and REST query parameters;
-    query the metrics backend;
-    return the value of the metric.
+    query the metrics backend; return the value of the metric.
     """
     (value, err) = (None, None)
     # interpolated metrics backend URL
@@ -266,9 +266,8 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
             auth, err = get_basic_auth(metric_resource)
             logger.debug("Auth error: %s", err)
     if err is None:
-        if metric_resource.spec.method == Method.POST:
-            body, err = get_body(metric_resource, version, start_time)
-            logger.debug("Body error: %s", err)
+        body, err = get_body(metric_resource, version, start_time)
+        logger.debug("Body error: %s", err)
 
     if err is None:
         try:
