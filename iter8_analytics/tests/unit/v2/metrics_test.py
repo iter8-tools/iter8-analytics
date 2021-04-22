@@ -24,7 +24,7 @@ from iter8_analytics.api.v2.types import ExperimentResource, MetricInfo, \
 from iter8_analytics.api.v2.examples.examples_canary import er_example
 from iter8_analytics.api.v2.examples.examples_metrics import cpu_utilization, \
     request_count, new_relic_embedded, new_relic_secret, sysdig_embedded, \
-    sysdig_secret
+    sysdig_secret, elastic_secret
 
 logger = logging.getLogger('iter8_analytics')
 if not logger.hasHandlers():
@@ -516,27 +516,24 @@ class SamplesUsedInIter8Docs(TestCase):
             assert value == 6.481
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
-    def test_new_relic_secret(self, mock_secret):
+    def test_elastic_secret(self, mock_secret):
         """Test Sysdig with a secret token"""
         with requests_mock.mock(real_http=True) as req_mock:
-            sde = MetricResource(** sysdig_secret)
-            url = sde.spec.urlTemplate
+            ela = MetricResource(** elastic_secret)
+            url = ela.spec.urlTemplate
             response_json = {
-                "data": [
-                    {
-                        "t": 1582756200,
-                        "d": [
-                            6.481
-                        ]
+                "aggregations": {
+                    "items_to_sell": {
+                        "doc_count": 3,
+                        "avg_sales": {"value": 128.33333333333334}
                     }
-                ],
-                "start": 1582755600,
-                "end": 1582756200
+                }
             }
             req_mock.register_uri('POST', url, json = response_json, status_code = 200, \
-                request_headers={'Authorization': 'Bearer 87654321-1234-1234-1234-123456789012'})
+                request_headers={'Authorization': 'Basic cHJvZHVzZXI6dDBwLXNlY3JldA=='})
             mock_secret.return_value = ({
-                "token": "87654321-1234-1234-1234-123456789012"
+                "username": "produser",
+                "password": "t0p-secret"
             }, None)
 
             expr = ExperimentResource(** er_example)
@@ -548,13 +545,13 @@ class SamplesUsedInIter8Docs(TestCase):
             start_time = expr.status.startTime
 
             # verify body
-            body, err = get_body(sde, version, start_time)
+            body, err = get_body(ela, version, start_time)
             logger.info(body)
             assert err is None
-            groups = re.search("'sample-app-v1'", body["filter"])
+            groups = re.search("sample-app-v1", body["aggs"]["items_to_sell"]["filter"]["term"]["version"])
             assert groups is not None
 
             # verify jq expression
-            value, err = get_metric_value(sde, version, start_time)
+            value, err = get_metric_value(ela, version, start_time)
             assert err is None
-            assert value == 6.481
+            assert value == 128.33333333333334

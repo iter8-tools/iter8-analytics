@@ -224,3 +224,28 @@ sysdig_secret = {
     "urlTemplate": "https://secure.sysdig.com/api/data"
   }
 }
+
+elastic_secret = {
+  "apiVersion": "iter8.tools/v2alpha2",
+  "kind": "Metric",
+  "metadata": {
+    "name": "average-sales"
+  },
+  "spec": {
+    "description": "An elastic example",
+    "provider": "elastic",
+    "body": "{\n  \"aggs\": {\n    \"range\": {\n      \"date_range\": {\n        \"field\": \"date\",\n        \"ranges\": [\n          { \"from\": \"now-${elapsedTime}s/s\" } \n        ]\n      }\n    },\n    \"items_to_sell\": {\n      \"filter\": { \"term\": { \"version\": \"${revision}\" } },\n      \"aggs\": {\n        \"avg_sales\": { \"avg\": { \"field\": \"sale_price\" } }\n      }\n    }\n  }\n}",
+    "method": "POST",
+    "authType": "Basic",
+    "secret": "myns/elasticcredentials",
+    "type": "Gauge",
+    "headerTemplates": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "jqExpression": ".aggregations.items_to_sell.avg_sales.value | tonumber",
+    "urlTemplate": "https://secure.elastic.com/my/sales"
+  }
+}
