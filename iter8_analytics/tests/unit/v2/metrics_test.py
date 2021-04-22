@@ -23,7 +23,7 @@ from iter8_analytics.api.v2.types import ExperimentResource, MetricInfo, \
     MetricResource, NamedValue, AuthType
 from iter8_analytics.api.v2.examples.examples_canary import er_example
 from iter8_analytics.api.v2.examples.examples_metrics import cpu_utilization, \
-    request_count
+    request_count, new_relic_embedded, new_relic_secret
 
 logger = logging.getLogger('iter8_analytics')
 if not logger.hasHandlers():
@@ -175,7 +175,6 @@ class HeaderTemplate(TestCase):
         mock_secret.assert_called_with(metric_resource)
         assert headers is None
         assert err is not None
-
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_bearer_auth_type(self, mock_secret):
@@ -364,7 +363,6 @@ class SamplesUsedInIter8Docs(TestCase):
             assert err is None
             assert value == 21.7639
 
-
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_prometheus_basic_auth(self, mock_secret):
         """Test prometheus with no authentication"""
@@ -396,7 +394,6 @@ class SamplesUsedInIter8Docs(TestCase):
             assert auth == HTTPBasicAuth("produser", "t0p-secret")
             assert err is None
 
-
             expr = ExperimentResource(** er_example)
             version = expr.spec.versionInfo.baseline
             version.variables = [
@@ -414,3 +411,65 @@ class SamplesUsedInIter8Docs(TestCase):
             value, err = get_metric_value(metric_info.metricObj, version, start_time)
             assert err is None
             assert value == 21.7639
+
+    def test_new_relic_embedded_apikey(self):
+        """Test New Relic with an embedded API Key"""
+        with requests_mock.mock(real_http=True) as req_mock:
+            nre = MetricResource(** new_relic_embedded)
+            url = nre.spec.urlTemplate
+            file_path = os.path.join(os.path.dirname(__file__), 'data/newrelic_responses',
+                                        'newrelic_sample_response.json')
+            response_json = json.load(open(file_path))
+            req_mock.register_uri('GET', url, json = response_json, status_code = 200, request_headers={'X-Query-Key': 't0p-secret-api-key'})
+
+            expr = ExperimentResource(** er_example)
+            version = expr.spec.versionInfo.baseline
+            version.variables = [
+                NamedValue(name = "userfilter", value = 'usergroup!~"wakanda"'),
+                NamedValue(name = "revision", value = 'sample-app-v1')
+            ]
+            start_time = expr.status.startTime
+
+            # verify params
+            params = get_params(nre, version, start_time)
+            logger.info(params)
+            groups = re.search("'sample-app-v1'", params[0]["nrql"])
+            assert groups is not None
+
+            # verify jq expression
+            value, err = get_metric_value(nre, version, start_time)
+            assert err is None
+            assert value == 80275388
+
+    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
+    def test_new_relic_secret(self, mock_secret):
+        """Test New Relic with a secret API Key"""
+        with requests_mock.mock(real_http=True) as req_mock:
+            nre = MetricResource(** new_relic_secret)
+            url = nre.spec.urlTemplate
+            file_path = os.path.join(os.path.dirname(__file__), 'data/newrelic_responses',
+                                        'newrelic_sample_response.json')
+            response_json = json.load(open(file_path))
+            req_mock.register_uri('GET', url, json = response_json, status_code = 200, request_headers={'X-Query-Key': 't0p-secret-api-key'})
+            mock_secret.return_value = ({
+                "mykey": "t0p-secret-api-key"
+            }, None)
+
+            expr = ExperimentResource(** er_example)
+            version = expr.spec.versionInfo.baseline
+            version.variables = [
+                NamedValue(name = "userfilter", value = 'usergroup!~"wakanda"'),
+                NamedValue(name = "revision", value = 'sample-app-v1')
+            ]
+            start_time = expr.status.startTime
+
+            # verify params
+            params = get_params(nre, version, start_time)
+            logger.info(params)
+            groups = re.search("'sample-app-v1'", params[0]["nrql"])
+            assert groups is not None
+
+            # verify jq expression
+            value, err = get_metric_value(nre, version, start_time)
+            assert err is None
+            assert value == 80275388

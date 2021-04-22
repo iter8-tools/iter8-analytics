@@ -112,3 +112,59 @@ business_revenue = {
         }
     }
 }
+
+new_relic_embedded = {
+    "apiVersion": "iter8.tools/v2alpha2",
+    "kind": "Metric",
+    "metadata": {
+        "name": "name-count"
+    },
+    "spec": {
+        "params": [
+            {
+                "name": "nrql",
+                "value": "SELECT count(appName) FROM PageView WHERE revisionName='${revision}' SINCE ${elapsedTime} seconds ago"
+            }
+        ],
+        "description": "A New Relic example",
+        "type": "Counter",
+        "headerTemplates": [
+            {
+                "name": "X-Query-Key",
+                "value": "t0p-secret-api-key"
+            }
+        ],
+        "provider": "newrelic",
+                    "jqExpression": ".results[0].count | tonumber",
+                    "urlTemplate": "https://insights-api.newrelic.com/v1/accounts/my_account_id"
+    }
+}
+
+new_relic_secret = {
+  "apiVersion": "iter8.tools/v2alpha2",
+  "kind": "Metric",
+  "metadata": {
+    "name": "name-count"
+  },
+  "spec": {
+    "params": [
+      {
+        "name": "nrql",
+        "value": "SELECT count(appName) FROM PageView WHERE revisionName='${revision}' SINCE ${elapsedTime} seconds ago"
+      }
+    ],
+    "description": "A New Relic example",
+    "type": "Counter",
+    "authType": "APIKey",
+    "secret": "myns/nrcredentials",
+    "headerTemplates": [
+      {
+        "name": "X-Query-Key",
+        "value": "${mykey}"
+      }
+    ],
+    "provider": "newrelic",
+    "jqExpression": ".results[0].count | tonumber",
+    "urlTemplate": "https://insights-api.newrelic.com/v1/accounts/my_account_id"
+  }
+}

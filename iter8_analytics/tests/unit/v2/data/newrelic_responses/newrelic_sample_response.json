@@ -1,0 +1,36 @@
+{
+    "results": [
+        {
+            "count": 80275388
+        }
+    ],
+    "metadata": {
+        "eventTypes": [
+            "PageView"
+        ],
+        "eventType": "PageView",
+        "openEnded": true,
+        "beginTime": "2014-08-03T19:00:00Z",
+        "endTime": "2017-01-18T23:18:41Z",
+        "beginTimeMillis=": 1407092400000,
+        "endTimeMillis": 1484781521198,
+        "rawSince": "'2014-08-04 00:00:00+0500'",
+        "rawUntil": "`now`",
+        "rawCompareWith": "",
+        "clippedTimeWindows": {
+            "Browser": {
+                "beginTimeMillis": 1483571921198,
+                "endTimeMillis": 1484781521198,
+                "retentionMillis": 1209600000
+            }
+        },
+        "messages": [],
+        "contents": [
+            {
+                "function": "count",
+                "attribute": "appName",
+                "simple": true
+            }
+        ]
+    }
+}
