@@ -168,3 +168,30 @@ new_relic_secret = {
     "urlTemplate": "https://insights-api.newrelic.com/v1/accounts/my_account_id"
   }
 }
+
+sysdig_embedded = {
+  "apiVersion": "iter8.tools/v2alpha2",
+  "kind": "Metric",
+  "metadata": {
+    "name": "cpu-utilization"
+  },
+  "spec": {
+    "description": "A Sysdig example",
+    "provider": "sysdig",
+    "body": "{\n  \"last\": ${elapsedTime},\n  \"sampling\": 600,\n  \"filter\": \"kubernetes.app.revision.name = '${revision}'\",\n  \"metrics\": [\n    {\n      \"id\": \"cpu.cores.used\",\n      \"aggregations\": { \"time\": \"avg\", \"group\": \"sum\" }\n    }\n  ],\n  \"dataSourceType\": \"container\",\n  \"paging\": {\n    \"from\": 0,\n    \"to\": 99\n  }\n}",
+    "method": "POST",
+    "type": "Gauge",
+    "headerTemplates": [
+      {
+        "name": "Accept",
+        "value": "application/json"
+      },
+      {
+        "name": "Authorization",
+        "value": "Bearer 87654321-1234-1234-1234-123456789012"
+      }
+    ],
+    "jqExpression": ".data[0].d[0] | tonumber",
+    "urlTemplate": "https://secure.sysdig.com/api/data"
+  }
+}
