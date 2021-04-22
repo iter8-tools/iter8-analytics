@@ -516,6 +516,50 @@ class SamplesUsedInIter8Docs(TestCase):
             assert value == 6.481
 
     @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
+    def test_sysdig_secret(self, mock_secret):
+        """Test Sysdig with secret token"""
+        with requests_mock.mock(real_http=True) as req_mock:
+            sde = MetricResource(** sysdig_secret)
+            url = sde.spec.urlTemplate
+            response_json = {
+                "data": [
+                    {
+                        "t": 1582756200,
+                        "d": [
+                            6.481
+                        ]
+                    }
+                ],
+                "start": 1582755600,
+                "end": 1582756200
+            }
+            req_mock.register_uri('POST', url, json = response_json, status_code = 200, \
+                request_headers={'Authorization': 'Bearer 87654321-1234-1234-1234-123456789012'})
+            mock_secret.return_value = ({
+                "token": "87654321-1234-1234-1234-123456789012"
+            }, None)
+
+            expr = ExperimentResource(** er_example)
+            version = expr.spec.versionInfo.baseline
+            version.variables = [
+                NamedValue(name = "userfilter", value = 'usergroup!~"wakanda"'),
+                NamedValue(name = "revision", value = 'sample-app-v1')
+            ]
+            start_time = expr.status.startTime
+
+            # verify body
+            body, err = get_body(sde, version, start_time)
+            logger.info(body)
+            assert err is None
+            groups = re.search("'sample-app-v1'", body["filter"])
+            assert groups is not None
+
+            # verify jq expression
+            value, err = get_metric_value(sde, version, start_time)
+            assert err is None
+            assert value == 6.481
+
+    @mock.patch('iter8_analytics.api.v2.metrics.get_secret_data_for_metric')
     def test_elastic_secret(self, mock_secret):
         """Test Sysdig with a secret token"""
         with requests_mock.mock(real_http=True) as req_mock:
