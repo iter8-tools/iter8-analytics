@@ -274,7 +274,7 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
             logger.debug("Invoking requests with method %s and with url %s and params: %s and headers: %s and auth: %s and body: %s", metric_resource.spec.method, url, params, headers, auth, body)
             raw_response = get_raw_response(url = url, \
                 method = metric_resource.spec.method, params = params, body = body, \
-                    headers = headers, auth = auth, timeout = 2.0)
+                    headers = headers, auth = auth, timeout = 5.0)
             logger.debug("response status code: %s", raw_response.status_code)
             logger.debug("response text: %s", raw_response.text)
             response = raw_response.json()
