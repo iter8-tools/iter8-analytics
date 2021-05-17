@@ -53,30 +53,30 @@ ab_am_response = {
         "request-count": {
             "data": {
                 "default": {
-                    "value": 148.0405378277749
+                    "value": '148.0405378277749'
                 },
                 "canary": {
-                    "value": 143.03538837774244
+                    "value": '143.03538837774244'
                 }
             }
         },
         "mean-latency": {
             "data": {
                 "default": {
-                    "value": 419.2027282381035
+                    "value": '419.2027282381035'
                 },
                 "canary": {
-                    "value": 412.9510489510489
+                    "value": '412.9510489510489'
                 }
             }
         },
         "business-revenue": {
             "data": {
                 "default": {
-                    "value": 323.32
+                    "value": '323.32'
                 },
                 "canary": {
-                    "value": 2343.2343
+                    "value": '2343.2343'
                 }
             }
         }

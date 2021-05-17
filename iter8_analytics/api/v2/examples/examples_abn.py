@@ -59,39 +59,39 @@ abn_am_response = {
         "request-count": {
             "data": {
                 "default": {
-                    "value": 148.0405378277749
+                    "value": '148.0405378277749'
                 },
                 "canary1": {
-                    "value": 143.03538837774244
+                    "value": '143.03538837774244'
                 },
                 "canary2": {
-                    "value": 145.03478732974244
+                    "value": '145.03478732974244'
                 }
             }
         },
         "mean-latency": {
             "data": {
                 "default": {
-                    "value": 419.2027282381035
+                    "value": '419.2027282381035'
                 },
                 "canary1": {
-                    "value": 412.9510489510489
+                    "value": '412.9510489510489'
                 },
                 "canary2": {
-                    "value": 415.9573489510489
+                    "value": '415.9573489510489'
                 }
             }
         },
         "business-revenue": {
             "data": {
                 "default": {
-                    "value": 323.32
+                    "value": '323.32'
                 },
                 "canary1": {
-                    "value": 3343.2343
+                    "value": '3343.2343'
                 },
                 "canary2": {
-                    "value": 2326.2343
+                    "value": '2326.2343'
                 }
             }
         }

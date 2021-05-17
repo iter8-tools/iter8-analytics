@@ -49,20 +49,20 @@ am_response = {
         "request-count": {
             "data": {
                 "default": {
-                    "value": 148.0405378277749
+                    "value": '148.0405378277749'
                 },
                 "canary": {
-                    "value": 143.03538837774244
+                    "value": '143.03538837774244'
                 }
             }
         },
         "mean-latency": {
             "data": {
                 "default": {
-                    "value": 419.2027282381035
+                    "value": '419.2027282381035'
                 },
                 "canary": {
-                    "value": 426.9510489510489
+                    "value": '426.9510489510489'
                 }
             }
         }

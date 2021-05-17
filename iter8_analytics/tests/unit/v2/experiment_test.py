@@ -16,15 +16,15 @@ from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 from iter8_analytics.api.v2.examples.examples_canary import \
     er_example, er_example_step1, er_example_step2, er_example_step3, \
-    am_response, va_response, wa_response, w_response
+    am_response, va_response, wa_response, w_response, mr_example
 
 from iter8_analytics.api.v2.examples.examples_ab import \
     ab_er_example, ab_er_example_step1, ab_er_example_step2, ab_er_example_step3, \
-    ab_am_response, ab_va_response, ab_wa_response, ab_w_response
+    ab_am_response, ab_va_response, ab_wa_response, ab_w_response, ab_mr_example
 
 from iter8_analytics.api.v2.examples.examples_abn import \
     abn_er_example, abn_er_example_step1, abn_er_example_step2, abn_er_example_step3, \
-    abn_am_response, abn_va_response, abn_wa_response, abn_w_response
+    abn_am_response, abn_va_response, abn_wa_response, abn_w_response, abn_mr_example
 
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
 from iter8_analytics.api.v2.experiment import get_version_assessments, get_winner_assessment, \
@@ -64,7 +64,6 @@ def test_v2_aggregated_metrics_endpoint():
         expr = ExperimentResource(** er_example)
         agm = get_aggregated_metrics(
             expr.convert_to_float()).convert_to_quantity()
-        logger.info(agm)
         assert agm.data['request-count'].data['default'].value == \
             response_json['data']['result'][0]['value'][1]
 
@@ -432,6 +431,24 @@ def test_v2_set_weights_config():
     resp = get_weights(expr.convert_to_float())
     assert resp.data == expected_resp
 
+def test_v2_using_previous_metric_status():
+     with requests_mock.mock(real_http=True) as mock:
+        file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                    'prometheus_sample_no_response.json')
+        mock.get(er_example["status"]["metrics"][0]["metricObj"]
+                ["spec"]["urlTemplate"], json=json.load(open(file_path)))
+
+        example = copy.deepcopy(er_example_step1)
+
+        example['status']['metrics'] = mr_example
+        expr = ExperimentResource(** example)
+        resp = get_aggregated_metrics(
+                expr.convert_to_float()).convert_to_quantity()
+
+        expected_response = copy.deepcopy(am_response)
+        assert resp.data['mean-latency'].data['default'].value == expected_response['data']['mean-latency']['data']['default']['value']
+
+
 ########## A/B TESTS #############
 def test_v2_ab_input_object():
     ExperimentResource(** ab_er_example)
@@ -579,6 +596,23 @@ def test_v2_ab_without_reward_for_feasible_version():
     resp = get_winner_assessment(expr.convert_to_float())
     assert "reward value for feasible version canary is not available" in \
         resp.message
+
+def test_v2_ab_using_previous_metric_status():
+     with requests_mock.mock(real_http=True) as mock:
+        file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                    'prometheus_sample_no_response.json')
+        mock.get(ab_er_example["status"]["metrics"][0]["metricObj"]
+                ["spec"]["urlTemplate"], json=json.load(open(file_path)))
+
+        example = copy.deepcopy(ab_er_example_step1)
+
+        example['status']['metrics'] = ab_mr_example[:2]
+        expr = ExperimentResource(** example)
+        resp = get_aggregated_metrics(
+                expr.convert_to_float()).convert_to_quantity()
+
+        expected_response = copy.deepcopy(ab_am_response)
+        assert resp.data['mean-latency'].data['default'].value == expected_response['data']['mean-latency']['data']['default']['value']
 
 ########## A/B/N TESTS #############
 def test_v2_abn_input_object():
@@ -747,3 +781,35 @@ def test_v2_abn_with_better_reward_but_not_feasible():
     resp = get_winner_assessment(expr.convert_to_float())
     assert resp.data.winnerFound is True
     assert resp.data.winner == 'canary2'
+
+def test_v2_abn_using_previous_metric_status():
+     with requests_mock.mock(real_http=True) as mock:
+        file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                    'prometheus_sample_no_response.json')
+        mock.get(abn_er_example["status"]["metrics"][0]["metricObj"]
+                ["spec"]["urlTemplate"], json=json.load(open(file_path)))
+
+        example = copy.deepcopy(abn_er_example_step1)
+
+        example['status']['metrics'] = abn_mr_example[:2]
+        expr = ExperimentResource(** example)
+        resp = get_aggregated_metrics(
+                expr.convert_to_float()).convert_to_quantity()
+
+        expected_response = copy.deepcopy(abn_am_response)
+        assert resp.data['mean-latency'].data['default'].value == expected_response['data']['mean-latency']['data']['default']['value']
+
+def test_v2_abn_using_previous_metric_status_none():
+     with requests_mock.mock(real_http=True) as mock:
+        file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                    'prometheus_sample_no_response.json')
+        mock.get(abn_er_example["status"]["metrics"][0]["metricObj"]
+                ["spec"]["urlTemplate"], json=json.load(open(file_path)))
+
+        example = copy.deepcopy(abn_er_example)
+
+        example['status']['metrics'] = abn_mr_example[:2]
+        expr = ExperimentResource(** example)
+        resp = get_aggregated_metrics(
+                expr.convert_to_float()).convert_to_quantity()
+        assert resp.data['mean-latency'].data['default'].value == None
