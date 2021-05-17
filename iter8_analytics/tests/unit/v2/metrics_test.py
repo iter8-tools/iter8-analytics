@@ -331,7 +331,8 @@ class SamplesUsedInIter8Docs(TestCase):
         with requests_mock.mock(real_http=True) as req_mock:
             prometheus_no_auth = request_count
             metric_info = MetricInfo(** prometheus_no_auth)
-            metric_info.metricObj.spec.params[0].value = "sum(increase(revision_app_request_latencies_count{service_name='${name}',${userfilter}}[${elapsedTime}s])) or on() vector(0)"
+            metric_info.metricObj.spec.params[0].value = \
+                "sum(increase(revision_app_request_latencies_count{service_name='${name}',${userfilter}}[${elapsedTime}s])) or on() vector(0)"
             url = metric_info.metricObj.spec.urlTemplate
             json_response = {
                 "status": "success",
@@ -370,7 +371,8 @@ class SamplesUsedInIter8Docs(TestCase):
         with requests_mock.mock(real_http=True) as req_mock:
             prometheus_basic_auth = request_count
             metric_info = MetricInfo(** prometheus_basic_auth)
-            metric_info.metricObj.spec.params[0].value = "sum(increase(revision_app_request_latencies_count{service_name='${name}',${userfilter}}[${elapsedTime}s])) or on() vector(0)"
+            metric_info.metricObj.spec.params[0].value = \
+                "sum(increase(revision_app_request_latencies_count{service_name='${name}',${userfilter}}[${elapsedTime}s])) or on() vector(0)"
             metric_info.metricObj.spec.authType = AuthType.BASIC
             metric_info.metricObj.spec.secret = "myns/promcredentials"
             url = metric_info.metricObj.spec.urlTemplate
@@ -421,7 +423,8 @@ class SamplesUsedInIter8Docs(TestCase):
             file_path = os.path.join(os.path.dirname(__file__), 'data/newrelic_responses',
                                         'newrelic_sample_response.json')
             response_json = json.load(open(file_path))
-            req_mock.register_uri('GET', url, json = response_json, status_code = 200, request_headers={'X-Query-Key': 't0p-secret-api-key'})
+            req_mock.register_uri('GET', url, json = response_json, \
+                status_code = 200, request_headers={'X-Query-Key': 't0p-secret-api-key'})
 
             expr = ExperimentResource(** er_example)
             version = expr.spec.versionInfo.baseline
@@ -451,7 +454,8 @@ class SamplesUsedInIter8Docs(TestCase):
             file_path = os.path.join(os.path.dirname(__file__), 'data/newrelic_responses',
                                         'newrelic_sample_response.json')
             response_json = json.load(open(file_path))
-            req_mock.register_uri('GET', url, json = response_json, status_code = 200, request_headers={'X-Query-Key': 't0p-secret-api-key'})
+            req_mock.register_uri('GET', url, json = response_json, \
+                status_code = 200, request_headers={'X-Query-Key': 't0p-secret-api-key'})
             mock_secret.return_value = ({
                 "mykey": "t0p-secret-api-key"
             }, None)
@@ -592,7 +596,8 @@ class SamplesUsedInIter8Docs(TestCase):
             body, err = get_body(ela, version, start_time)
             logger.info(body)
             assert err is None
-            groups = re.search("sample-app-v1", body["aggs"]["items_to_sell"]["filter"]["term"]["version"])
+            groups = re.search("sample-app-v1", \
+                body["aggs"]["items_to_sell"]["filter"]["term"]["version"])
             assert groups is not None
 
             # verify jq expression

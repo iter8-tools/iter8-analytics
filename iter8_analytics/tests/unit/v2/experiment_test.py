@@ -446,7 +446,8 @@ def test_v2_using_previous_metric_status():
                 expr.convert_to_float()).convert_to_quantity()
 
         expected_response = copy.deepcopy(am_response)
-        assert resp.data['mean-latency'].data['default'].value == expected_response['data']['mean-latency']['data']['default']['value']
+        assert resp.data['mean-latency'].data['default'].value == \
+            expected_response['data']['mean-latency']['data']['default']['value']
 
 
 ########## A/B TESTS #############
@@ -612,7 +613,8 @@ def test_v2_ab_using_previous_metric_status():
                 expr.convert_to_float()).convert_to_quantity()
 
         expected_response = copy.deepcopy(ab_am_response)
-        assert resp.data['mean-latency'].data['default'].value == expected_response['data']['mean-latency']['data']['default']['value']
+        assert resp.data['mean-latency'].data['default'].value == \
+            expected_response['data']['mean-latency']['data']['default']['value']
 
 ########## A/B/N TESTS #############
 def test_v2_abn_input_object():
@@ -797,7 +799,8 @@ def test_v2_abn_using_previous_metric_status():
                 expr.convert_to_float()).convert_to_quantity()
 
         expected_response = copy.deepcopy(abn_am_response)
-        assert resp.data['mean-latency'].data['default'].value == expected_response['data']['mean-latency']['data']['default']['value']
+        assert resp.data['mean-latency'].data['default'].value == \
+            expected_response['data']['mean-latency']['data']['default']['value']
 
 def test_v2_abn_using_previous_metric_status_none():
      with requests_mock.mock(real_http=True) as mock:
@@ -812,4 +815,5 @@ def test_v2_abn_using_previous_metric_status_none():
         expr = ExperimentResource(** example)
         resp = get_aggregated_metrics(
                 expr.convert_to_float()).convert_to_quantity()
-        assert resp.data['mean-latency'].data['default'].value == None
+        assert resp.data['mean-latency'].data['default'].value is None
+        

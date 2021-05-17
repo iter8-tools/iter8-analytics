@@ -271,7 +271,9 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
 
     if err is None:
         try:
-            logger.debug("Invoking requests with method %s and with url %s and params: %s and headers: %s and auth: %s and body: %s", metric_resource.spec.method, url, params, headers, auth, body)
+            logger.debug("Invoking requests with method %s and with \
+                url %s and params: %s and headers: %s and auth: %s and body: %s", \
+                    metric_resource.spec.method, url, params, headers, auth, body)
             raw_response = get_raw_response(url = url, \
                 method = metric_resource.spec.method, params = params, body = body, \
                     headers = headers, auth = auth, timeout = 5.0)
