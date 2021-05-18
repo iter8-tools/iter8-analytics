@@ -321,14 +321,7 @@ def get_aggregated_metrics(expr: ExperimentResource):
                 iam.data[metric_resource.name].data[version.name] = VersionMetric()
                 val, err = get_metric_value(metric_resource.metricObj, version, \
                 expr.status.startTime)
-                if err is None:
-                    if val is not None:
-                        iam.data[metric_resource.name].data[version.name].value = val
-                    else:
-                        try:
-                            val = float(expr.status.analysis.aggregated_metrics.data[metric_resource.name].data[version.name].value)
-                        except:
-                            val = None
+                if err is None and val is not None:
                         iam.data[metric_resource.name].data[version.name].value = val
                 else:
                     try:
@@ -336,6 +329,8 @@ def get_aggregated_metrics(expr: ExperimentResource):
                     except:
                         val = None
                     iam.data[metric_resource.name].data[version.name].value = val
+                    
+                if err is not None:
                     messages.append(Message(MessageLevel.ERROR, \
                         f"Error from metrics backend for metric: {metric_resource.name} \
                             and version: {version.name}"))
