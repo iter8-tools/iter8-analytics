@@ -5,6 +5,7 @@ Module containing classes and methods for querying prometheus and returning metr
 from datetime import datetime, timezone
 import logging
 from string import Template
+from typing import Sequence, Dict, Any
 import numbers
 import pprint
 import base64
@@ -26,6 +27,12 @@ from iter8_analytics.api.v2.types import AggregatedMetricsAnalysis, ExperimentRe
 from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
+
+builtin_metric_names = [
+    "request_count",
+    "mean_latency",
+    "for"
+]
 
 # cache secrets data for no longer than ten seconds
 @cached(cache=TTLCache(maxsize=1024, ttl=10))
@@ -290,12 +297,88 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
         value, err = unmarshal(response, metric_resource.spec.jqExpression)
     return value, err
 
+# We will mirror the following handler data structures below...
+
+# // DurationSample is a Fortio duration sample
+# type DurationSample struct {
+# 	Start float64
+# 	End   float64
+# 	Count int
+# }
+
+# // DurationHist is the Fortio duration histogram
+# type DurationHist struct {
+# 	Count int
+# 	Max   float64
+# 	Sum   float64
+# 	Data  []DurationSample
+# }
+
+# // Result is the result of a single Fortio run; it contains the result for a single version
+# type Result struct {
+# 	DurationHistogram DurationHist
+# 	RetCodes          map[string]int
+# }
+
+class DurationSample:
+    """
+    DurationSample is a Fortio duration sample.
+    """
+    def __init__(self, sample: Dict[str, Any]):
+        self.start: float = float(sample["Start"])
+        self.end: float = float(sample["End"])
+        self.count: int = int(sample["Count"])
+
+class DurationHist:
+    """
+    DurationHist is a Fortio duration histogram.
+    """
+    def __init__(self, dur_hist: Dict[str, Any]):
+        self.count: int = int(dur_hist["Count"])
+        self.max: float = float(dur_hist["Max"])
+        self.sum: float = float(dur_hist["Sum"])
+        self.data: Sequence[DurationSample] = [
+            DurationSample(sample) for sample in dur_hist["Data"]
+        ]
+
+class Result:
+    """
+    Result is the result of a single Fortio run; it contains the result for a single version
+    """
+    def __init__(self, result: Dict[str, Any]):
+        self.duration_histogram: DurationHist = DurationHist(result["DurationHistogram"])
+        self.ret_codes: Dict[str, int] = {
+            key: int(value) for (key, value) in result["RetCodes"]
+        }
+
+class Builtins:
+    """
+    Builtins contains results for all versions
+    """
+    def __init__(self, data: Dict[str, any]):
+        self.version_results: Dict[str, Result] = {
+            key: Result(value) for (key, value) in data.items()
+        }
+
+def initialize_builtins(iam: AggregatedMetricsAnalysis):
+    pass
+
+def populate_builtins(iam: AggregatedMetricsAnalysis, version: str, result: Result):
+    pass
+
 def get_builtin_metrics(expr: ExperimentResource):
     """
     Get built in metrics using experiment resource.
     """
     # initialize aggregated metrics object
     iam = AggregatedMetricsAnalysis(data = {})
+    if expr.status.analysis is None or \
+        expr.status.analysis.aggregated_builtin_hists is None:
+        return iam
+    builtins = Builtins(expr.status.analysis.aggregated_builtin_hists.data)
+    initialize_builtins(iam)
+    for version in builtins.version_results:
+        populate_builtins(iam, version, builtins.version_results[version])
     return iam
 
 def get_aggregated_metrics(expr: ExperimentResource):

@@ -246,7 +246,7 @@ equals None if sampleSize is not specified", alias = "sampleSize")
         self.value = convert_to_quantity(self.value)
         self.sample_size = convert_to_quantity(self.sample_size)
         return self
-        
+
 class AggregatedMetric(BaseModel):
     """
     Pydantic model for an aggregated metric object
