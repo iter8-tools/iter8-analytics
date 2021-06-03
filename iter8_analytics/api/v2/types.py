@@ -63,6 +63,9 @@ class MetricSpec(BaseModel):
         and value templates for headers that should be passed to the metrics backend; \
         typically, these are authentication headers; \
         values are interpolated using secret data")
+    provider: str = Field(None, \
+        description = "provider field is used to \
+        disambiguate between builtin metrics and custom metrics")
 
 class MetricResource(BaseModel):
     """

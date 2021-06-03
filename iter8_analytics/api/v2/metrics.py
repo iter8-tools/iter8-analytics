@@ -291,9 +291,17 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
         value, err = unmarshal(response, metric_resource.spec.jqExpression)
     return value, err
 
+def get_builtin_metrics(expr: ExperimentResource):
+    """
+    Get built in metrics using experiment resource.
+    """
+    # initialize aggregated metrics object
+    iam = AggregatedMetricsAnalysis(data = {})
+    return iam
+
 def get_aggregated_metrics(expr: ExperimentResource):
     """
-    Get aggregated metrics from experiment resource and metric resources.
+    Get aggregated metrics using experiment resource and metric resources.
     """
     versions = [expr.spec.versionInfo.baseline]
     if expr.spec.versionInfo.candidates is not None:
@@ -303,17 +311,24 @@ def get_aggregated_metrics(expr: ExperimentResource):
     messages = []
 
     # initialize aggregated metrics object
-    iam = AggregatedMetricsAnalysis(data = {})
+    iam = get_builtin_metrics(expr)
 
-    #check if start time is greater than now
+    # check if start time is greater than now
+    # this is problematic.... start time is set by etc3 and checked by analytics.
+    # clocks are obviously not synced, so this is not really valid.
     if expr.status.startTime > (datetime.now(timezone.utc)):
         messages.append(Message(MessageLevel.ERROR, "Invalid startTime: greater than current time"))
         iam.message = Message.join_messages(messages)
         return iam
 
-    # if there are metrics to be fetched...
-    if expr.status.metrics is not None:
-        for metric_resource in expr.status.metrics:
+    # there are no metrics to be fetched
+    if expr.status.metrics is None:
+        return iam
+
+    for metric_resource in expr.status.metrics:
+        # only custom metrics is handled below... not builtin metrics
+        if metric_resource.metricObj.spec.provider is None or \
+            metric_resource.metricObj.spec.provider != "iter8":
             iam.data[metric_resource.name] = AggregatedMetric(data = {})
             # fetch the metric value for each version...
             for version in versions:
@@ -322,14 +337,13 @@ def get_aggregated_metrics(expr: ExperimentResource):
                 val, err = get_metric_value(metric_resource.metricObj, version, \
                 expr.status.startTime)
                 if err is None and val is not None:
-                        iam.data[metric_resource.name].data[version.name].value = val
+                    iam.data[metric_resource.name].data[version.name].value = val
                 else:
                     try:
                         val = float(expr.status.analysis.aggregated_metrics.data[metric_resource.name].data[version.name].value)
-                    except:
+                    except ValueError:
                         val = None
                     iam.data[metric_resource.name].data[version.name].value = val
-                    
                 if err is not None:
                     messages.append(Message(MessageLevel.ERROR, \
                         f"Error from metrics backend for metric: {metric_resource.name} \
