@@ -395,8 +395,8 @@ def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
 
     # populate error rate
     if result.duration_histogram.count > 0:
-        iam.data["iter8-system/error-count"].data[version_name] = VersionMetric()
-        iam.data["iter8-system/error-count"].data[version_name].value = \
+        iam.data["iter8-system/error-rate"].data[version_name] = VersionMetric()
+        iam.data["iter8-system/error-rate"].data[version_name].value = \
             float(iam.data["iter8-system/error-count"].data[version_name].value) \
                 / float(iam.data["iter8-system/request-count"].data[version_name].value)
 
@@ -415,7 +415,7 @@ def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
             if duras.count > 0:
                 # 10x random sample
                 npr = np.random.uniform(duras.start, duras.end, 10*duras.count)
-                sample = np.concatenate(sample, npr)
+                sample = np.concatenate((sample, npr), axis = None)
         # if sample is not-empty
         # compute and populate tail latencies
         if sample.size > 0:
@@ -424,10 +424,15 @@ def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
             tail90 = np.percentile(sample, 90)
             tail95 = np.percentile(sample, 95)
             tail99 = np.percentile(sample, 99)
+            iam.data["iter8-system/latency-50th-percentile"].data[version_name] = VersionMetric()
             iam.data["iter8-system/latency-50th-percentile"].data[version_name].value = tail50
+            iam.data["iter8-system/latency-75th-percentile"].data[version_name] = VersionMetric()
             iam.data["iter8-system/latency-75th-percentile"].data[version_name].value = tail75
-            iam.data["iter8-system/latency-90th-percentile"].data[version_name].value = tail99
+            iam.data["iter8-system/latency-90th-percentile"].data[version_name] = VersionMetric()
+            iam.data["iter8-system/latency-90th-percentile"].data[version_name].value = tail90
+            iam.data["iter8-system/latency-95th-percentile"].data[version_name] = VersionMetric()
             iam.data["iter8-system/latency-95th-percentile"].data[version_name].value = tail95
+            iam.data["iter8-system/latency-99th-percentile"].data[version_name] = VersionMetric()
             iam.data["iter8-system/latency-99th-percentile"].data[version_name].value = tail99
 
 def get_builtin_metrics(expr: ExperimentResource):
@@ -439,7 +444,7 @@ def get_builtin_metrics(expr: ExperimentResource):
     if expr.status.analysis is None or \
         expr.status.analysis.aggregated_builtin_hists is None:
         return iam
-    builtins = Builtins(expr.status.analysis.aggregated_builtin_hists.data)
+    builtins = Builtins(expr.status.analysis.aggregated_builtin_hists["data"])
     initialize_builtins(iam)
     for version in builtins.version_results:
         populate_builtins_for_version(iam, version, builtins.version_results[version])

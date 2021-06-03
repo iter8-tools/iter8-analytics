@@ -1,0 +1,335 @@
+{
+    "apiVersion": "iter8.tools/v2alpha2",
+    "kind": "Experiment",
+    "metadata": {
+        "annotations": {
+            "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"iter8.tools/v2alpha2\",\"kind\":\"Experiment\",\"metadata\":{\"annotations\":{},\"generation\":1,\"name\":\"metrics-collect-exp\",\"namespace\":\"default\"},\"spec\":{\"criteria\":{\"indicators\":[\"builtin-metrics/95th-percentile-tail-latency\"],\"objectives\":[{\"metric\":\"builtin-metrics/mean-latency\",\"upperLimit\":\"1k\"},{\"metric\":\"builtin-metrics/error-count\",\"upperLimit\":\"10\"}],\"requestCount\":\"builtin-metrics/request-count\"},\"duration\":{\"intervalSeconds\":15,\"iterationsPerLoop\":10},\"strategy\":{\"actions\":{\"start\":[{\"task\":\"metrics/collect\",\"with\":{\"versions\":[{\"name\":\"default\",\"url\":\"https://httpbin.org\"},{\"name\":\"canary\",\"url\":\"https://httpbin.org/stream/1\"}]}}]},\"deploymentPattern\":\"Progressive\",\"testingPattern\":\"Canary\",\"weights\":{\"maxCandidateWeight\":100,\"maxCandidateWeightIncrement\":10}},\"target\":\"default/sklearn-iris\",\"versionInfo\":{\"baseline\":{\"name\":\"default\",\"variables\":[{\"name\":\"revision\",\"value\":\"revision1\"}]},\"candidates\":[{\"name\":\"canary\",\"variables\":[{\"name\":\"revision\",\"value\":\"revision2\"}],\"weightObjRef\":{\"apiVersion\":\"serving.kubeflow.org/v1alpha2\",\"fieldPath\":\".spec.canaryTrafficPercent\",\"kind\":\"InferenceService\",\"name\":\"sklearn-iris\",\"namespace\":\"default\"}}]}}}\n"
+        },
+        "creationTimestamp": "2021-06-03T19:59:02Z",
+        "generation": 1,
+        "managedFields": [
+            {
+                "apiVersion": "iter8.tools/v2alpha2",
+                "fieldsType": "FieldsV1",
+                "fieldsV1": {
+                    "f:metadata": {
+                        "f:annotations": {
+                            ".": {},
+                            "f:kubectl.kubernetes.io/last-applied-configuration": {}
+                        }
+                    },
+                    "f:spec": {
+                        ".": {},
+                        "f:criteria": {
+                            ".": {},
+                            "f:indicators": {},
+                            "f:objectives": {},
+                            "f:requestCount": {}
+                        },
+                        "f:duration": {
+                            ".": {},
+                            "f:intervalSeconds": {},
+                            "f:iterationsPerLoop": {}
+                        },
+                        "f:strategy": {
+                            ".": {},
+                            "f:actions": {
+                                ".": {},
+                                "f:start": {}
+                            },
+                            "f:deploymentPattern": {},
+                            "f:testingPattern": {},
+                            "f:weights": {
+                                ".": {},
+                                "f:maxCandidateWeight": {},
+                                "f:maxCandidateWeightIncrement": {}
+                            }
+                        },
+                        "f:target": {},
+                        "f:versionInfo": {
+                            ".": {},
+                            "f:baseline": {
+                                ".": {},
+                                "f:name": {},
+                                "f:variables": {}
+                            },
+                            "f:candidates": {}
+                        }
+                    }
+                },
+                "manager": "kubectl-client-side-apply",
+                "operation": "Update",
+                "time": "2021-06-03T19:59:02Z"
+            },
+            {
+                "apiVersion": "iter8.tools/v2alpha2",
+                "fieldsType": "FieldsV1",
+                "fieldsV1": {
+                    "f:status": {
+                        ".": {},
+                        "f:analysis": {
+                            ".": {},
+                            "f:aggregatedBuiltinHists": {
+                                ".": {},
+                                "f:data": {
+                                    ".": {},
+                                    "f:canary": {
+                                        ".": {},
+                                        "f:DurationHistogram": {
+                                            ".": {},
+                                            "f:Count": {},
+                                            "f:Data": {},
+                                            "f:Max": {},
+                                            "f:Sum": {}
+                                        },
+                                        "f:RetCodes": {
+                                            ".": {},
+                                            "f:200": {}
+                                        }
+                                    },
+                                    "f:default": {
+                                        ".": {},
+                                        "f:DurationHistogram": {
+                                            ".": {},
+                                            "f:Count": {},
+                                            "f:Data": {},
+                                            "f:Max": {},
+                                            "f:Sum": {}
+                                        },
+                                        "f:RetCodes": {
+                                            ".": {},
+                                            "f:200": {}
+                                        }
+                                    }
+                                },
+                                "f:provenance": {},
+                                "f:timestamp": {}
+                            }
+                        }
+                    }
+                },
+                "manager": "handler",
+                "operation": "Update",
+                "time": "2021-06-03T20:00:56Z"
+            }
+        ],
+        "name": "metrics-collect-exp",
+        "namespace": "default",
+        "resourceVersion": "782",
+        "uid": "afd65343-9e24-47af-9a40-b7770fedb2d0"
+    },
+    "spec": {
+        "criteria": {
+            "indicators": [
+                "builtin-metrics/95th-percentile-tail-latency"
+            ],
+            "objectives": [
+                {
+                    "metric": "builtin-metrics/mean-latency",
+                    "upperLimit": "1k"
+                },
+                {
+                    "metric": "builtin-metrics/error-count",
+                    "upperLimit": "10"
+                }
+            ],
+            "requestCount": "builtin-metrics/request-count"
+        },
+        "duration": {
+            "intervalSeconds": 15,
+            "iterationsPerLoop": 10
+        },
+        "strategy": {
+            "actions": {
+                "start": [
+                    {
+                        "task": "metrics/collect",
+                        "with": {
+                            "versions": [
+                                {
+                                    "name": "default",
+                                    "url": "https://httpbin.org"
+                                },
+                                {
+                                    "name": "canary",
+                                    "url": "https://httpbin.org/stream/1"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "deploymentPattern": "Progressive",
+            "testingPattern": "Canary",
+            "weights": {
+                "maxCandidateWeight": 100,
+                "maxCandidateWeightIncrement": 10
+            }
+        },
+        "target": "default/sklearn-iris",
+        "versionInfo": {
+            "baseline": {
+                "name": "default",
+                "variables": [
+                    {
+                        "name": "revision",
+                        "value": "revision1"
+                    }
+                ]
+            },
+            "candidates": [
+                {
+                    "name": "canary",
+                    "variables": [
+                        {
+                            "name": "revision",
+                            "value": "revision2"
+                        }
+                    ],
+                    "weightObjRef": {
+                        "apiVersion": "serving.kubeflow.org/v1alpha2",
+                        "fieldPath": ".spec.canaryTrafficPercent",
+                        "kind": "InferenceService",
+                        "name": "sklearn-iris",
+                        "namespace": "default"
+                    }
+                }
+            ]
+        }
+    },
+    "status": {
+        "startTime": "2021-06-03T20:00:56Z",
+        "analysis": {
+            "aggregatedBuiltinHists": {
+                "data": {
+                    "canary": {
+                        "DurationHistogram": {
+                            "Count": 40,
+                            "Data": [
+                                {
+                                    "Count": 6,
+                                    "End": 0.011,
+                                    "Start": 0.010439131
+                                },
+                                {
+                                    "Count": 5,
+                                    "End": 0.012,
+                                    "Start": 0.011
+                                },
+                                {
+                                    "Count": 8,
+                                    "End": 0.014,
+                                    "Start": 0.012
+                                },
+                                {
+                                    "Count": 2,
+                                    "End": 0.016,
+                                    "Start": 0.014
+                                },
+                                {
+                                    "Count": 10,
+                                    "End": 0.018000000000000002,
+                                    "Start": 0.016
+                                },
+                                {
+                                    "Count": 3,
+                                    "End": 0.02,
+                                    "Start": 0.018000000000000002
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.04,
+                                    "Start": 0.035
+                                },
+                                {
+                                    "Count": 2,
+                                    "End": 0.12,
+                                    "Start": 0.1
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.2,
+                                    "Start": 0.18
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.25,
+                                    "Start": 0.2
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.599231637,
+                                    "Start": 0.5
+                                }
+                            ],
+                            "Max": 0.599231637,
+                            "Sum": 1.791820224
+                        },
+                        "RetCodes": {
+                            "200": 40
+                        }
+                    },
+                    "default": {
+                        "DurationHistogram": {
+                            "Count": 40,
+                            "Data": [
+                                {
+                                    "Count": 1,
+                                    "End": 0.012,
+                                    "Start": 0.011776259
+                                },
+                                {
+                                    "Count": 12,
+                                    "End": 0.014,
+                                    "Start": 0.012
+                                },
+                                {
+                                    "Count": 16,
+                                    "End": 0.016,
+                                    "Start": 0.014
+                                },
+                                {
+                                    "Count": 6,
+                                    "End": 0.018000000000000002,
+                                    "Start": 0.016
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.02,
+                                    "Start": 0.018000000000000002
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.035,
+                                    "Start": 0.03
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.07,
+                                    "Start": 0.06
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.12,
+                                    "Start": 0.1
+                                },
+                                {
+                                    "Count": 1,
+                                    "End": 0.138142697,
+                                    "Start": 0.12
+                                }
+                            ],
+                            "Max": 0.138142697,
+                            "Sum": 0.8790456280000001
+                        },
+                        "RetCodes": {
+                            "200": 40
+                        }
+                    }
+                },
+                "provenance": "Builtin metrics collector",
+                "timestamp": "2021-06-03T20:00:56Z"
+            }
+        }
+    }
+}
