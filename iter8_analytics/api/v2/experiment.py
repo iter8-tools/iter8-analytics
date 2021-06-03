@@ -31,10 +31,10 @@ def get_version_assessments(experiment_resource: ExperimentResource):
 
     messages = []
 
-    def check_limits(obj: Objective, value: float):
-        if (obj.upper_limit is not None) and (value > obj.upper_limit):
+    def check_limits(obj: Objective, value: float) -> bool:
+        if (obj.upper_limit is not None) and (value > float(obj.upper_limit)):
             return False
-        if (obj.lower_limit is not None) and (value < obj.lower_limit):
+        if (obj.lower_limit is not None) and (value < float(obj.lower_limit)):
             return False
         return True
 
@@ -56,7 +56,7 @@ def get_version_assessments(experiment_resource: ExperimentResource):
                 if version.name in versions_metric_data:
                     if versions_metric_data[version.name].value is not None:
                         version_assessments.data[version.name][ind] = \
-                            check_limits(obj, versions_metric_data[version.name].value)
+                            check_limits(obj, float(versions_metric_data[version.name].value))
                     else:
                         messages.append(Message(MessageLevel.WARNING, \
                             f"Value for {obj.metric} metric and {version.name} version is None."))
@@ -174,7 +174,7 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
                             best_versions.append(fver)
                         else: # this reward not equal to top reward
                             is_better, err = first_better_than_second(\
-                                reward_metric_data[fver].value, top_reward, \
+                                float(reward_metric_data[fver].value), float(top_reward), \
                                 experiment_resource.spec.criteria.rewards[0].preferredDirection)
                             if err is None:
                                 if is_better:

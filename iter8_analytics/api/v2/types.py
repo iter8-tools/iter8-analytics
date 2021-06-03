@@ -2,7 +2,7 @@
 Module containing pydantic data models for iter8 v2
 """
 # core python dependencies
-from typing import Sequence, Dict, Union, Any
+from typing import MutableSequence, Sequence, Dict, Union, Any
 from datetime import datetime
 from enum import Enum
 
@@ -305,7 +305,7 @@ class VersionAssessmentsAnalysis(BaseModel):
     """
     Pydantic model for version assessments
     """
-    data: Dict[str, Sequence[bool]] = Field(..., \
+    data: Dict[str, MutableSequence[bool]] = Field(..., \
     description = "dictionary with version name as key and \
         sequence of booleans as value; each element of the sequence indicates if \
         the version satisfies the corresponding objective.")

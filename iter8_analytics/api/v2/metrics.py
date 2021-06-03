@@ -28,10 +28,17 @@ from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
 
-builtin_metric_names = [
-    "request_count",
-    "mean_latency",
-    "for"
+# namespaced names of builtin metrics
+builtin_metrics_nn = [
+    "iter8-system/request-count",
+    "iter8-system/error-count",
+    "iter8-system/error-rate",
+    "iter8-system/mean-latency",
+    "iter8-system/latency-50th-percentile", # median
+    "iter8-system/latency-75th-percentile",
+    "iter8-system/latency-90th-percentile",
+    "iter8-system/latency-95th-percentile",
+    "iter8-system/latency-99th-percentile"
 ]
 
 # cache secrets data for no longer than ten seconds
@@ -171,8 +178,8 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
     if version.variables is not None and len(version.variables) > 0:
         for variable in version.variables:
             args[variable.name] = variable.value
-    args["elapsedTime"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
-    args["elapsedTime"] = str(args["elapsedTime"])
+    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    args["elapsedTime"] = str(elapsed)
 
     params = {}
     if  metric_resource.spec.params is not None:
@@ -191,8 +198,8 @@ def get_body(metric_resource: MetricResource, version: VersionDetail, start_time
     if version.variables is not None and len(version.variables) > 0:
         for variable in version.variables:
             args[variable.name] = variable.value
-    args["elapsedTime"] = int((datetime.now(timezone.utc) - start_time).total_seconds())
-    args["elapsedTime"] = str(args["elapsedTime"])
+    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    args["elapsedTime"] = str(elapsed)
 
     if metric_resource.spec.body is None:
         return None, None
@@ -348,23 +355,80 @@ class Result:
     def __init__(self, result: Dict[str, Any]):
         self.duration_histogram: DurationHist = DurationHist(result["DurationHistogram"])
         self.ret_codes: Dict[str, int] = {
-            key: int(value) for (key, value) in result["RetCodes"]
+            key: int(value) for (key, value) in result["RetCodes"].items()
         }
 
 class Builtins:
     """
     Builtins contains results for all versions
     """
-    def __init__(self, data: Dict[str, any]):
+    def __init__(self, data: Dict[str, Any]):
         self.version_results: Dict[str, Result] = {
             key: Result(value) for (key, value) in data.items()
         }
 
 def initialize_builtins(iam: AggregatedMetricsAnalysis):
-    pass
+    """
+    Initialize builtin metrics in iam
+    """
+    for metric_nn in builtin_metrics_nn:
+        iam.data[metric_nn] = AggregatedMetric(data = {})
 
-def populate_builtins(iam: AggregatedMetricsAnalysis, version: str, result: Result):
-    pass
+def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
+    version_name: str, result: Result):
+    """
+    Populate builtin metrics in iam for version
+    """
+    # populate request count
+    iam.data["iter8-system/request-count"].data[version_name] = VersionMetric(
+        value = result.duration_histogram.count
+    )
+
+    # populate error count
+    error_count: int = 0
+    for (key, val) in result.ret_codes.items():
+        if int(key) >= 400:
+            error_count += val
+    iam.data["iter8-system/error-count"].data[version_name] = VersionMetric(
+        value = error_count
+    )
+
+    # populate error rate
+    if result.duration_histogram.count > 0:
+        iam.data["iter8-system/error-count"].data[version_name] = VersionMetric()
+        iam.data["iter8-system/error-count"].data[version_name].value = \
+            float(iam.data["iter8-system/error-count"].data[version_name].value) \
+                / float(iam.data["iter8-system/request-count"].data[version_name].value)
+
+    # populate mean latency
+    if result.duration_histogram.count > 0:
+        iam.data["iter8-system/mean-latency"].data[version_name] = VersionMetric()
+        iam.data["iter8-system/mean-latency"].data[version_name].value = \
+            float(result.duration_histogram.sum) \
+                / float(result.duration_histogram.count)
+
+    # populate tail latencies
+    if result.duration_histogram.count > 0:
+        # create sample of size 1000+
+        sample = np.array([])
+        for duras in result.duration_histogram.data:
+            if duras.count > 0:
+                # 10x random sample
+                npr = np.random.uniform(duras.start, duras.end, 10*duras.count)
+                sample = np.concatenate(sample, npr)
+        # if sample is not-empty
+        # compute and populate tail latencies
+        if sample.size > 0:
+            tail50 = np.percentile(sample, 50)
+            tail75 = np.percentile(sample, 75)
+            tail90 = np.percentile(sample, 90)
+            tail95 = np.percentile(sample, 95)
+            tail99 = np.percentile(sample, 99)
+            iam.data["iter8-system/latency-50th-percentile"].data[version_name].value = tail50
+            iam.data["iter8-system/latency-75th-percentile"].data[version_name].value = tail75
+            iam.data["iter8-system/latency-90th-percentile"].data[version_name].value = tail99
+            iam.data["iter8-system/latency-95th-percentile"].data[version_name].value = tail95
+            iam.data["iter8-system/latency-99th-percentile"].data[version_name].value = tail99
 
 def get_builtin_metrics(expr: ExperimentResource):
     """
@@ -378,7 +442,7 @@ def get_builtin_metrics(expr: ExperimentResource):
     builtins = Builtins(expr.status.analysis.aggregated_builtin_hists.data)
     initialize_builtins(iam)
     for version in builtins.version_results:
-        populate_builtins(iam, version, builtins.version_results[version])
+        populate_builtins_for_version(iam, version, builtins.version_results[version])
     return iam
 
 def get_aggregated_metrics(expr: ExperimentResource):
@@ -396,8 +460,8 @@ def get_aggregated_metrics(expr: ExperimentResource):
     iam = get_builtin_metrics(expr)
 
     # check if start time is greater than now
-    # this is problematic.... start time is set by etc3 and checked by analytics.
-    # clocks are obviously not synced, so this is not really valid.
+    # this is problematic.... start time is set by etc3 but checked by analytics.
+    # clocks are not synced, so this is not right...
     if expr.status.startTime > (datetime.now(timezone.utc)):
         messages.append(Message(MessageLevel.ERROR, "Invalid startTime: greater than current time"))
         iam.message = Message.join_messages(messages)
@@ -408,28 +472,28 @@ def get_aggregated_metrics(expr: ExperimentResource):
         iam.message = Message.join_messages(messages)
         return iam
 
-    for metric_resource in expr.status.metrics:
+    for metric_info in expr.status.metrics:
         # only custom metrics is handled below... not builtin metrics
-        if metric_resource.metricObj.spec.provider is None or \
-            metric_resource.metricObj.spec.provider != "iter8":
-            iam.data[metric_resource.name] = AggregatedMetric(data = {})
+        if metric_info.metricObj.spec.provider is None or \
+            metric_info.metricObj.spec.provider != "iter8":
+            iam.data[metric_info.name] = AggregatedMetric(data = {})
             # fetch the metric value for each version...
             for version in versions:
                 # initialize metric object for this version...
-                iam.data[metric_resource.name].data[version.name] = VersionMetric()
-                val, err = get_metric_value(metric_resource.metricObj, version, \
+                iam.data[metric_info.name].data[version.name] = VersionMetric()
+                val, err = get_metric_value(metric_info.metricObj, version, \
                 expr.status.startTime)
                 if err is None and val is not None:
-                    iam.data[metric_resource.name].data[version.name].value = val
+                    iam.data[metric_info.name].data[version.name].value = val
                 else:
                     try:
-                        val = float(expr.status.analysis.aggregated_metrics.data[metric_resource.name].data[version.name].value)
+                        val = float(expr.status.analysis.aggregated_metrics.data[metric_info.name].data[version.name].value)
                     except AttributeError:
                         val = None
-                    iam.data[metric_resource.name].data[version.name].value = val
+                    iam.data[metric_info.name].data[version.name].value = val
                 if err is not None:
                     messages.append(Message(MessageLevel.ERROR, \
-                        f"Error from metrics backend for metric: {metric_resource.name} \
+                        f"Error from metrics backend for metric: {metric_info.name} \
                             and version: {version.name}"))
 
     iam.message = Message.join_messages(messages)
