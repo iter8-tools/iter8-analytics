@@ -347,13 +347,17 @@ def get_weights(experiment_resource: ExperimentResource):
     logger.debug("weights: %s", pprint.PrettyPrinter().pformat(_weights))
     return _weights
 
-def get_analytics_results(exp_res: ExperimentResource):
+def get_analytics_results(expr: ExperimentResource):
     """
     Get analysis results using experiment resource and metric resources.
     """
-    exp_res.status.analysis = Analysis()
-    exp_res.status.analysis.aggregated_metrics = get_aggregated_metrics(exp_res)
-    exp_res.status.analysis.version_assessments = get_version_assessments(exp_res)
-    exp_res.status.analysis.winner_assessment = get_winner_assessment(exp_res)
-    exp_res.status.analysis.weights = get_weights(exp_res)
-    return exp_res.status.analysis
+    # if experiment contains aggregated builtin metric histograms, retain it
+    ana = Analysis()
+    if expr.status.analysis is not None:
+        ana.aggregated_builtin_hists = expr.status.analysis.aggregated_builtin_hists
+    expr.status.analysis = ana
+    expr.status.analysis.aggregated_metrics = get_aggregated_metrics(expr)
+    expr.status.analysis.version_assessments = get_version_assessments(expr)
+    expr.status.analysis.winner_assessment = get_winner_assessment(expr)
+    expr.status.analysis.weights = get_weights(expr)
+    return expr.status.analysis

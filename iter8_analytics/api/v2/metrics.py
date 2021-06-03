@@ -152,8 +152,7 @@ def get_basic_auth(metric_resource: MetricResource):
     if err is None:
         if "username" in args and "password" in args:
             return HTTPBasicAuth(args["username"], args["password"]), None
-        else:
-            return None, ValueError("username and password keys missing in secret data")
+        return None, ValueError("username and password keys missing in secret data")
     return None, err
 
 def get_params(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
@@ -323,6 +322,7 @@ def get_aggregated_metrics(expr: ExperimentResource):
 
     # there are no metrics to be fetched
     if expr.status.metrics is None:
+        iam.message = Message.join_messages(messages)
         return iam
 
     for metric_resource in expr.status.metrics:
@@ -341,7 +341,7 @@ def get_aggregated_metrics(expr: ExperimentResource):
                 else:
                     try:
                         val = float(expr.status.analysis.aggregated_metrics.data[metric_resource.name].data[version.name].value)
-                    except ValueError:
+                    except AttributeError:
                         val = None
                     iam.data[metric_resource.name].data[version.name].value = val
                 if err is not None:

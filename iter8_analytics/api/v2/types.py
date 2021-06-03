@@ -2,7 +2,7 @@
 Module containing pydantic data models for iter8 v2
 """
 # core python dependencies
-from typing import Sequence, Dict, Union
+from typing import Sequence, Dict, Union, Any
 from datetime import datetime
 from enum import Enum
 
@@ -246,7 +246,7 @@ equals None if sampleSize is not specified", alias = "sampleSize")
         self.value = convert_to_quantity(self.value)
         self.sample_size = convert_to_quantity(self.sample_size)
         return self
-
+        
 class AggregatedMetric(BaseModel):
     """
     Pydantic model for an aggregated metric object
@@ -350,6 +350,8 @@ class Analysis(BaseModel):
     """
     Pydantic model for analysis section of experiment status
     """
+    aggregated_builtin_hists: Any = Field(None, \
+        description = "aggregated builtin metric histograms", alias = "aggregatedBuiltinHists")
     aggregated_metrics: AggregatedMetricsAnalysis = Field(None, \
         description = "aggregated metrics", alias = "aggregatedMetrics")
     version_assessments: VersionAssessmentsAnalysis = Field(None, \
