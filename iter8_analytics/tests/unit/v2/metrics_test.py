@@ -3,7 +3,6 @@
 import logging
 import re
 import os
-import pprint
 import json
 from unittest import TestCase, mock
 

@@ -378,7 +378,12 @@ def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
     version_name: str, result: Result):
     """
     Populate builtin metrics in iam for version
+    1. Latency values will be converted to milliseconds
+    2. Random seed will be fixed to ensure repeatability
     """
+    # initialize random state for numpy
+    np.random.seed(17) # actual number... 17 in this case... is not important
+
     # populate request count
     iam.data["iter8-system/request-count"].data[version_name] = VersionMetric(
         value = result.duration_histogram.count
@@ -400,11 +405,11 @@ def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
             float(iam.data["iter8-system/error-count"].data[version_name].value) \
                 / float(iam.data["iter8-system/request-count"].data[version_name].value)
 
-    # populate mean latency
+    # populate mean latency (in msec)
     if result.duration_histogram.count > 0:
         iam.data["iter8-system/mean-latency"].data[version_name] = VersionMetric()
         iam.data["iter8-system/mean-latency"].data[version_name].value = \
-            float(result.duration_histogram.sum) \
+            1000.0 * float(result.duration_histogram.sum) \
                 / float(result.duration_histogram.count)
 
     # populate tail latencies
@@ -414,7 +419,7 @@ def populate_builtins_for_version(iam: AggregatedMetricsAnalysis, \
         for duras in result.duration_histogram.data:
             if duras.count > 0:
                 # 10x random sample
-                npr = np.random.uniform(duras.start, duras.end, 10*duras.count)
+                npr = np.random.uniform(1000.0 * duras.start, 1000.0 * duras.end, 10*duras.count)
                 sample = np.concatenate((sample, npr), axis = None)
         # if sample is not-empty
         # compute and populate tail latencies
