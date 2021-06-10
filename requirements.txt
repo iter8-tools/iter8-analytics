@@ -4,7 +4,7 @@ cachetools==4.1.1
 Click==7.0
 certifi==2019.3.9
 chardet==3.0.4
-fastapi==0.60.1
+fastapi==0.65.2
 Flask==1.0.2
 flask-restplus==0.12.1
 idna==2.8
