@@ -42,9 +42,11 @@ def get_version_assessments(experiment_resource: ExperimentResource):
 
     version_assessments = VersionAssessmentsAnalysis(data = {})
 
-    if experiment_resource.spec.criteria is None:
+    if experiment_resource.spec.criteria is None or \
+        experiment_resource.spec.criteria.objectives is None:
         return version_assessments
 
+    # objectives are available
     for version in versions:
         version_assessments.data[version.name] = [False] * \
             len(experiment_resource.spec.criteria.objectives)
@@ -79,10 +81,19 @@ def get_winner_assessment_for_conformance(experiment_resource: ExperimentResourc
 
     versions = [experiment_resource.spec.versionInfo.baseline]
 
-    feasible_versions = list(filter(lambda version: \
-    all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
+    # no version assessments data ... 
+    # this is because there are no objectives in the experiment to satisfy ...
+    # declare all versions to be feasible
+    if experiment_resource.status.analysis.version_assessments.data is None or \
+        len(experiment_resource.status.analysis.version_assessments.data) == 0:
+        feasible_versions = versions
+    else:
+        # there is version assessment data
+        # filter out feasible versions
+        feasible_versions = list(filter(lambda version: \
+        all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
 
-    # names of feasible versions
+    # extract names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))
 
     if versions[0].name in fvn:
