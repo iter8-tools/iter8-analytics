@@ -29,6 +29,15 @@ class NamedLevel(BaseModel):
     """
     Pydantic model for version-level pair used in mocking metrics.
     For complete documentation, see: https://github.com/iter8-tools/etc3/blob/1f747f07de7008895717c415dac9173b57374afa/api/v2alpha2/metric_types.go#L76
+
+    NamedLevel contains the name of a version and the level of the version to be used in mock metric generation.
+
+    The semantics of level are the following:
+    ---
+    If the metric is a counter, if level is x, and time elapsed since the start of the experiment is y, then x*y is the metric value.
+    Note: this will keep increasing over time as counters do.
+    If the metric is gauge, if level is x, the metric value is a random value with mean x.
+    Note: due to randomness, this stay around x but can go up or down as a gauges do.
     """
     name: str = Field(..., description = "name of the version")
     level: PolymorphicQuantity = Field(..., description = "level of the version")

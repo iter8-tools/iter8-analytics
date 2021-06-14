@@ -273,6 +273,7 @@ def mocked_value(metric_resource: MetricResource, version: VersionDetail, start_
     # metric does specify how to mock value for version
     # compute time elapsed
     elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    # the logic for mocked values is https://github.com/iter8-tools/etc3/blob/1f747f07de7008895717c415dac9173b57374afa/api/v2alpha2/metric_types.go#L71
     if metric_resource.spec.type == MetricType.Counter:
         return (elapsed * named_level.level, None)
     else: # gauge metric

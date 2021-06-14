@@ -110,13 +110,6 @@ def test_mock_metrics():
     assert agm.data['mean-latency'].data['default'].value > 15.0
     assert agm.data['mean-latency'].data['canary'].value > 9.0
 
-    # del ercopy["status"]["metrics"]
-    # expr = ExperimentResource(** ercopy)
-    # agm = get_aggregated_metrics(
-    #     expr.convert_to_float()).convert_to_quantity()
-    # assert(agm.data['request-count'].data['default'].value == \
-    # response_json['data']['result'][0]['value'][1])
-
 def test_v2_am_without_candidates():
     with requests_mock.mock(real_http=True) as mock:
         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
