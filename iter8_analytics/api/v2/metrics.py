@@ -256,9 +256,16 @@ def unmarshal(response, jq_expression):
         return None, err
 
 def is_mocked(metric_resource: MetricResource) -> bool:
+    """
+    Is this metrics a mocked metric or a real metric?
+    """
     return metric_resource.spec.mock is not None
 
-def mocked_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime) -> (numbers.Number, BaseException):
+def mocked_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime)\
+    -> (numbers.Number, BaseException):
+    """
+    Return a mock value for a mocked metric.
+    """
     # if no level is available for version, return error
     named_level = None
 
@@ -269,17 +276,19 @@ def mocked_value(metric_resource: MetricResource, version: VersionDetail, start_
 
     if named_level is None:
         return None, ValueError("metrics does not specify how to mock value for version")
-    
+
     # metric does specify how to mock value for version
     # compute time elapsed
     elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
-    # the logic for mocked values is https://github.com/iter8-tools/etc3/blob/1f747f07de7008895717c415dac9173b57374afa/api/v2alpha2/metric_types.go#L71
+    # the logic for mocked values is below...
+    # https://github.com/iter8-tools/etc3/blob/\
+    # 1f747f07de7008895717c415dac9173b57374afa/api/v2alpha2/metric_types.go#L71
     if metric_resource.spec.type == MetricType.Counter:
         return (elapsed * named_level.level, None)
     else: # gauge metric
-        a = elapsed
-        b = elapsed
-        beta = np.random.beta(a, b)
+        _alpha = elapsed
+        _beta = elapsed
+        beta = np.random.beta(_alpha, _beta)
         return (beta * 2 * named_level.level, None)
 
 def get_metric_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
@@ -533,7 +542,8 @@ def get_aggregated_metrics(expr: ExperimentResource):
                     iam.data[metric_info.name].data[version.name].value = val
                 else:
                     try:
-                        val = float(expr.status.analysis.aggregated_metrics.data[metric_info.name].data[version.name].value)
+                        val = float(expr.status.analysis.aggregated_metrics.data\
+                            [metric_info.name].data[version.name].value)
                     except AttributeError:
                         val = None
                     iam.data[metric_info.name].data[version.name].value = val

@@ -72,8 +72,6 @@ def test_v2_aggregated_metrics_endpoint():
         expr = ExperimentResource(** ercopy)
         agm = get_aggregated_metrics(
             expr.convert_to_float()).convert_to_quantity()
-        # assert(agm.data['request-count'].data['default'].value == \
-        # response_json['data']['result'][0]['value'][1])        
 
 def test_v2_version_assessment_endpoint():
     expr = ExperimentResource(** er_example_step1)
