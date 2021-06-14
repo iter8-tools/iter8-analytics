@@ -523,6 +523,21 @@ def test_v2_ab_analytics_assessment_conformance():
         expr = ExperimentResource(** example)
         get_analytics_results(expr.convert_to_float()).convert_to_quantity()
 
+def test_conformance_without_objectives():
+    with requests_mock.mock(real_http=True) as mock:
+        file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
+                                    'prometheus_sample_response.json')
+        mock.get(ab_er_example["status"]["metrics"][0]["metricObj"]
+                ["spec"]["urlTemplate"], json=json.load(open(file_path)))
+
+        example = copy.deepcopy(ab_er_example)
+        del example['spec']['versionInfo']['candidates']
+        del example['spec']['criteria']['objectives']
+        del example['spec']['criteria']['rewards']
+        example['spec']['strategy']['testingPattern'] = 'Conformance'
+        expr = ExperimentResource(** example)
+        get_analytics_results(expr.convert_to_float()).convert_to_quantity()
+
 def test_v2_ab_version_assessment_conformance():
     with requests_mock.mock(real_http=True) as mock:
         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
