@@ -16,7 +16,7 @@ from iter8_analytics.config import env_config
 import iter8_analytics.constants as constants
 from iter8_analytics.api.v2.examples.examples_canary import \
     er_example, er_example_step1, er_example_step2, er_example_step3, \
-    am_response, va_response, wa_response, w_response, mr_example
+    am_response, va_response, wa_response, w_response, mr_example, mocked_mr_example
 
 from iter8_analytics.api.v2.examples.examples_ab import \
     ab_er_example, ab_er_example_step1, ab_er_example_step2, ab_er_example_step3, \
@@ -73,7 +73,7 @@ def test_v2_aggregated_metrics_endpoint():
         agm = get_aggregated_metrics(
             expr.convert_to_float()).convert_to_quantity()
         # assert(agm.data['request-count'].data['default'].value == \
-        # response_json['data']['result'][0]['value'][1])
+        # response_json['data']['result'][0]['value'][1])        
 
 def test_v2_version_assessment_endpoint():
     expr = ExperimentResource(** er_example_step1)
@@ -96,6 +96,26 @@ def test_v2_analytics_assessment_endpoint():
 
         expr = ExperimentResource(** er_example)
         get_analytics_results(expr.convert_to_float()).convert_to_quantity()
+
+def test_mock_metrics():
+    ercopy = copy.deepcopy(er_example)
+    ercopy["status"]["metrics"] = mocked_mr_example
+    expr = ExperimentResource(** ercopy)
+
+    agm = get_aggregated_metrics(
+        expr.convert_to_float())
+    logger.info(agm)
+    assert agm.data['request-count'].data['default'].value > 100.0
+    assert agm.data['request-count'].data['canary'].value > 100.0
+    assert agm.data['mean-latency'].data['default'].value > 15.0
+    assert agm.data['mean-latency'].data['canary'].value > 9.0
+
+    # del ercopy["status"]["metrics"]
+    # expr = ExperimentResource(** ercopy)
+    # agm = get_aggregated_metrics(
+    #     expr.convert_to_float()).convert_to_quantity()
+    # assert(agm.data['request-count'].data['default'].value == \
+    # response_json['data']['result'][0]['value'][1])
 
 def test_v2_am_without_candidates():
     with requests_mock.mock(real_http=True) as mock:

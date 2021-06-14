@@ -10,12 +10,12 @@ request_count = {
             "name": "request-count"
         },
         "spec": {
+            "type": "Counter",
             "params": [{
                 "name": "query",
                 "value": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0)"
             }],
             "description": "Number of requests",
-            "type": "counter",
             "provider": "prometheus",
             "jqExpression": ".data.result[0].value[1] | tonumber",
             "urlTemplate": "http://metrics-mock:8080/promcounter"
@@ -38,7 +38,7 @@ mean_latency = {
                 "name": "query",
                 "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
             }],
-            "type": "gauge",
+            "type": "Gauge",
             "sampleSize": {
                 "name": "request-count"
             },
@@ -79,7 +79,7 @@ cpu_utilization = {
             "description": "CPU utilization",
             "body": "{\n  \"last\": $elapsedTime,\n  \"sampling\": 600,\n  \"filter\": \"kubernetes.node.name = 'n1' and service = '$name'\",\n   \"metrics\": [\n    {\n      \"id\": \"cpu.cores.used\",\n      \"aggregations\": { \"time\": \"avg\", \"group\": \"sum\" }\n    }\n  ],\n  \"dataSourceType\": \"container\",\n  \"paging\": {\n    \"from\": 0,\n    \"to\": 99\n  }\n}\n",
             "method": "POST",
-            "type": "gauge",
+            "type": "Gauge",
             "provider": "Sysdig",
             "jqExpression": ".data[0].d[0] | tonumber",
             "urlTemplate": "http://metrics-mock:8080/sysdig"
@@ -102,7 +102,7 @@ business_revenue = {
                 "name": "query",
                 "value": "(sum(increase(business_revenue{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
             }],
-            "type": "gauge",
+            "type": "Gauge",
             "sampleSize": {
                 "name": "request-count"
             },
@@ -248,4 +248,70 @@ elastic_secret = {
     "jqExpression": ".aggregations.items_to_sell.avg_sales.value | tonumber",
     "urlTemplate": "https://secure.elastic.com/my/sales"
   }
+}
+
+mocked_request_count = {
+    "name": "request-count",
+    "metricObj": {
+        "apiVersion": "iter8.tools/v2alpha2",
+        "kind": "Metric",
+        "metadata": {
+            "name": "request-count"
+        },
+        "spec": {
+            "type": "Counter",
+            "params": [{
+                "name": "query",
+                "value": "sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0)"
+            }],
+            "description": "Number of requests",
+            "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
+            "urlTemplate": "http://metrics-mock:8080/promcounter",
+            "mock": [
+              {
+                "name": "default",
+                "level": "0.001"
+              }, {
+                "name": "canary",
+                "level": "0.00002"
+              }
+            ]
+        }
+    }
+}
+
+mocked_mean_latency = {
+    "name": "mean-latency",
+    "metricObj": {
+        "apiVersion": "iter8.tools/v2alpha2",
+        "kind": "Metric",
+        "metadata": {
+            "name": "mean-latency"
+        },
+        "spec": {
+            "description": "Mean latency",
+            "units": "milliseconds",
+            "params": [{
+                "name": "query",
+                "value": "(sum(increase(revision_app_request_latencies_sum{service_name=~'.*$name'}[${elapsedTime}s]))or on() vector(0)) / (sum(increase(revision_app_request_latencies_count{service_name=~'.*$name'}[${elapsedTime}s])) or on() vector(0))"
+            }],
+            "type": "Gauge",
+            "sampleSize": {
+                "name": "request-count"
+            },
+            "provider": "prometheus",
+            "jqExpression": ".data.result[0].value[1] | tonumber",
+            "urlTemplate": "http://metrics-mock:8080/promcounter",
+            "mock": [
+              {
+                "name": "default",
+                "level": "20.0"
+              }, {
+                "name": "canary",
+                "level": "10.0"
+              }
+            ]
+        }
+    }
 }

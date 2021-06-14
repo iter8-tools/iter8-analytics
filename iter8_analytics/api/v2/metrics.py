@@ -23,7 +23,8 @@ from kubernetes import config as kubeconfig
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import AggregatedMetricsAnalysis, ExperimentResource, \
-    MetricResource, VersionDetail, AggregatedMetric, VersionMetric, AuthType, Method
+    MetricResource, VersionDetail, AggregatedMetric, VersionMetric, MetricType, \
+    AuthType, Method
 from iter8_analytics.api.utils import Message, MessageLevel
 
 logger = logging.getLogger('iter8_analytics')
@@ -108,6 +109,8 @@ def get_url(metric_resource: MetricResource):
     Keyword arguments:
     metric_resource: the metric resource
     """
+    if metric_resource.spec.urlTemplate is None:
+        return None, ValueError("No URL template is available in metric resource")
     if metric_resource.spec.secret is None: # no need to interpolate
         return metric_resource.spec.urlTemplate, None
     args, err = get_secret_data_for_metric(metric_resource)
@@ -252,11 +255,41 @@ def unmarshal(response, jq_expression):
     except Exception as err:
         return None, err
 
+def is_mocked(metric_resource: MetricResource) -> bool:
+    return metric_resource.spec.mock is not None
+
+def mocked_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime) -> (numbers.Number, BaseException):
+    # if no level is available for version, return error
+    named_level = None
+
+    for nal in metric_resource.spec.mock:
+        if nal.name == version.name:
+            named_level = nal
+            break
+
+    if named_level is None:
+        return None, ValueError("metrics does not specify how to mock value for version")
+    
+    # metric does specify how to mock value for version
+    # compute time elapsed
+    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    if metric_resource.spec.type == MetricType.Counter:
+        return (elapsed * named_level.level, None)
+    else: # gauge metric
+        a = elapsed
+        b = elapsed
+        beta = np.random.beta(a, b)
+        return (beta * 2 * named_level.level, None)
+
 def get_metric_value(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
     """
     Interpolate metrics backend URL, headerTemplates, and REST query parameters;
     query the metrics backend; return the value of the metric.
     """
+    if is_mocked(metric_resource):
+        metric_resource.spec.convert_to_float()
+        return mocked_value(metric_resource, version, start_time)
+
     (value, err) = (None, None)
     # interpolated metrics backend URL
     url, err = get_url(metric_resource)
@@ -301,6 +334,8 @@ def get_metric_value(metric_resource: MetricResource, version: VersionDetail, st
             logger.error(exc)
             return value, exc
         logger.debug("unmarshaling metrics response using jqExpression...")
+        if metric_resource.spec.jqExpression is None:
+            return value, ValueError("no jqExpression is specific in metric resource")
         value, err = unmarshal(response, metric_resource.spec.jqExpression)
     return value, err
 

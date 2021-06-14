@@ -4,9 +4,11 @@ Examples used in tests of iter8 analytics v2 APIs.
 """
 # iter8 dependencies
 from iter8_analytics.api.v2.examples.examples_metrics import \
-    request_count, mean_latency
+    request_count, mean_latency, mocked_request_count, mocked_mean_latency
+
 
 mr_example = [request_count, mean_latency]
+mocked_mr_example = [mocked_request_count, mocked_mean_latency]
 
 er_example = {
     "spec": {
