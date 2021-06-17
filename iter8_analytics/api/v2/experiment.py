@@ -5,13 +5,14 @@
 import logging
 import math
 import pprint
+from typing import Sequence
 
 # external dependencies
 import numpy as np
 
 # iter8 dependencies
 from iter8_analytics.api.v2.types import ExperimentResource, \
-    VersionAssessmentsAnalysis, VersionWeight, \
+    VersionAssessmentsAnalysis, VersionWeight, VersionDetail, \
     WinnerAssessmentAnalysis, WinnerAssessmentData, WeightsAnalysis, \
     Analysis, Objective, TestingPattern, Reward, PreferredDirection
 from iter8_analytics.api.v2.metrics import get_aggregated_metrics
@@ -73,14 +74,11 @@ def get_version_assessments(experiment_resource: ExperimentResource):
     logger.debug("version assessments: %s", pprint.PrettyPrinter().pformat(version_assessments))
     return version_assessments
 
-def get_winner_assessment_for_conformance(experiment_resource: ExperimentResource):
+def get_feasible_versions(experiment_resource: ExperimentResource, \
+  versions: Sequence[VersionDetail]) -> Sequence[VersionDetail]:
     """
-    Get winner assessment using experiment resource for Conformance
+    Get the list of feasible versions, i.e., versions satisfying objectives
     """
-    was = WinnerAssessmentAnalysis()
-
-    versions = [experiment_resource.spec.versionInfo.baseline]
-
     # no version assessments data ... 
     # this is because there are no objectives in the experiment to satisfy ...
     # declare all versions to be feasible
@@ -92,6 +90,19 @@ def get_winner_assessment_for_conformance(experiment_resource: ExperimentResourc
         # filter out feasible versions
         feasible_versions = list(filter(lambda version: \
         all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
+        
+    return feasible_versions
+
+
+def get_winner_assessment_for_conformance(experiment_resource: ExperimentResource):
+    """
+    Get winner assessment using experiment resource for Conformance
+    """
+    was = WinnerAssessmentAnalysis()
+
+    versions = [experiment_resource.spec.versionInfo.baseline]
+
+    feasible_versions = get_feasible_versions(experiment_resource, versions)
 
     # extract names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))
@@ -112,8 +123,7 @@ def get_winner_assessment_for_canarybg(experiment_resource: ExperimentResource):
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
 
-    feasible_versions = list(filter(lambda version: \
-    all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
+    feasible_versions = get_feasible_versions(experiment_resource, versions)
 
     # names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))
@@ -139,8 +149,9 @@ def get_winner_assessment_for_abn(experiment_resource: ExperimentResource):
     versions = [experiment_resource.spec.versionInfo.baseline]
     versions += experiment_resource.spec.versionInfo.candidates
 
-    feasible_versions = list(filter(lambda version: \
-    all(experiment_resource.status.analysis.version_assessments.data[version.name]), versions))
+    logger.info("Versions: %s", versions)
+    feasible_versions = get_feasible_versions(experiment_resource, versions)
+    logger.info("Feasible versions: %s", feasible_versions)
 
     # names of feasible versions
     fvn = list(map(lambda version: version.name, feasible_versions))

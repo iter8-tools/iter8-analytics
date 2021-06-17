@@ -615,4 +615,3 @@ class SamplesUsedInIter8Docs(TestCase):
             value, err = get_metric_value(ela, version, start_time)
             assert err is None
             assert value == 128.33333333333334
-
