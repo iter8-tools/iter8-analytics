@@ -172,6 +172,13 @@ def get_basic_auth(metric_resource: MetricResource):
         return None, ValueError("username and password keys missing in secret data")
     return None, err
 
+def get_elapsed_time_seconds(start_time) -> int:
+    """
+    If start time is in the future, make it 1 second
+    """
+    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    return max(elapsed, 1) # at least one second
+
 def get_params(metric_resource: MetricResource, version: VersionDetail, start_time: datetime):
     """Interpolate REST query params for metric and return interpolated params"""
     # args contain data from VersionInfo,
@@ -181,7 +188,7 @@ def get_params(metric_resource: MetricResource, version: VersionDetail, start_ti
     if version.variables is not None and len(version.variables) > 0:
         for variable in version.variables:
             args[variable.name] = variable.value
-    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    elapsed = get_elapsed_time_seconds(start_time)
     args["elapsedTime"] = str(elapsed)
 
     params = {}
@@ -201,7 +208,7 @@ def get_body(metric_resource: MetricResource, version: VersionDetail, start_time
     if version.variables is not None and len(version.variables) > 0:
         for variable in version.variables:
             args[variable.name] = variable.value
-    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    elapsed = get_elapsed_time_seconds(start_time)
     args["elapsedTime"] = str(elapsed)
 
     if metric_resource.spec.body is None:
@@ -279,7 +286,7 @@ def mocked_value(metric_resource: MetricResource, version: VersionDetail, start_
 
     # metric does specify how to mock value for version
     # compute time elapsed
-    elapsed = int((datetime.now(timezone.utc) - start_time).total_seconds())
+    elapsed = get_elapsed_time_seconds(start_time)
     # the logic for mocked values is below...
     # https://github.com/iter8-tools/etc3/blob/\
     # 1f747f07de7008895717c415dac9173b57374afa/api/v2alpha2/metric_types.go#L71
@@ -513,14 +520,6 @@ def get_aggregated_metrics(expr: ExperimentResource):
 
     # initialize aggregated metrics object
     iam = get_builtin_metrics(expr)
-
-    # check if start time is greater than now
-    # this is problematic.... start time is set by etc3 but checked by analytics.
-    # clocks are not synced, so this is not right...
-    if expr.status.startTime > (datetime.now(timezone.utc)):
-        messages.append(Message(MessageLevel.ERROR, "Invalid startTime: greater than current time"))
-        iam.message = Message.join_messages(messages)
-        return iam
 
     # there are no metrics to be fetched
     if expr.status.metrics is None:

@@ -1,9 +1,10 @@
 """Tests for module iter8_analytics.api.v2"""
 # standard python stuff
-import logging
-import json
-import os
 import copy
+from datetime import datetime, timezone, timedelta
+import json
+import logging
+import os
 
 # python libraries
 import requests_mock
@@ -107,6 +108,20 @@ def test_mock_metrics():
     assert agm.data['request-count'].data['canary'].value > 100.0
     assert agm.data['mean-latency'].data['default'].value > 15.0
     assert agm.data['mean-latency'].data['canary'].value > 9.0
+
+def test_mock_metrics_with_negative_elapsed():
+    ercopy = copy.deepcopy(er_example)
+    ercopy["status"]["metrics"] = mocked_mr_example
+    expr = ExperimentResource(** ercopy)
+    expr.status.startTime = datetime.now(timezone.utc) + timedelta(hours=10)
+
+    agm = get_aggregated_metrics(
+        expr.convert_to_float())
+    logger.info(agm)
+    assert agm.data['request-count'].data['default'].value > 0
+    assert agm.data['request-count'].data['canary'].value > 0
+    assert agm.data['mean-latency'].data['default'].value > 0
+    assert agm.data['mean-latency'].data['canary'].value > 0
 
 def test_am_without_candidates():
     with requests_mock.mock(real_http=True) as mock:
