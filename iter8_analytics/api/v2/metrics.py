@@ -227,7 +227,8 @@ def get_body(metric_resource: MetricResource, version: VersionDetail, start_time
 def get_raw_response(url, method, params, body, headers, auth, timeout):
     """Send GET or POST request to the url and get HTTP response"""
     kw_args = {
-        "url": url
+        "url": url,
+        "verify": False,
     }
 
     if params is not None:
