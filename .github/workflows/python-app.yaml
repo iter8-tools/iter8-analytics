@@ -41,7 +41,7 @@ jobs:
       run: |
         # stop the build if Pylint score is too low
         pip install pylint --upgrade
-        pylint --fail-under=9.1 iter8_analytics --reports=y
+        pylint --fail-under=9.1 iter8_analytics --reports=y --ignore-patterns=.*_test.*?py
 
   build-and-push:
     # Ensure test job passes before pushing image.
