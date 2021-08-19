@@ -11,6 +11,7 @@ import pprint
 import base64
 import binascii
 import json
+import pytz
 
 # external module dependencies
 import requests
@@ -538,15 +539,17 @@ def get_aggregated_metrics(expr: ExperimentResource):
                 iam.data[metric_info.name].data[version.name] = VersionMetric()
                 val, err = get_metric_value(metric_info.metricObj, version, \
                 expr.status.startTime)
+                version_metric = iam.data[metric_info.name].data[version.name]
                 if err is None and val is not None:
-                    iam.data[metric_info.name].data[version.name].value = val
+                    version_metric.value = val
                 else:
                     try:
                         val = float(expr.status.analysis.aggregated_metrics.data\
                             [metric_info.name].data[version.name].value)
                     except AttributeError:
                         val = None
-                    iam.data[metric_info.name].data[version.name].value = val
+                    version_metric.value = val
+                version_metric.history.append((datetime.now(pytz.utc), val))
                 if err is not None:
                     messages.append(Message(MessageLevel.ERROR, \
                         f"Error from metrics backend for metric: {metric_info.name} \

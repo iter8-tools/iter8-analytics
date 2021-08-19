@@ -4,3 +4,4 @@ requests-mock==1.6.0
 pytest==5.4.2
 pylint==2.6.0
 mypy==0.812
+freezegun==0.1.11

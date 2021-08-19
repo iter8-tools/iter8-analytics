@@ -5,6 +5,7 @@ Module containing pydantic data models for iter8 v2
 from typing import MutableSequence, Sequence, Dict, Union, Any
 from datetime import datetime
 from enum import Enum
+from typing import Dict, Sequence, Tuple, Union
 
 # external module dependencies
 from pydantic import BaseModel, Field
@@ -269,6 +270,8 @@ class VersionMetric(BaseModel):
     sample_size: PolymorphicQuantity = Field(None, description = "last observed value \
         for the sampleSize metric for this version; \
 equals None if sampleSize is not specified", alias = "sampleSize")
+    history: Sequence[Tuple[datetime, PolymorphicQuantity]] = Field(default_factory=list, \
+        description = "history of all past observed values for this metric for this version")
 
     def convert_to_float(self):
         """
@@ -278,6 +281,7 @@ equals None if sampleSize is not specified", alias = "sampleSize")
         self.min = convert_to_float(self.min)
         self.value = convert_to_float(self.value)
         self.sample_size = convert_to_float(self.sample_size)
+        self.history = [(dt, convert_to_float(value)) for dt, value in self.history]
         return self
 
     def convert_to_quantity(self):
@@ -288,6 +292,7 @@ equals None if sampleSize is not specified", alias = "sampleSize")
         self.min = convert_to_quantity(self.min)
         self.value = convert_to_quantity(self.value)
         self.sample_size = convert_to_quantity(self.sample_size)
+        self.history = [(dt, convert_to_quantity(value)) for dt, value in self.history]
         return self
 
 class AggregatedMetric(BaseModel):

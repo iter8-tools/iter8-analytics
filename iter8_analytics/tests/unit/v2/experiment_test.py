@@ -8,6 +8,8 @@ import os
 
 # python libraries
 import requests_mock
+import pytz
+from freezegun import freeze_time
 
 from iter8_analytics import fastapi_app
 from iter8_analytics.api.v2.types import \
@@ -183,6 +185,7 @@ def test_w_without_wa():
     except AttributeError:
         pass
 
+@freeze_time("2012-01-14 03:21:34", tz_offset=-4)
 def test_no_prometheus_response():
     with requests_mock.mock(real_http=True) as mock:
         file_path = os.path.join(os.path.dirname(__file__), 'data/prom_responses',
@@ -202,13 +205,15 @@ def test_no_prometheus_response():
                         "max": None,
                         "min": None,
                         "sample_size": None,
-                        "value": None
+                        "value": None,
+                        "history": [(datetime(2012, 1, 13, 23, 21, 34, tzinfo=pytz.utc), None)],
                     },
                     "canary": {
                         "max": None,
                         "min": None,
                         "sample_size": None,
-                        "value": None
+                        "value": None,
+                        "history": [(datetime(2012, 1, 13, 23, 21, 34, tzinfo=pytz.utc), None)],
                     }
                 }
             },
@@ -220,13 +225,15 @@ def test_no_prometheus_response():
                         "max": None,
                         "min": None,
                         "sample_size": None,
-                        "value": None
+                        "value": None,
+                        "history": [(datetime(2012, 1, 13, 23, 21, 34, tzinfo=pytz.utc), None)],
                     },
                     "canary": {
                         "max": None,
                         "min": None,
                         "sample_size": None,
-                        "value": None
+                        "value": None,
+                        "history": [(datetime(2012, 1, 13, 23, 21, 34, tzinfo=pytz.utc), None)],
                     }
                 }
             }
